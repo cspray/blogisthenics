@@ -3,6 +3,8 @@
 namespace Cspray\Blogisthenics;
 
 use Amp\Promise;
+use Cspray\Blogisthenics\Template\Renderer;
+use Cspray\Blogisthenics\Template\SafeToNotEncode;
 use DateTimeImmutable;
 use function Amp\call;
 use function Amp\File\filesystem;
@@ -21,11 +23,21 @@ final class Engine {
     private $rootDirectory;
     private $configDirectory;
     private $parser;
+    private $renderer;
 
-    public function __construct(string $rootDirectory, PageParser $pageParser) {
+    /**
+     * The $rootDirectory passed should have a `.blogisthenics` directory inside it with the appropriate configuration
+     * for your site.
+     *
+     * @param string $rootDirectory
+     * @param PageParser $pageParser
+     * @param Renderer $renderer
+     */
+    public function __construct(string $rootDirectory, PageParser $pageParser, Renderer $renderer) {
         $this->rootDirectory = $rootDirectory;
         $this->configDirectory = $rootDirectory . '/.blogisthenics';
         $this->parser = $pageParser;
+        $this->renderer = $renderer;
     }
 
     /**
@@ -36,21 +48,40 @@ final class Engine {
      */
     public function buildSite() : Promise {
         return call(function() {
-            /** @var SiteConfiguration $siteConfig */
+            /** @var Site $site */
+            $site = yield $this->generateSite();
+
+            /** @var Page $page */
+            foreach ($site->getAllPages() as $page) {
+                $frontMatter = $page->getFrontMatter();
+                $outputFile = (string) $frontMatter->get('output_path');
+                $outputDir = dirname($outputFile);
+                $outputDirExists = yield filesystem()->exists($outputDir);
+                if (!$outputDirExists) {
+                    yield filesystem()->mkdir($outputDir, 0777, true);
+                }
+
+                $contents = $this->buildTemplateContents($site, $page);
+                yield filesystem()->put($outputFile, $contents);
+            }
+
+            return $site;
+        });
+    }
+
+    private function generateSite() : Promise {
+        return call(function() {
             $siteConfig = yield $this->getSiteConfiguration();
             $site = new Site($siteConfig);
             $layouts = [];
             $pages = [];
 
-            /** @var \SplFileInfo $fileInfo */
             foreach ($this->getSourceIterator() as $fileInfo) {
                 if ($this->isParseablePath($fileInfo)) {
                     $filePath = $fileInfo->getRealPath();
                     $fileName = basename($filePath);
 
-                    /** @var PageParserResults $parsedFile */
                     $parsedFile = yield $this->parseFile($filePath);
-                    /** @var DateTimeImmutable $pageDate */
                     $pageDate = yield $this->getPageDate($filePath, $fileName);
                     $frontMatter = $this->buildFrontMatter(
                         $siteConfig,
@@ -61,12 +92,7 @@ final class Engine {
                     );
                     $template = yield $this->createTemplate($fileInfo, $parsedFile);
 
-                    $page = new Page(
-                        $filePath,
-                        $pageDate,
-                        $frontMatter,
-                        $template
-                    );
+                    $page = new Page($filePath, $pageDate, $frontMatter, $template);
 
                     if ($this->isLayoutPath($siteConfig, $filePath)) {
                         $layouts[] = $page;
@@ -90,6 +116,7 @@ final class Engine {
 
             return $site;
         });
+
     }
 
     private function getSiteConfiguration() : Promise {
@@ -107,8 +134,12 @@ final class Engine {
 
     private function isParseablePath(\SplFileInfo $fileInfo) : bool {
         $filePath = $fileInfo->getRealPath();
-        $configPattern = '(^' . $this->configDirectory . ')';
-        return $fileInfo->isFile() && basename($filePath)[0] !== '.' && !preg_match($configPattern, $filePath);
+        $configPattern = '<^' . $this->configDirectory . '>';
+        $outputPattern = '<^' . $this->rootDirectory . '/_site>';
+        return $fileInfo->isFile()
+            && basename($filePath)[0] !== '.'
+            && !preg_match($configPattern, $filePath)
+            && !preg_match($outputPattern, $filePath);
     }
 
     private function parseFile(string $filePath) : Promise {
@@ -139,7 +170,9 @@ final class Engine {
         return call(function() use($parsedFile, $fileInfo) {
             $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
             $format = explode('.', basename($fileInfo->getRealPath()))[1];
-            yield filesystem()->put($tempName, $parsedFile->getRawContents());
+            $contents = $parsedFile->getRawContents();
+
+            yield filesystem()->put($tempName, $contents);
             return new Template($format, $tempName);
         });
     }
@@ -161,15 +194,46 @@ final class Engine {
                 $dataToAdd['layout'] = $siteConfig->getDefaultLayoutName();
             }
 
+            $fileNameWithoutFormat = explode('.', $fileName)[0];
             if (is_null($frontMatter->getTitle())) {
-                $baseName = preg_replace('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\-/', '', $fileName);
-                $baseName = explode('.', $baseName)[0];
-                $dataToAdd['title'] = (string) s($baseName)->replace('-', ' ')->titleize();
+                $potentialTitle = preg_replace('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\-/', '', $fileNameWithoutFormat);
+                $dataToAdd['title'] = (string) s($potentialTitle)->replace('-', ' ')->titleize();
             }
+
+            $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
+            $dataToAdd['output_path'] = $this->rootDirectory . '/_site' . $outputDir . '/' . $fileNameWithoutFormat . '.html';
         }
 
         $frontMatter = $frontMatter->withData($dataToAdd);
         return $frontMatter;
+    }
+
+    private function buildTemplateContents(Site $site, Page $page) : string {
+        $pages = [];
+        $pages[] = $page;
+        $layoutName = $page->getFrontMatter()->getLayout();
+
+        while ($layoutName !== null) {
+            $layout = $pages[] = $site->findLayout($layoutName);
+            $layoutName = $layout->getFrontMatter()->getLayout();
+        }
+
+        $finalLayout = array_pop($pages);
+        $contents = null;
+        foreach ($pages as $contentPage) {
+            $frontMatter = $page->getFrontMatter();
+            if ($contents !== null) {
+                $frontMatter = $frontMatter->withData(['content' => $contents]);
+            }
+            $contentFrontMatter = $contentPage->getFrontMatter()->withData(iterator_to_array($frontMatter));
+            $markup = $this->renderer->render($contentPage->getTemplate()->getPath(), iterator_to_array($contentFrontMatter));
+
+            $contents = new SafeToNotEncode($markup . PHP_EOL);
+        }
+
+        $pageFrontMatter = $page->getFrontMatter()->withData(['content' => $contents]);
+        $frontMatter = $finalLayout->getFrontMatter()->withData(iterator_to_array($pageFrontMatter));
+        return $this->renderer->render($finalLayout->getTemplate()->getPath(), iterator_to_array($frontMatter));
     }
 
 }

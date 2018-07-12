@@ -5,7 +5,6 @@
     "amphp/amp": "^2",
     "amphp/file": "^0.3",
     "zendframework/zend-escaper": "^2.6",
-    "erusev/parsedown": "^1.7",
     "danielstjules/stringy": "^3.1"
   },
   "require-dev": {

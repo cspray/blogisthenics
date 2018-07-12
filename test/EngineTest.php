@@ -1,19 +1,18 @@
 <?php declare(strict_types=1);
 
-/**
- *
- */
-
 namespace Cspray\Blogisthenics\Test;
 
-use function Amp\call;
-use function Amp\Promise\wait;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Page;
 use Cspray\Blogisthenics\PageParser;
 use Cspray\Blogisthenics\Site;
+use Cspray\Blogisthenics\Template\ContextFactory;
+use Cspray\Blogisthenics\Template\MethodDelegator;
+use Cspray\Blogisthenics\Template\Renderer;
 use DateTimeImmutable;
+use function Amp\Promise\wait;
 use function Amp\File\filesystem;
+use Zend\Escaper\Escaper;
 
 class EngineTest extends AsyncTestCase {
 
@@ -22,14 +21,18 @@ class EngineTest extends AsyncTestCase {
      */
     private $subject;
 
+    private $rootDir;
+
     /**
      * @throws \Throwable
      */
     public function setUp() {
         parent::setUp();
-        $rootDir = __DIR__ . '/_dummy';
-        $this->subject = new Engine($rootDir, new PageParser());
-        wait(filesystem()->rmdir($rootDir . '/_site'));
+        $this->rootDir = __DIR__ . '/_dummy';
+        $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
+        $renderer = new Renderer($contextFactory);
+        $this->subject = new Engine($this->rootDir, new PageParser(), $renderer);
+        wait(filesystem()->rmdir($this->rootDir . '/_site'));
     }
 
     public function testValidBuildSiteResolvesPromiseWithSite() {
@@ -52,14 +55,14 @@ class EngineTest extends AsyncTestCase {
         $site = yield $this->subject->buildSite();
 
         $layouts = $site->getAllLayouts();
-        $this->assertCount(1, $layouts, 'Expected there to be 1 layout added');
+        $this->assertCount(2, $layouts, 'Expected there to be 1 layout added');
     }
 
     public function testSiteHasNonLayoutPagesCount() {
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
-        $this->assertCount(2, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
+        $this->assertCount(3, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
     }
 
     /**
@@ -68,9 +71,11 @@ class EngineTest extends AsyncTestCase {
      */
     public function sitePagesDates() : array {
         return [
-            ['getAllLayouts', 0, new DateTimeImmutable('2018-06-30 23:57:43')],
+            ['getAllLayouts', 0, new DateTimeImmutable('2018-07-02 22:01:35')],
+            ['getAllLayouts', 1, new DateTimeImmutable('2018-07-11 21:44:50')],
             ['getAllPages', 0, new DateTimeImmutable('2018-06-23')],
-            ['getAllPages', 1, new DateTimeImmutable('2018-06-30')]
+            ['getAllPages', 1, new DateTimeImmutable('2018-06-30')],
+            ['getAllPages', 2, new DateTimeImmutable('2018-07-01')]
         ];
     }
 
@@ -88,19 +93,31 @@ class EngineTest extends AsyncTestCase {
     }
 
     public function sitePagesFrontMatters() : array {
+        $rootDir = __DIR__ . '/_dummy';
         return [
             ['getAllLayouts', 0, [
-                'date' => '2018-06-30'
+                'date' => '2018-07-02'
+            ]],
+            ['getAllLayouts', 1, [
+                'date' => '2018-07-11'
             ]],
             ['getAllPages', 0, [
                 'date' => '2018-06-23',
                 'layout' => 'default.html',
                 'title' => 'The Blog Title',
+                'output_path' => $rootDir . '/_site/posts/2018-06-23-the-blog-article-title.html'
             ]],
             ['getAllPages', 1, [
                 'date' => '2018-06-30',
                 'layout' => 'default.html',
                 'title' => 'Another Blog Article',
+                'output_path' => $rootDir . '/_site/posts/2018-06-30-another-blog-article.html'
+            ]],
+            ['getAllPages', 2, [
+                'date' => '2018-07-01',
+                'layout' => 'article.md',
+                'title' => 'Nested Layout Article',
+                'output_path' => $rootDir . '/_site/posts/2018-07-01-nested-layout-article.html'
             ]]
         ];
     }
@@ -113,21 +130,28 @@ class EngineTest extends AsyncTestCase {
         $site = yield $this->subject->buildSite();
         $frontMatter = iterator_to_array($site->$method()[$index]->getFrontMatter());
 
-        $this->assertSame($expectedFrontMatter, $frontMatter, 'Expected the front matter data to be an empty array');
+        $this->assertArraySubset($expectedFrontMatter, $frontMatter, false, 'Expected the front matter data to be an empty array');
     }
 
     public function sitePagesContents() : array {
         $defaultLayout = <<<'HTML'
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-    </head>
-    <body>
-        <?= $this->content ?>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <?= $this->content ?>
+  </body>
 </html>
 HTML;
+
+        $articleLayout = <<<'HTML'
+# <?= $this->title ?>
+
+<?= $this->content ?>
+HTML;
+
 
         $firstArticle = <<<'HTML'
 # <?= $this->title ?>
@@ -140,14 +164,22 @@ HTML;
         $secondArticle = <<<'HTML'
 <h1><?= $this->title ?></h1>
 <div>
-    This past has no front matter but should still have a title and a <?= $this->date ?>
+  This post has no front matter but should still have a title and a <?= $this->date ?>
 </div>
+
+But _should not_ parse Markdown.
+HTML;
+
+        $thirdArticle = <<<'HTML'
+Some article that winds up in a nested layout
 HTML;
 
         return [
             ['getAllLayouts', 0, $defaultLayout],
+            ['getAllLayouts', 1, $articleLayout],
             ['getAllPages', 0, $firstArticle],
-            ['getAllPages', 1, $secondArticle]
+            ['getAllPages', 1, $secondArticle],
+            ['getAllPages', 2, $thirdArticle]
         ];
     }
 
@@ -167,8 +199,10 @@ HTML;
     public function sitePagesFormats() : array {
         return [
             ['getAllLayouts', 0, 'html'],
+            ['getAllLayouts', 1, 'md'],
             ['getAllPages', 0, 'md'],
-            ['getAllPages', 1, 'html']
+            ['getAllPages', 1, 'html'],
+            ['getAllPages', 2, 'md']
         ];
     }
 
@@ -188,8 +222,10 @@ HTML;
     public function sitePagesSourcePaths() : array {
         return [
             ['getAllLayouts', 0, __DIR__  . '/_dummy/_layouts/default.html.php'],
+            ['getAllLayouts', 1, __DIR__ . '/_dummy/_layouts/article.md.php'],
             ['getAllPages', 0, __DIR__ . '/_dummy/posts/2018-06-23-the-blog-article-title.md.php'],
-            ['getAllPages', 1, __DIR__ . '/_dummy/posts/2018-06-30-another-blog-article.html.php']
+            ['getAllPages', 1, __DIR__ . '/_dummy/posts/2018-06-30-another-blog-article.html.php'],
+            ['getAllPages', 2, __DIR__ . '/_dummy/posts/2018-07-01-nested-layout-article.md.php']
         ];
     }
 
@@ -202,6 +238,42 @@ HTML;
         /** @var Page $layoutPage */
         $sourcePath = $site->$method()[$index]->getSourcePath();
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
+    }
+
+    public function testSitePagesOutputFilesExists() {
+        /** @var Site $site */
+        $site = yield $this->subject->buildSite();
+
+        /** @var Page $page */
+        foreach ($site->getAllPages() as $page) {
+            $filePath = (string) $page->getFrontMatter()->get('output_path');
+
+            $fileExists = yield filesystem()->exists($filePath);
+            $this->assertTrue($fileExists, 'Expected to see pages written to disk at configured output paths');
+        }
+    }
+
+    public function sitePagesOutputContents() : array {
+        return [
+            [0, __DIR__ . '/_fixtures/2018-06-23-the-blog-article-title.html'],
+            [1, __DIR__ . '/_fixtures/2018-06-30-another-blog-article.html'],
+            [2, __DIR__ . '/_fixtures/2018-07-01-nested-layout-article.html']
+        ];
+    }
+
+    /**
+     * @dataProvider sitePagesOutputContents
+     */
+    public function testSitePagesOutputFileHasCorrectContent(int $pageIndex, string $filePath) {
+        /** @var Site $site */
+        $site = yield $this->subject->buildSite();
+        $actualContents = yield filesystem()->get($site->getAllPages()[$pageIndex]->getFrontMatter()->get('output_path'));
+        $expectedContents = yield filesystem()->get($filePath);
+        $this->assertEquals(
+            trim($expectedContents),
+            trim($actualContents),
+            'Expected the content for page ' . $pageIndex . ' to match fixture at ' . $filePath
+        );
     }
 
 }

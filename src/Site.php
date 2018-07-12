@@ -9,6 +9,9 @@ namespace Cspray\Blogisthenics;
 
 final class Site {
 
+    /**
+     * @var Page[]
+     */
     private $layouts = [];
     private $pages = [];
     private $siteConfiguration;
@@ -30,6 +33,11 @@ final class Site {
     }
 
     public function findLayout(string $name) : ?Page {
+        foreach ($this->layouts as $layout) {
+            if (preg_match('<' . $name . '.php$>', $layout->getSourcePath())) {
+                return $layout;
+            }
+        }
         return null;
     }
 
