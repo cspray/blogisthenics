@@ -1,17 +1,9 @@
 <?php declare(strict_types=1);
 
-/**
- *
- */
-
-namespace Cspray\Blogisthenics;
-
+namespace Cspray\Jasg;
 
 final class Site {
 
-    /**
-     * @var Page[]
-     */
     private $layouts = [];
     private $pages = [];
     private $siteConfiguration;
@@ -24,15 +16,18 @@ final class Site {
         return $this->siteConfiguration;
     }
 
-    public function addLayout(Page $layoutPage) : void {
-        $this->layouts[] = $layoutPage;
+    public function addContent(Content $content) {
+        switch ($content->getType()) {
+            case ContentType::LAYOUT:
+                $this->layouts[] = $content;
+                break;
+            case ContentType::PAGE:
+                $this->pages[] = $content;
+                break;
+        }
     }
 
-    public function addPage(Page $page) : void {
-        $this->pages[] = $page;
-    }
-
-    public function findLayout(string $name) : ?Page {
+    public function findLayout(string $name) : ?Layout {
         foreach ($this->layouts as $layout) {
             if (preg_match('<' . $name . '.php$>', $layout->getSourcePath())) {
                 return $layout;
@@ -46,7 +41,11 @@ final class Site {
     }
 
     public function getAllPages() : array {
-        return $this->pages;
+        $pages = $this->pages;
+        usort($pages, function(Content $a, Content $b) {
+            return ($a->getDate() > $b->getDate()) ? 1 : -1;
+        });
+        return $pages;
     }
 
 }

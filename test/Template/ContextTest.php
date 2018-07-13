@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Test\Template;
+namespace Cspray\Jasg\Test\Template;
 
-use Cspray\Blogisthenics\Template\Context;
-use Cspray\Blogisthenics\Template\MethodDelegator;
-use Cspray\Blogisthenics\Template\SafeToNotEncode;
+use Cspray\Jasg\Template\Context;
+use Cspray\Jasg\Template\MethodDelegator;
+use Cspray\Jasg\Template\SafeToNotEncode;
 use PHPUnit\Framework\TestCase;
 use Zend\Escaper\Escaper;
 use BadMethodCallException;

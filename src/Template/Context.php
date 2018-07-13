@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Template;
+namespace Cspray\Jasg\Template;
 
 use Zend\Escaper\Escaper;
 use ArrayAccess;
@@ -97,7 +97,7 @@ final class Context implements ArrayAccess {
      * @since 5.0.0
      */
     public function offsetSet($offset, $value) {
-        $this->__set((string) $offset, $value);
+        throw new BadMethodCallException('Attempted to set a value on an immutable object');
     }
 
     /**
@@ -110,6 +110,6 @@ final class Context implements ArrayAccess {
      * @since 5.0.0
      */
     public function offsetUnset($offset) {
-        $this->__unset((string) $offset);
+        throw new BadMethodCallException('Attempted to unset a value on an immutable object');
     }
 }

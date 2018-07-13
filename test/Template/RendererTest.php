@@ -4,12 +4,12 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test\Template;
+namespace Cspray\Jasg\Test\Template;
 
-use Cspray\Blogisthenics\Template\ContextFactory;
-use Cspray\Blogisthenics\Template\MethodDelegator;
-use Cspray\Blogisthenics\Template\Renderer;
-use Cspray\Blogisthenics\Test\AsyncTestCase;
+use Cspray\Jasg\Template\ContextFactory;
+use Cspray\Jasg\Template\MethodDelegator;
+use Cspray\Jasg\Template\Renderer;
+use Cspray\Jasg\Test\AsyncTestCase;
 use function Amp\File\filesystem;
 use Zend\Escaper\Escaper;
 

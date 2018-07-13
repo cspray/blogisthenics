@@ -1,14 +1,16 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Jasg\Test;
 
-use Cspray\Blogisthenics\Engine;
-use Cspray\Blogisthenics\Page;
-use Cspray\Blogisthenics\PageParser;
-use Cspray\Blogisthenics\Site;
-use Cspray\Blogisthenics\Template\ContextFactory;
-use Cspray\Blogisthenics\Template\MethodDelegator;
-use Cspray\Blogisthenics\Template\Renderer;
+use Cspray\Jasg\Engine;
+use Cspray\Jasg\Page;
+use Cspray\Jasg\FileParser;
+use Cspray\Jasg\Site;
+use Cspray\Jasg\Engine\SiteGenerator;
+use Cspray\Jasg\Engine\SiteWriter;
+use Cspray\Jasg\Template\ContextFactory;
+use Cspray\Jasg\Template\MethodDelegator;
+use Cspray\Jasg\Template\Renderer;
 use DateTimeImmutable;
 use function Amp\Promise\wait;
 use function Amp\File\filesystem;
@@ -31,7 +33,7 @@ class EngineTest extends AsyncTestCase {
         $this->rootDir = __DIR__ . '/_dummy';
         $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
         $renderer = new Renderer($contextFactory);
-        $this->subject = new Engine($this->rootDir, new PageParser(), $renderer);
+        $this->subject = new Engine(new SiteGenerator($this->rootDir, new FileParser()), new SiteWriter($renderer));
         wait(filesystem()->rmdir($this->rootDir . '/_site'));
     }
 

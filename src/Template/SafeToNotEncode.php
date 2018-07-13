@@ -1,11 +1,6 @@
 <?php declare(strict_types=1);
 
-/**
- *
- */
-
-namespace Cspray\Blogisthenics\Template;
-
+namespace Cspray\Jasg\Template;
 
 final class SafeToNotEncode {
 

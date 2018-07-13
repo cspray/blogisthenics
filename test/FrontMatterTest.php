@@ -4,56 +4,15 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Jasg\Test;
 
-use Cspray\Blogisthenics\PageFrontMatter;
+use Cspray\Jasg\FrontMatter;
 use PHPUnit\Framework\TestCase;
 
-class PageFrontMatterTest extends TestCase {
-
-    public function testGettingLayoutKeyPresent() {
-        $frontMatter = new PageFrontMatter([
-           'layout' => 'something'
-        ]);
-
-        $this->assertEquals('something', $frontMatter->getLayout(), 'Expected value from the layout key');
-    }
-
-    public function testGettingTitleKeyPresent() {
-        $frontMatter = new PageFrontMatter([
-            'title' => 'The truth, tell it'
-        ]);
-
-        $this->assertEquals('The truth, tell it', $frontMatter->getTitle(), 'Expected value from the title key');
-    }
-
-    public function testGettingDescriptionKeyPresent() {
-        $frontMatter = new PageFrontMatter([
-            'description' => 'Make a choice'
-        ]);
-
-        $this->assertEquals('Make a choice', $frontMatter->getDescription(), 'Expected value from the description key');
-    }
-
-    public function definedGetterNames() {
-        return [
-            ['getLayout'],
-            ['getTitle'],
-            ['getDescription']
-        ];
-    }
-
-    /**
-     * @dataProvider definedGetterNames
-     */
-    public function testGettingDefinedGettersReturnsNullNoKeyPresent(string $method) {
-        $frontMatter = new PageFrontMatter([]);
-
-        $this->assertNull($frontMatter->$method(), 'Expected null because no layout key');
-    }
+class FrontMatterTest extends TestCase {
 
     public function testGettingCustomKeyPresent() {
-        $frontMatter = new PageFrontMatter([
+        $frontMatter = new FrontMatter([
             'foo' => 'bar'
         ]);
 
@@ -61,30 +20,30 @@ class PageFrontMatterTest extends TestCase {
     }
 
     public function testGettingCustomKeyNotPresent() {
-        $frontMatter = new PageFrontMatter([]);
+        $frontMatter = new FrontMatter([]);
 
         $this->assertNull($frontMatter->get('foo'), 'Expected to get null for custom key not present');
     }
 
     public function testCreatingWithNewData() {
-        $frontMatter = new PageFrontMatter([]);
+        $frontMatter = new FrontMatter([]);
         $subject = $frontMatter->withData(['title' => 'Shiny as chrome']);
 
-        $this->assertSame('Shiny as chrome', $subject->getTitle(), 'Execpted to get title from new PageFrontMatter');
+        $this->assertSame('Shiny as chrome', $subject->get('title'), 'Execpted to get title from new FrontMatter');
     }
 
     public function testCreatingWithNewDataHasAccessToOldData() {
-        $frontMatter = new PageFrontMatter([
+        $frontMatter = new FrontMatter([
             'so fresh' => 'so clean'
         ]);
         $subject = $frontMatter->withData(['title' => 'Outkast']);
 
         $this->assertSame('so clean', $subject->get('so fresh'), 'Expected to get our custom attribute passed to original constructor');
-        $this->assertSame('Outkast', $subject->getTitle(), 'Expected to get new data from our changed object');
+        $this->assertSame('Outkast', $subject->get('title'), 'Expected to get new data from our changed object');
     }
 
     public function testCreatingWithNewDataOverridesSameAttributes() {
-        $frontMatter = new PageFrontMatter([
+        $frontMatter = new FrontMatter([
             'foo' => 'bar'
         ]);
         $subject = $frontMatter->withData(['foo' => 'baz']);
@@ -93,7 +52,7 @@ class PageFrontMatterTest extends TestCase {
     }
 
     public function testHandlesComplexArrayStructures() {
-        $frontMatter = new PageFrontMatter([
+        $frontMatter = new FrontMatter([
             'a' => [
                 'b' => [
                     'c' => [

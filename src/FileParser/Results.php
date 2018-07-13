@@ -1,13 +1,8 @@
 <?php declare(strict_types=1);
 
-/**
- *
- */
+namespace Cspray\Jasg\FileParser;
 
-namespace Cspray\Blogisthenics;
-
-
-final class PageParserResults {
+final class Results {
 
     private $rawFrontMatter;
     private $contents;

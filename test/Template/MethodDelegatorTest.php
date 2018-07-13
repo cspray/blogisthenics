@@ -4,10 +4,10 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test\Template;
+namespace Cspray\Jasg\Test\Template;
 
-use Cspray\Blogisthenics\Template\Context;
-use Cspray\Blogisthenics\Template\MethodDelegator;
+use Cspray\Jasg\Template\Context;
+use Cspray\Jasg\Template\MethodDelegator;
 use PHPUnit\Framework\TestCase;
 use BadMethodCallException;
 use Zend\Escaper\Escaper;

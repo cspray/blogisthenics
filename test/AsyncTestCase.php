@@ -4,7 +4,7 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Jasg\Test;
 
 use Amp\Loop;
 use PHPUnit\Framework\Test;

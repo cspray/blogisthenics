@@ -1,6 +1,6 @@
 {
-  "name": "cspray/blogisthenics",
-  "description": "A static site generator built to be highly-extensible",
+  "name": "cspray/jasg",
+  "description": "Just a site generator.",
   "require": {
     "amphp/amp": "^2",
     "amphp/file": "^0.3",
@@ -12,12 +12,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Cspray\\Blogisthenics\\": "src"
+      "Cspray\\Jasg\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Cspray\\Blogisthenics\\Test\\": "test"
+      "Cspray\\Jasg\\Test\\": "test"
     }
   }
 }

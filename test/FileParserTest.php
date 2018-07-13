@@ -4,21 +4,21 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Jasg\Test;
 
-use Cspray\Blogisthenics\Exception\ParsingException;
-use Cspray\Blogisthenics\PageParser;
+use Cspray\Jasg\Exception\ParsingException;
+use Cspray\Jasg\FileParser;
 
-class PageParserTest extends AsyncTestCase {
+class FileParserTest extends AsyncTestCase {
 
     /**
-     * @var PageParser
+     * @var FileParser
      */
     private $parser;
 
     public function setUp() {
         parent::setUp();
-        $this->parser = new PageParser();
+        $this->parser = new FileParser();
     }
 
     public function testParsingBasicFrontMatterAndContent() {

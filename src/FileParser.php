@@ -1,16 +1,13 @@
 <?php declare(strict_types=1);
 
-/**
- *
- */
+namespace Cspray\Jasg;
 
-namespace Cspray\Blogisthenics;
+use Cspray\Jasg\FileParser\Results as ParserResults;
+use Cspray\Jasg\Exception\ParsingException;
 
-use Cspray\Blogisthenics\Exception\ParsingException;
+final class FileParser {
 
-final class PageParser {
-
-    public function parse(string $fileContents) : PageParserResults {
+    public function parse(string $fileContents) : ParserResults {
         list($hasFrontMatter, $frontMatterBuffer, $contentBuffer) = $this->parseIntoRawBuffers($fileContents);
         $frontMatter = [];
         if ($hasFrontMatter) {
@@ -21,7 +18,7 @@ final class PageParser {
             }
         }
 
-        return new PageParserResults($frontMatter, trim($contentBuffer));
+        return new ParserResults($frontMatter, trim($contentBuffer));
     }
 
     private function parseIntoRawBuffers(string $fileContents) : array {
