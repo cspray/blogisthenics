@@ -5,10 +5,10 @@
     "amphp/amp": "^2",
     "amphp/file": "^0.3",
     "zendframework/zend-escaper": "^2.6",
-    "danielstjules/stringy": "^3.1",
-    "adlawson/vfs": "^0.12.1"
+    "danielstjules/stringy": "^3.1"
   },
   "require-dev": {
+    "adlawson/vfs": "^0.12.1",
     "phpunit/phpunit": "^7"
   },
   "autoload": {
