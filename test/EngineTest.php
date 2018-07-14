@@ -2,6 +2,7 @@
 
 namespace Cspray\Jasg\Test;
 
+use Amp\File\BlockingDriver;
 use Cspray\Jasg\Engine;
 use Cspray\Jasg\Page;
 use Cspray\Jasg\FileParser;
@@ -11,10 +12,13 @@ use Cspray\Jasg\Engine\SiteWriter;
 use Cspray\Jasg\Template\ContextFactory;
 use Cspray\Jasg\Template\MethodDelegator;
 use Cspray\Jasg\Template\Renderer;
-use DateTimeImmutable;
-use function Amp\Promise\wait;
-use function Amp\File\filesystem;
+use Cspray\Jasg\Test\Support\VirtualFile;
+use Vfs\FileSystem as VfsFileSystem;
+use Vfs\Node\Directory as VfsDirectory;
+use Vfs\Node\File as VfsFile;
 use Zend\Escaper\Escaper;
+use DateTimeImmutable;
+use function Amp\File\filesystem;
 
 class EngineTest extends AsyncTestCase {
 
@@ -25,16 +29,98 @@ class EngineTest extends AsyncTestCase {
 
     private $rootDir;
 
+    private $vfs;
+
     /**
      * @throws \Throwable
      */
     public function setUp() {
         parent::setUp();
-        $this->rootDir = __DIR__ . '/_dummy';
+        $this->rootDir = 'vfs://install_dir';
         $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
         $renderer = new Renderer($contextFactory);
         $this->subject = new Engine(new SiteGenerator($this->rootDir, new FileParser()), new SiteWriter($renderer));
-        wait(filesystem()->rmdir($this->rootDir . '/_site'));
+        $this->vfs = VfsFileSystem::factory('vfs://');
+        $this->setupVirtualFileSystem();
+        $this->vfs->mount();
+        // we need to use the BlockingDriver because our files are stored  in-memory in this process
+        // and the default driver runs in a parallel process.
+        filesystem(new BlockingDriver());
+    }
+
+    public function tearDown() {
+        parent::tearDown();
+        $this->vfs->unmount();
+    }
+
+    private function setupVirtualFileSystem() {
+        $configFile = new VfsFile(json_encode([
+            'layout_directory' => '_layouts',
+            'output_directory' => '_site',
+            'default_layout' => 'default.html'
+        ]));
+
+        $articleLayout = (new VirtualFile())->withFrontMatter(['layout' => 'default.html'])
+            ->withContent('# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->content ?>')
+            ->build();
+        $articleLayout->setDateModified(new \DateTime('2018-07-02 22:01:35'));
+
+        $defaultLayoutContent = <<<'HTML'
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <?= $this->content ?>
+  </body>
+</html>
+HTML;
+        $defaultLayout = (new VirtualFile())->withFrontMatter([])->withContent($defaultLayoutContent)->build();
+        $defaultLayout->setDateModified(new \DateTime('2018-07-11 21:44:50'));
+
+        $theBlogArticleTitleContent = <<<'HTML'
+# <?= $this->title ?>
+
+The simplest blog post, Hello Blogisthenics! The layout is <?= $this->layout ?>.
+
+> Was written by <?= $this->date ?>
+HTML;
+
+        $theBlogArticleTitle = (new VirtualFile())->withFrontMatter([
+            'layout' => 'default.html',
+            'title' => 'The Blog Title',
+        ])->withContent($theBlogArticleTitleContent)->build();
+
+        $anotherBlogArticleContent = <<<'HTML'
+<h1><?= $this->title ?></h1>
+<div>
+  This post has no front matter but should still have a title and a <?= $this->date ?>
+</div>
+
+But _should not_ parse Markdown.
+HTML;
+        $anotherBlogArticle = new VfsFile($anotherBlogArticleContent);
+
+        $nestedLayout = (new VirtualFile())->withFrontMatter(['layout' => 'article.md'])
+            ->withContent('Some article that winds up in a nested layout')
+            ->build();
+
+        $installDir = new VfsDirectory([
+            '.jasg' => new VfsDirectory([
+                'config.json' => $configFile,
+            ]),
+            '_layouts' => new VfsDirectory([
+                'article.md.php' => $articleLayout,
+                'default.html.php' => $defaultLayout,
+            ]),
+            'posts' => new VfsDirectory([
+                '2018-06-23-the-blog-article-title.md.php' => $theBlogArticleTitle,
+                '2018-06-30-another-blog-article.html.php' => $anotherBlogArticle,
+                '2018-07-01-nested-layout-article.md.php' => $nestedLayout,
+            ]),
+        ]);
+        $this->vfs->get('/')->add('install_dir', $installDir);
     }
 
     public function testValidBuildSiteResolvesPromiseWithSite() {
@@ -95,7 +181,6 @@ class EngineTest extends AsyncTestCase {
     }
 
     public function sitePagesFrontMatters() : array {
-        $rootDir = __DIR__ . '/_dummy';
         return [
             ['getAllLayouts', 0, [
                 'date' => '2018-07-02'
@@ -107,19 +192,19 @@ class EngineTest extends AsyncTestCase {
                 'date' => '2018-06-23',
                 'layout' => 'default.html',
                 'title' => 'The Blog Title',
-                'output_path' => $rootDir . '/_site/posts/2018-06-23-the-blog-article-title.html'
+                'output_path' => 'vfs://install_dir/_site/posts/2018-06-23-the-blog-article-title.html'
             ]],
             ['getAllPages', 1, [
                 'date' => '2018-06-30',
                 'layout' => 'default.html',
                 'title' => 'Another Blog Article',
-                'output_path' => $rootDir . '/_site/posts/2018-06-30-another-blog-article.html'
+                'output_path' => 'vfs://install_dir/_site/posts/2018-06-30-another-blog-article.html'
             ]],
             ['getAllPages', 2, [
                 'date' => '2018-07-01',
                 'layout' => 'article.md',
                 'title' => 'Nested Layout Article',
-                'output_path' => $rootDir . '/_site/posts/2018-07-01-nested-layout-article.html'
+                'output_path' => 'vfs://install_dir/_site/posts/2018-07-01-nested-layout-article.html'
             ]]
         ];
     }
@@ -135,73 +220,10 @@ class EngineTest extends AsyncTestCase {
         $this->assertArraySubset($expectedFrontMatter, $frontMatter, false, 'Expected the front matter data to be an empty array');
     }
 
-    public function sitePagesContents() : array {
-        $defaultLayout = <<<'HTML'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <?= $this->content ?>
-  </body>
-</html>
-HTML;
-
-        $articleLayout = <<<'HTML'
-# <?= $this->title ?>
-
-<?= $this->content ?>
-HTML;
-
-
-        $firstArticle = <<<'HTML'
-# <?= $this->title ?>
-
-The simplest blog post, Hello Blogisthenics! The layout is <?= $this->layout ?>.
-
-> Was written by <?= $this->date ?>
-HTML;
-
-        $secondArticle = <<<'HTML'
-<h1><?= $this->title ?></h1>
-<div>
-  This post has no front matter but should still have a title and a <?= $this->date ?>
-</div>
-
-But _should not_ parse Markdown.
-HTML;
-
-        $thirdArticle = <<<'HTML'
-Some article that winds up in a nested layout
-HTML;
-
-        return [
-            ['getAllLayouts', 0, $defaultLayout],
-            ['getAllLayouts', 1, $articleLayout],
-            ['getAllPages', 0, $firstArticle],
-            ['getAllPages', 1, $secondArticle],
-            ['getAllPages', 2, $thirdArticle]
-        ];
-    }
-
-    /**
-     * @dataProvider sitePagesContents
-     */
-    public function testSitePagesContentsAreWrittenToTemplatePath(string $method, int $index, string $expectedContents) {
-        /** @var Site $site */
-        $site = yield $this->subject->buildSite();
-
-        /** @var Page $layoutPage */
-        $layoutPage = $site->$method()[$index];
-        $contents = yield filesystem()->get($layoutPage->getTemplate()->getPath());
-        $this->assertSame($expectedContents, $contents, 'Expected the contents to be written to the template path provided');
-    }
-
     public function sitePagesFormats() : array {
         return [
-            ['getAllLayouts', 0, 'html'],
-            ['getAllLayouts', 1, 'md'],
+            ['getAllLayouts', 0, 'md'],
+            ['getAllLayouts', 1, 'html'],
             ['getAllPages', 0, 'md'],
             ['getAllPages', 1, 'html'],
             ['getAllPages', 2, 'md']
@@ -223,11 +245,11 @@ HTML;
 
     public function sitePagesSourcePaths() : array {
         return [
-            ['getAllLayouts', 0, __DIR__  . '/_dummy/_layouts/default.html.php'],
-            ['getAllLayouts', 1, __DIR__ . '/_dummy/_layouts/article.md.php'],
-            ['getAllPages', 0, __DIR__ . '/_dummy/posts/2018-06-23-the-blog-article-title.md.php'],
-            ['getAllPages', 1, __DIR__ . '/_dummy/posts/2018-06-30-another-blog-article.html.php'],
-            ['getAllPages', 2, __DIR__ . '/_dummy/posts/2018-07-01-nested-layout-article.md.php']
+            ['getAllLayouts', 0, 'vfs://install_dir/_layouts/article.md.php'],
+            ['getAllLayouts', 1, 'vfs://install_dir/_layouts/default.html.php'],
+            ['getAllPages', 0, 'vfs://install_dir/posts/2018-06-23-the-blog-article-title.md.php'],
+            ['getAllPages', 1, 'vfs://install_dir/posts/2018-06-30-another-blog-article.html.php'],
+            ['getAllPages', 2, 'vfs://install_dir/posts/2018-07-01-nested-layout-article.md.php']
         ];
     }
 

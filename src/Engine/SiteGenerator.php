@@ -65,7 +65,7 @@ final class SiteGenerator {
     }
 
     private function isParseablePath(SplFileInfo $fileInfo) : bool {
-        $filePath = $fileInfo->getRealPath();
+        $filePath = $fileInfo->getPathname();
         $configPattern = '<^' . $this->configDirectory . '>';
         $outputPattern = '<^' . $this->rootDirectory . '/_site>';
         return $fileInfo->isFile()
@@ -76,7 +76,7 @@ final class SiteGenerator {
 
     private function doParsing(Site $site, SplFileInfo $fileInfo) : Promise {
         return call(function() use($site, $fileInfo) {
-            $filePath = $fileInfo->getRealPath();
+            $filePath = $fileInfo->getPathname();
             $fileName = basename($filePath);
 
             $parsedFile = yield $this->parseFile($filePath);
@@ -159,7 +159,7 @@ final class SiteGenerator {
     private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Promise {
         return call(function() use($parsedFile, $fileInfo) {
             $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
-            $format = explode('.', basename($fileInfo->getRealPath()))[1];
+            $format = explode('.', basename($fileInfo->getPathname()))[1];
             $contents = $parsedFile->getRawContents();
 
             yield filesystem()->put($tempName, $contents);

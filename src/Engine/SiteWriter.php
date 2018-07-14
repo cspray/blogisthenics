@@ -34,7 +34,8 @@ final class SiteWriter {
                     yield filesystem()->mkdir($outputDir, 0777, true);
                 }
 
-                yield filesystem()->put($outputFile, $this->buildTemplateContents($site, $page));
+                $contents = $this->buildTemplateContents($site, $page);
+                yield filesystem()->put($outputFile, $contents);
             }
         });
     }

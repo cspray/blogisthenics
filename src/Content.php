@@ -6,8 +6,6 @@ use DateTimeImmutable;
 
 interface Content {
 
-    public function getType() : string;
-
     public function getDate() : DateTimeImmutable;
 
     public function getSourcePath() : string;

@@ -17,11 +17,11 @@ final class Site {
     }
 
     public function addContent(Content $content) {
-        switch ($content->getType()) {
-            case ContentType::LAYOUT:
+        switch (get_class($content)) {
+            case Layout::class:
                 $this->layouts[] = $content;
                 break;
-            case ContentType::PAGE:
+            case Page::class:
                 $this->pages[] = $content;
                 break;
         }
