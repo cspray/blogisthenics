@@ -26,20 +26,17 @@ use function Stringy\create as s;
  */
 final class SiteGenerator {
 
-    private $configDirectory;
     private $parser;
     private $rootDirectory;
 
     public function __construct(string $rootDirectory, FileParser $pageParser) {
         $this->rootDirectory = $rootDirectory;
-        $this->configDirectory = $rootDirectory . '/.jasg';
         $this->parser = $pageParser;
     }
 
-    public function generateSite() : Promise {
-        return call(function() {
-            $siteConfig = yield $this->getSiteConfiguration();
-            $site = new Site($siteConfig);
+    public function generateSite(SiteConfiguration $siteConfiguration) : Promise {
+        return call(function() use($siteConfiguration) {
+            $site = new Site($siteConfiguration);
 
             foreach ($this->getSourceIterator() as $fileInfo) {
                 if ($this->isParseablePath($fileInfo)) {
@@ -51,13 +48,6 @@ final class SiteGenerator {
         });
     }
 
-    private function getSiteConfiguration() : Promise {
-        return call(function() {
-            $rawConfig = yield filesystem()->get($this->configDirectory . '/config.json');
-            $config = json_decode($rawConfig, true);
-            return new SiteConfiguration($config);
-        });
-    }
 
     private function getSourceIterator() : Iterator {
         $directoryIterator = new RecursiveDirectoryIterator($this->rootDirectory);
@@ -66,7 +56,7 @@ final class SiteGenerator {
 
     private function isParseablePath(SplFileInfo $fileInfo) : bool {
         $filePath = $fileInfo->getPathname();
-        $configPattern = '<^' . $this->configDirectory . '>';
+        $configPattern = '<^' . $this->rootDirectory . '/.jasg' . '>';
         $outputPattern = '<^' . $this->rootDirectory . '/_site>';
         return $fileInfo->isFile()
             && basename($filePath)[0] !== '.'

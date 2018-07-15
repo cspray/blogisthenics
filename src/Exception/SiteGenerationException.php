@@ -2,4 +2,4 @@
 
 namespace Cspray\Jasg\Exception;
 
-class ParsingException extends JasgException {}
+class SiteGenerationException extends JasgException {}

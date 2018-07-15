@@ -2,8 +2,11 @@
 
 namespace Cspray\Jasg\Test;
 
+use function Amp\call;
 use Amp\File\BlockingDriver;
 use Cspray\Jasg\Engine;
+use Cspray\Jasg\Exception\SiteGenerationException;
+use Cspray\Jasg\Exception\SiteValidationException;
 use Cspray\Jasg\Page;
 use Cspray\Jasg\FileParser;
 use Cspray\Jasg\Site;
@@ -12,10 +15,13 @@ use Cspray\Jasg\Engine\SiteWriter;
 use Cspray\Jasg\Template\ContextFactory;
 use Cspray\Jasg\Template\MethodDelegator;
 use Cspray\Jasg\Template\Renderer;
-use Cspray\Jasg\Test\Support\VirtualFile;
+use Cspray\Jasg\Test\Support\AbstractTestSite;
+use Cspray\Jasg\Test\Support\EmptyLayoutDirectoryConfigurationTestSite;
+use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
+use Cspray\Jasg\Test\Support\EmptyOutputDirectoryConfigurationTestSite;
+use Cspray\Jasg\Test\Support\PageSpecifiesNotFoundLayoutTestSite;
+use Cspray\Jasg\Test\Support\StandardTestSite;
 use Vfs\FileSystem as VfsFileSystem;
-use Vfs\Node\Directory as VfsDirectory;
-use Vfs\Node\File as VfsFile;
 use Zend\Escaper\Escaper;
 use DateTimeImmutable;
 use function Amp\File\filesystem;
@@ -39,9 +45,12 @@ class EngineTest extends AsyncTestCase {
         $this->rootDir = 'vfs://install_dir';
         $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
         $renderer = new Renderer($contextFactory);
-        $this->subject = new Engine(new SiteGenerator($this->rootDir, new FileParser()), new SiteWriter($renderer));
+        $this->subject = new Engine(
+            $this->rootDir,
+            new SiteGenerator($this->rootDir, new FileParser()),
+            new SiteWriter($renderer)
+        );
         $this->vfs = VfsFileSystem::factory('vfs://');
-        $this->setupVirtualFileSystem();
         $this->vfs->mount();
         // we need to use the BlockingDriver because our files are stored  in-memory in this process
         // and the default driver runs in a parallel process.
@@ -53,83 +62,19 @@ class EngineTest extends AsyncTestCase {
         $this->vfs->unmount();
     }
 
-    private function setupVirtualFileSystem() {
-        $configFile = new VfsFile(json_encode([
-            'layout_directory' => '_layouts',
-            'output_directory' => '_site',
-            'default_layout' => 'default.html'
-        ]));
-
-        $articleLayout = (new VirtualFile())->withFrontMatter(['layout' => 'default.html'])
-            ->withContent('# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->content ?>')
-            ->build();
-        $articleLayout->setDateModified(new \DateTime('2018-07-02 22:01:35'));
-
-        $defaultLayoutContent = <<<'HTML'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <?= $this->content ?>
-  </body>
-</html>
-HTML;
-        $defaultLayout = (new VirtualFile())->withFrontMatter([])->withContent($defaultLayoutContent)->build();
-        $defaultLayout->setDateModified(new \DateTime('2018-07-11 21:44:50'));
-
-        $theBlogArticleTitleContent = <<<'HTML'
-# <?= $this->title ?>
-
-The simplest blog post, Hello Blogisthenics! The layout is <?= $this->layout ?>.
-
-> Was written by <?= $this->date ?>
-HTML;
-
-        $theBlogArticleTitle = (new VirtualFile())->withFrontMatter([
-            'layout' => 'default.html',
-            'title' => 'The Blog Title',
-        ])->withContent($theBlogArticleTitleContent)->build();
-
-        $anotherBlogArticleContent = <<<'HTML'
-<h1><?= $this->title ?></h1>
-<div>
-  This post has no front matter but should still have a title and a <?= $this->date ?>
-</div>
-
-But _should not_ parse Markdown.
-HTML;
-        $anotherBlogArticle = new VfsFile($anotherBlogArticleContent);
-
-        $nestedLayout = (new VirtualFile())->withFrontMatter(['layout' => 'article.md'])
-            ->withContent('Some article that winds up in a nested layout')
-            ->build();
-
-        $installDir = new VfsDirectory([
-            '.jasg' => new VfsDirectory([
-                'config.json' => $configFile,
-            ]),
-            '_layouts' => new VfsDirectory([
-                'article.md.php' => $articleLayout,
-                'default.html.php' => $defaultLayout,
-            ]),
-            'posts' => new VfsDirectory([
-                '2018-06-23-the-blog-article-title.md.php' => $theBlogArticleTitle,
-                '2018-06-30-another-blog-article.html.php' => $anotherBlogArticle,
-                '2018-07-01-nested-layout-article.md.php' => $nestedLayout,
-            ]),
-        ]);
-        $this->vfs->get('/')->add('install_dir', $installDir);
+    private function useStandardTestSite() {
+        (new StandardTestSite())->populateVirtualFileSystem($this->vfs);
     }
 
     public function testValidBuildSiteResolvesPromiseWithSite() {
+        $this->useStandardTestSite();
         $site = yield $this->subject->buildSite();
 
         $this->assertInstanceOf(Site::class, $site, 'Expected buildSitePromise to resolve with a Promise');
     }
 
     public function testSiteConfigurationComesFromDotBlogisthenicsFolder() {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
         $siteConfig = $site->getConfiguration();
@@ -139,6 +84,7 @@ HTML;
     }
 
     public function testSiteHasLayoutPageCount() {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
@@ -147,6 +93,7 @@ HTML;
     }
 
     public function testSiteHasNonLayoutPagesCount() {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
@@ -172,6 +119,7 @@ HTML;
      * @throws \Exception
      */
     public function testSitePagesHaveCorrectDate(string $method, int $index, DateTimeImmutable $expectedDate) {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
         $date = $site->$method()[$index]->getDate();
@@ -213,6 +161,7 @@ HTML;
      * @dataProvider sitePagesFrontMatters
      */
     public function testSitePagesHaveCorrectRawFrontMatter(string $method, int $index, array $expectedFrontMatter) {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
         $frontMatter = iterator_to_array($site->$method()[$index]->getFrontMatter());
@@ -234,6 +183,7 @@ HTML;
      * @dataProvider sitePagesFormats
      */
     public function testSitePagesFormatIsAlwaysPresent(string $method, int $index, string $expectedFormat) {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
@@ -257,6 +207,7 @@ HTML;
      * @dataProvider sitePagesSourcePaths
      */
     public function testSitePagesSourcePathIsAccurate(string $method, int $index, string $expectedSourcePath) {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
         /** @var Page $layoutPage */
@@ -265,6 +216,7 @@ HTML;
     }
 
     public function testSitePagesOutputFilesExists() {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
@@ -279,9 +231,9 @@ HTML;
 
     public function sitePagesOutputContents() : array {
         return [
-            [0, __DIR__ . '/_fixtures/2018-06-23-the-blog-article-title.html'],
-            [1, __DIR__ . '/_fixtures/2018-06-30-another-blog-article.html'],
-            [2, __DIR__ . '/_fixtures/2018-07-01-nested-layout-article.html']
+            [0, __DIR__ . '/_fixtures/standard_test_site/2018-06-23-the-blog-article-title.html'],
+            [1, __DIR__ . '/_fixtures/standard_test_site/2018-06-30-another-blog-article.html'],
+            [2, __DIR__ . '/_fixtures/standard_test_site/2018-07-01-nested-layout-article.html']
         ];
     }
 
@@ -289,6 +241,7 @@ HTML;
      * @dataProvider sitePagesOutputContents
      */
     public function testSitePagesOutputFileHasCorrectContent(int $pageIndex, string $filePath) {
+        $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
         $actualContents = yield filesystem()->get($site->getAllPages()[$pageIndex]->getFrontMatter()->get('output_path'));
@@ -297,6 +250,48 @@ HTML;
             trim($expectedContents),
             trim($actualContents),
             'Expected the content for page ' . $pageIndex . ' to match fixture at ' . $filePath
+        );
+    }
+
+    public function siteValidationErrors() : array {
+        return [
+            [
+                'The layouts directory in your .jasg/config.json configuration, "_layouts", does not exist.',
+                new NotFoundLayoutDirectoryConfigurationTestSite()
+            ],
+            [
+                'There is no output directory specified in your .jasg/config.json configuration.',
+                new EmptyOutputDirectoryConfigurationTestSite()
+            ],
+            [
+                'There is no layouts directory specified in your .jasg/config.json configuration.',
+                new EmptyLayoutDirectoryConfigurationTestSite()
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider siteValidationErrors
+     */
+    public function testSiteValidationErrors(string $expectedMessage, AbstractTestSite $testSite) {
+        return $this->assertExceptionThrown(
+            SiteValidationException::class,
+            $expectedMessage,
+            function() use($testSite) {
+                $testSite->populateVirtualFilesystem($this->vfs);
+                yield $this->subject->buildSite();
+            }
+        );
+    }
+
+    public function testSitePageWithLayoutNotFoundThrowsError() {
+        return $this->assertExceptionThrown(
+            SiteGenerationException::class,
+            'The page "2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
+            function() {
+                (new PageSpecifiesNotFoundLayoutTestSite())->populateVirtualFileSystem($this->vfs);
+                yield $this->subject->buildSite();
+            }
         );
     }
 

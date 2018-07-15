@@ -2,6 +2,7 @@
 
 namespace Cspray\Jasg\Engine;
 
+use Cspray\Jasg\Exception\SiteGenerationException;
 use Cspray\Jasg\FrontMatter;
 use Cspray\Jasg\Page;
 use Cspray\Jasg\Template\Renderer;
@@ -67,7 +68,12 @@ final class SiteWriter {
         $layoutName = $page->getFrontMatter()->get('layout');
 
         while ($layoutName !== null) {
-            $layout = $pages[] = $site->findLayout((string) $layoutName);
+            $layout = $site->findLayout((string) $layoutName);
+            if (is_null($layout)) {
+                $msg = 'The page "' . basename($page->getSourcePath() . '" specified a layout "' . $layoutName . '" but the layout is not present.');
+                throw new SiteGenerationException($msg);
+            }
+            $pages[] = $layout;
             $layoutName = $layout->getFrontMatter()->get('layout');
         }
 
