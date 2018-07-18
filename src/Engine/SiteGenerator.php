@@ -10,6 +10,7 @@ use Cspray\Jasg\FileParser;
 use Cspray\Jasg\FileParser\Results as ParserResults;
 use Cspray\Jasg\Site;
 use Cspray\Jasg\SiteConfiguration;
+use Cspray\Jasg\StaticAsset;
 use Cspray\Jasg\Template;
 use Amp\Promise;
 use DateTimeImmutable;
@@ -41,6 +42,20 @@ final class SiteGenerator {
             foreach ($this->getSourceIterator() as $fileInfo) {
                 if ($this->isParseablePath($fileInfo)) {
                     yield $this->doParsing($site, $fileInfo);
+                } else if ($this->isStaticAssetPath($fileInfo)) {
+                    $filePath = $fileInfo->getPathname();
+                    $mtime = yield filesystem()->mtime($filePath);
+                    $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
+                    $filePathParts = explode('.', basename($filePath));
+                    $staticContent = new StaticAsset(
+                        $filePath,
+                        (new DateTimeImmutable())->setTimestamp($mtime),
+                        new FrontMatter([
+                            'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
+                        ]),
+                        new Template(array_pop($filePathParts), $filePath)
+                    );
+                    $site->addContent($staticContent);
                 }
             }
 
@@ -56,12 +71,25 @@ final class SiteGenerator {
 
     private function isParseablePath(SplFileInfo $fileInfo) : bool {
         $filePath = $fileInfo->getPathname();
-        $configPattern = '<^' . $this->rootDirectory . '/.jasg' . '>';
-        $outputPattern = '<^' . $this->rootDirectory . '/_site>';
+        $fileParts = explode('.', basename($filePath));
+        $fileExtension = array_pop($fileParts);
         return $fileInfo->isFile()
             && basename($filePath)[0] !== '.'
-            && !preg_match($configPattern, $filePath)
-            && !preg_match($outputPattern, $filePath);
+            && !$this->isConfigOrSitePath($filePath)
+            && $fileExtension === 'php';
+    }
+
+    private function isStaticAssetPath(SplFileInfo $fileInfo) : bool {
+        $filePath = $fileInfo->getPathname();
+        return $fileInfo->isFile()
+            && !$this->isConfigOrSitePath($filePath);
+    }
+
+    private function isConfigOrSitePath(string $filePath) {
+        $configPattern = '<^' . $this->rootDirectory . '/.jasg' . '>';
+        $outputPattern = '<^' . $this->rootDirectory . '/_site>';
+        return preg_match($configPattern, $filePath) || preg_match($outputPattern, $filePath);
+
     }
 
     private function doParsing(Site $site, SplFileInfo $fileInfo) : Promise {

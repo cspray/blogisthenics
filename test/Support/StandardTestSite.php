@@ -56,6 +56,12 @@ HTML;
                     new \DateTime('2018-07-11 21:44:50')
                 )
             ]),
+            'css' => $this->dir([
+                'styles.css' => $this->file('body { font-size: 1em; }', new \DateTime('2018-07-15 13:00:00'))
+            ]),
+            'js' => $this->dir([
+                'code.js' => $this->file('<script>alert("I ran!")</script>', new \DateTime('2018-07-15 14:00:00'))
+            ]),
             'posts' => $this->dir([
                 '2018-06-23-the-blog-article-title.md.php' => $this->content(
                     ['title' => 'The Blog Title'],

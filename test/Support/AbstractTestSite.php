@@ -26,8 +26,13 @@ abstract class AbstractTestSite {
         return new VfsDirectory($nodes);
     }
 
-    protected function file(string $contents = '') : VfsFile {
-        return new VfsFile($contents);
+    protected function file(string $contents = '', \DateTime $mtime = null) : VfsFile {
+        $file = new VfsFile($contents);
+        if (isset($mtime)) {
+            $file->setDateModified($mtime);
+        }
+
+        return $file;
     }
 
 

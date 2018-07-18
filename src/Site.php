@@ -6,6 +6,7 @@ final class Site {
 
     private $layouts = [];
     private $pages = [];
+    private $staticAssets = [];
     private $siteConfiguration;
 
     public function __construct(SiteConfiguration $siteConfiguration) {
@@ -23,6 +24,9 @@ final class Site {
                 break;
             case Page::class:
                 $this->pages[] = $content;
+                break;
+            case StaticAsset::class:
+                $this->staticAssets[] = $content;
                 break;
         }
     }
@@ -46,6 +50,10 @@ final class Site {
             return ($a->getDate() > $b->getDate()) ? 1 : -1;
         });
         return $pages;
+    }
+
+    public function getAllStaticAssets() : array {
+        return $this->staticAssets;
     }
 
 }

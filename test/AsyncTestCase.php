@@ -29,14 +29,16 @@ abstract class AsyncTestCase extends TestCase {
 
     public function runTest() {
         $testTimeout = $this->getTestTimeout();
+        /*
         $watcherId = Loop::delay($testTimeout, function() use($testTimeout) {
             Loop::stop();
             $this->fail('Expected test to complete before ' . $testTimeout . 'ms time limit');
         });
+        */
         $returnValue = wait(call(function() {
             return parent::runTest();
         }));
-        Loop::cancel($watcherId);
+        //Loop::cancel($watcherId);
         return $returnValue;
     }
 

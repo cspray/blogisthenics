@@ -2,7 +2,6 @@
 
 namespace Cspray\Jasg\Test;
 
-use function Amp\call;
 use Amp\File\BlockingDriver;
 use Cspray\Jasg\Engine;
 use Cspray\Jasg\Exception\SiteGenerationException;
@@ -21,6 +20,7 @@ use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\EmptyOutputDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Jasg\Test\Support\StandardTestSite;
+use Cspray\Jasg\Test\Support\StaticAssetTestSite;
 use Vfs\FileSystem as VfsFileSystem;
 use Zend\Escaper\Escaper;
 use DateTimeImmutable;
@@ -83,7 +83,7 @@ class EngineTest extends AsyncTestCase {
         $this->assertSame('default.html', $siteConfig->getDefaultLayoutName(), 'Default layout is not set from config');
     }
 
-    public function testSiteHasLayoutPageCount() {
+    public function testSiteLayoutCount() {
         $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
@@ -92,12 +92,20 @@ class EngineTest extends AsyncTestCase {
         $this->assertCount(2, $layouts, 'Expected there to be 1 layout added');
     }
 
-    public function testSiteHasNonLayoutPagesCount() {
+    public function testSitePageCount() {
         $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
 
         $this->assertCount(3, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
+    }
+
+    public function testSiteStaticAssetCount() {
+        $this->useStandardTestSite();
+        /** @var Site $site */
+        $site = yield $this->subject->buildSite();
+
+        $this->assertCount(2, $site->getAllStaticAssets(), 'Expected to have 2 static asset');
     }
 
     /**
@@ -110,7 +118,9 @@ class EngineTest extends AsyncTestCase {
             ['getAllLayouts', 1, new DateTimeImmutable('2018-07-11 21:44:50')],
             ['getAllPages', 0, new DateTimeImmutable('2018-06-23')],
             ['getAllPages', 1, new DateTimeImmutable('2018-06-30')],
-            ['getAllPages', 2, new DateTimeImmutable('2018-07-01')]
+            ['getAllPages', 2, new DateTimeImmutable('2018-07-01')],
+            ['getAllStaticAssets', 0, new DateTimeImmutable('2018-07-15 13:00:00')],
+            ['getAllStaticAssets', 1, new DateTimeImmutable('2018-07-15 14:00:00')]
         ];
     }
 
@@ -153,6 +163,12 @@ class EngineTest extends AsyncTestCase {
                 'layout' => 'article.md',
                 'title' => 'Nested Layout Article',
                 'output_path' => 'vfs://install_dir/_site/posts/2018-07-01-nested-layout-article.html'
+            ]],
+            ['getAllStaticAssets', 0, [
+                'output_path' => 'vfs://install_dir/_site/css/styles.css'
+            ]],
+            ['getAllStaticAssets', 1, [
+                'output_path' => 'vfs://install_dir/_site/js/code.js'
             ]]
         ];
     }
@@ -175,7 +191,9 @@ class EngineTest extends AsyncTestCase {
             ['getAllLayouts', 1, 'html'],
             ['getAllPages', 0, 'md'],
             ['getAllPages', 1, 'html'],
-            ['getAllPages', 2, 'md']
+            ['getAllPages', 2, 'md'],
+            ['getAllStaticAssets', 0, 'css'],
+            ['getAllStaticAssets', 1, 'js']
         ];
     }
 
@@ -199,7 +217,9 @@ class EngineTest extends AsyncTestCase {
             ['getAllLayouts', 1, 'vfs://install_dir/_layouts/default.html.php'],
             ['getAllPages', 0, 'vfs://install_dir/posts/2018-06-23-the-blog-article-title.md.php'],
             ['getAllPages', 1, 'vfs://install_dir/posts/2018-06-30-another-blog-article.html.php'],
-            ['getAllPages', 2, 'vfs://install_dir/posts/2018-07-01-nested-layout-article.md.php']
+            ['getAllPages', 2, 'vfs://install_dir/posts/2018-07-01-nested-layout-article.md.php'],
+            ['getAllStaticAssets', 0, 'vfs://install_dir/css/styles.css'],
+            ['getAllStaticAssets', 1, 'vfs://install_dir/js/code.js']
         ];
     }
 
@@ -215,36 +235,28 @@ class EngineTest extends AsyncTestCase {
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
     }
 
-    public function testSitePagesOutputFilesExists() {
-        $this->useStandardTestSite();
-        /** @var Site $site */
-        $site = yield $this->subject->buildSite();
-
-        /** @var Page $page */
-        foreach ($site->getAllPages() as $page) {
-            $filePath = (string) $page->getFrontMatter()->get('output_path');
-
-            $fileExists = yield filesystem()->exists($filePath);
-            $this->assertTrue($fileExists, 'Expected to see pages written to disk at configured output paths');
-        }
-    }
-
     public function sitePagesOutputContents() : array {
         return [
-            [0, __DIR__ . '/_fixtures/standard_test_site/2018-06-23-the-blog-article-title.html'],
-            [1, __DIR__ . '/_fixtures/standard_test_site/2018-06-30-another-blog-article.html'],
-            [2, __DIR__ . '/_fixtures/standard_test_site/2018-07-01-nested-layout-article.html']
+            ['getAllPages', 0, __DIR__ . '/_fixtures/standard_test_site/2018-06-23-the-blog-article-title.html'],
+            ['getAllPages', 1, __DIR__ . '/_fixtures/standard_test_site/2018-06-30-another-blog-article.html'],
+            ['getAllPages', 2, __DIR__ . '/_fixtures/standard_test_site/2018-07-01-nested-layout-article.html'],
+            ['getAllStaticAssets', 0, __DIR__ . '/_fixtures/standard_test_site/styles.css'],
+            ['getAllStaticAssets', 1, __DIR__ . '/_fixtures/standard_test_site/code.js']
         ];
     }
 
     /**
      * @dataProvider sitePagesOutputContents
      */
-    public function testSitePagesOutputFileHasCorrectContent(int $pageIndex, string $filePath) {
+    public function testSitePagesOutputFileHasCorrectContent(string $method, int $pageIndex, string $filePath) {
         $this->useStandardTestSite();
         /** @var Site $site */
         $site = yield $this->subject->buildSite();
-        $actualContents = yield filesystem()->get($site->getAllPages()[$pageIndex]->getFrontMatter()->get('output_path'));
+        $outputPath = $site->$method()[$pageIndex]->getFrontMatter()->get('output_path');
+        $fileExists = yield filesystem()->exists($outputPath);
+        $this->assertTrue($fileExists, 'A file was expected to exist at the output path');
+
+        $actualContents = yield filesystem()->get($outputPath);
         $expectedContents = yield filesystem()->get($filePath);
         $this->assertEquals(
             trim($expectedContents),
