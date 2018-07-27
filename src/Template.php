@@ -2,22 +2,12 @@
 
 namespace Cspray\Jasg;
 
-class Template {
+use Amp\Promise;
 
-    private $format;
-    private $path;
+interface Template {
 
-    public function __construct(string $format, string $path) {
-        $this->format = $format;
-        $this->path = $path;
-    }
+    public function getFormat() : string;
 
-    public function getFormat() : string {
-        return $this->format;
-    }
-
-    public function getPath() : string {
-        return $this->path;
-    }
+    public function render(Template\Context $context) : Promise;
 
 }

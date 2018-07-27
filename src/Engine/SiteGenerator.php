@@ -12,6 +12,8 @@ use Cspray\Jasg\Site;
 use Cspray\Jasg\SiteConfiguration;
 use Cspray\Jasg\StaticAsset;
 use Cspray\Jasg\Template;
+use Cspray\Jasg\Template\PhpTemplate;
+use Cspray\Jasg\Template\StaticTemplate;
 use Amp\Promise;
 use DateTimeImmutable;
 use Iterator;
@@ -53,7 +55,7 @@ final class SiteGenerator {
                         new FrontMatter([
                             'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
                         ]),
-                        new Template(array_pop($filePathParts), $filePath)
+                        new StaticTemplate(array_pop($filePathParts), $filePath)
                     );
                     $site->addContent($staticContent);
                 }
@@ -181,7 +183,7 @@ final class SiteGenerator {
             $contents = $parsedFile->getRawContents();
 
             yield filesystem()->put($tempName, $contents);
-            return new Template($format, $tempName);
+            return new PhpTemplate($format, $tempName);
         });
     }
 

@@ -44,11 +44,10 @@ class EngineTest extends AsyncTestCase {
         parent::setUp();
         $this->rootDir = 'vfs://install_dir';
         $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
-        $renderer = new Renderer($contextFactory);
         $this->subject = new Engine(
             $this->rootDir,
             new SiteGenerator($this->rootDir, new FileParser()),
-            new SiteWriter($renderer)
+            new SiteWriter($contextFactory)
         );
         $this->vfs = VfsFileSystem::factory('vfs://');
         $this->vfs->mount();
