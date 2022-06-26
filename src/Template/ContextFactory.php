@@ -1,7 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace Cspray\Jasg\Template;
-use Zend\Escaper\Escaper;
+
+use Laminas\Escaper\Escaper;
 
 final class ContextFactory {
 

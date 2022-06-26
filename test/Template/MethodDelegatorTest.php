@@ -8,10 +8,13 @@ namespace Cspray\Jasg\Test\Template;
 
 use Cspray\Jasg\Template\Context;
 use Cspray\Jasg\Template\MethodDelegator;
+use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
 use BadMethodCallException;
-use Zend\Escaper\Escaper;
 
+/**
+ * @covers \Cspray\Jasg\Template\MethodDelegator
+ */
 class MethodDelegatorTest extends TestCase {
 
     private function context() : Context {

@@ -2,9 +2,9 @@
 
 namespace Cspray\Jasg\Template;
 
-use Zend\Escaper\Escaper;
 use ArrayAccess;
 use BadMethodCallException;
+use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
 

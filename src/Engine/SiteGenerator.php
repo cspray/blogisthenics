@@ -14,14 +14,11 @@ use Cspray\Jasg\StaticAsset;
 use Cspray\Jasg\Template;
 use Cspray\Jasg\Template\PhpTemplate;
 use Cspray\Jasg\Template\StaticTemplate;
-use Amp\Promise;
 use DateTimeImmutable;
 use Iterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
-use function Amp\call;
-use function Amp\File\filesystem;
 use function Stringy\create as s;
 
 /**
@@ -37,32 +34,30 @@ final class SiteGenerator {
         $this->parser = $pageParser;
     }
 
-    public function generateSite(SiteConfiguration $siteConfiguration) : Promise {
-        return call(function() use($siteConfiguration) {
-            $site = new Site($siteConfiguration);
+    public function generateSite(SiteConfiguration $siteConfiguration) : Site {
+        $site = new Site($siteConfiguration);
 
-            foreach ($this->getSourceIterator() as $fileInfo) {
-                if ($this->isParseablePath($fileInfo)) {
-                    yield $this->doParsing($site, $fileInfo);
-                } else if ($this->isStaticAssetPath($fileInfo)) {
-                    $filePath = $fileInfo->getPathname();
-                    $mtime = yield filesystem()->mtime($filePath);
-                    $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
-                    $filePathParts = explode('.', basename($filePath));
-                    $staticContent = new StaticAsset(
-                        $filePath,
-                        (new DateTimeImmutable())->setTimestamp($mtime),
-                        new FrontMatter([
-                            'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
-                        ]),
-                        new StaticTemplate(array_pop($filePathParts), $filePath)
-                    );
-                    $site->addContent($staticContent);
-                }
+        foreach ($this->getSourceIterator() as $fileInfo) {
+            if ($this->isParseablePath($fileInfo)) {
+                $this->doParsing($site, $fileInfo);
+            } else if ($this->isStaticAssetPath($fileInfo)) {
+                $filePath = $fileInfo->getPathname();
+                $mtime = filemtime($filePath);
+                $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
+                $filePathParts = explode('.', basename($filePath));
+                $staticContent = new StaticAsset(
+                    $filePath,
+                    (new DateTimeImmutable())->setTimestamp($mtime),
+                    new FrontMatter([
+                        'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
+                    ]),
+                    new StaticTemplate(array_pop($filePathParts), $filePath)
+                );
+                $site->addContent($staticContent);
             }
+        }
 
-            return $site;
-        });
+        return $site;
     }
 
 
@@ -94,50 +89,44 @@ final class SiteGenerator {
 
     }
 
-    private function doParsing(Site $site, SplFileInfo $fileInfo) : Promise {
-        return call(function() use($site, $fileInfo) {
-            $filePath = $fileInfo->getPathname();
-            $fileName = basename($filePath);
+    private function doParsing(Site $site, SplFileInfo $fileInfo) : void {
+        $filePath = $fileInfo->getPathname();
+        $fileName = basename($filePath);
 
-            $parsedFile = yield $this->parseFile($filePath);
-            $pageDate = yield $this->getPageDate($filePath, $fileName);
-            $frontMatter = $this->buildFrontMatter(
-                $site->getConfiguration(),
-                $parsedFile,
-                $pageDate,
-                $filePath,
-                $fileName
-            );
-            $template = yield $this->createTemplate($fileInfo, $parsedFile);
-            $content = $this->createContent(
-                $site->getConfiguration(),
-                $filePath,
-                $pageDate,
-                $frontMatter,
-                $template
-            );
+        $parsedFile = $this->parseFile($filePath);
+        $pageDate = $this->getPageDate($filePath, $fileName);
+        $frontMatter = $this->buildFrontMatter(
+            $site->getConfiguration(),
+            $parsedFile,
+            $pageDate,
+            $filePath,
+            $fileName
+        );
+        $template = $this->createTemplate($fileInfo, $parsedFile);
+        $content = $this->createContent(
+            $site->getConfiguration(),
+            $filePath,
+            $pageDate,
+            $frontMatter,
+            $template
+        );
 
-            $site->addContent($content);
-        });
+        $site->addContent($content);
     }
 
-    private function parseFile(string $filePath) : Promise {
-        return call(function() use($filePath) {
-            $rawContents = yield filesystem()->get($filePath);
-            return $this->parser->parse($rawContents);
-        });
+    private function parseFile(string $filePath) : FileParser\Results {
+        $rawContents = file_get_contents($filePath);
+        return $this->parser->parse($rawContents);
     }
 
-    private function getPageDate(string $filePath, string $fileName) : Promise {
-        return call(function() use($filePath, $fileName) {
-            $datePattern = '/(^[0-9]{4}\-[0-9]{2}\-[0-9]{2})/';
-            if (preg_match($datePattern, $fileName, $matches)) {
-                return new DateTimeImmutable($matches[0]);
-            } else {
-                $modificationTime = yield filesystem()->mtime($filePath);
-                return (new DateTimeImmutable())->setTimestamp($modificationTime);
-            }
-        });
+    private function getPageDate(string $filePath, string $fileName) : DateTimeImmutable {
+        $datePattern = '/(^[0-9]{4}\-[0-9]{2}\-[0-9]{2})/';
+        if (preg_match($datePattern, $fileName, $matches)) {
+            return new DateTimeImmutable($matches[0]);
+        } else {
+            $modificationTime = filemtime($filePath);
+            return (new DateTimeImmutable())->setTimestamp($modificationTime);
+        }
     }
 
     private function buildFrontMatter(
@@ -176,15 +165,13 @@ final class SiteGenerator {
         return (bool) preg_match($layoutsPath, $filePath);
     }
 
-    private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Promise {
-        return call(function() use($parsedFile, $fileInfo) {
-            $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
-            $format = explode('.', basename($fileInfo->getPathname()))[1];
-            $contents = $parsedFile->getRawContents();
+    private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
+        $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
+        $format = explode('.', basename($fileInfo->getPathname()))[1];
+        $contents = $parsedFile->getRawContents();
 
-            yield filesystem()->put($tempName, $contents);
-            return new PhpTemplate($format, $tempName);
-        });
+        file_put_contents($tempName, $contents);
+        return new PhpTemplate($format, $tempName);
     }
 
     private function createContent(

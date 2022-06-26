@@ -20,7 +20,7 @@ class StaticTemplate implements Template {
         return $this->format;
     }
 
-    public function render(Template\Context $context): Promise {
-        return filesystem()->get($this->filePath);
+    public function render(Template\Context $context): string {
+        return file_get_contents($this->filePath);
     }
 }

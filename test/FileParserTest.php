@@ -8,15 +8,19 @@ namespace Cspray\Jasg\Test;
 
 use Cspray\Jasg\Exception\ParsingException;
 use Cspray\Jasg\FileParser;
+use PHPUnit\Framework\TestCase;
 
-class FileParserTest extends AsyncTestCase {
+/**
+ * @covers \Cspray\Jasg\FileParser
+ */
+class FileParserTest extends TestCase {
 
     /**
      * @var FileParser
      */
     private $parser;
 
-    public function setUp() {
+    public function setUp() : void {
         parent::setUp();
         $this->parser = new FileParser();
     }

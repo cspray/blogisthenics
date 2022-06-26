@@ -5,19 +5,19 @@ namespace Cspray\Jasg\Test\Template;
 use Cspray\Jasg\Template\Context;
 use Cspray\Jasg\Template\MethodDelegator;
 use Cspray\Jasg\Template\SafeToNotEncode;
+use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
-use Zend\Escaper\Escaper;
 use BadMethodCallException;
 
 /**
- *
+ * @covers \Cspray\Jasg\Template\Context
  */
 class ContextTest extends TestCase {
 
     private $escaper;
     private $methodDelegator;
 
-    public function setUp() {
+    public function setUp() : void {
         parent::setUp();
         $this->escaper = new Escaper('utf-8');
         $this->methodDelegator = new MethodDelegator();
