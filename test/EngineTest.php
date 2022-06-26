@@ -2,7 +2,6 @@
 
 namespace Cspray\Jasg\Test;
 
-use Amp\File\BlockingDriver;
 use Cspray\Jasg\Engine;
 use Cspray\Jasg\Exception\SiteGenerationException;
 use Cspray\Jasg\Exception\SiteValidationException;
@@ -13,20 +12,21 @@ use Cspray\Jasg\Engine\SiteGenerator;
 use Cspray\Jasg\Engine\SiteWriter;
 use Cspray\Jasg\Template\ContextFactory;
 use Cspray\Jasg\Template\MethodDelegator;
-use Cspray\Jasg\Template\Renderer;
 use Cspray\Jasg\Test\Support\AbstractTestSite;
 use Cspray\Jasg\Test\Support\EmptyLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\EmptyOutputDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Jasg\Test\Support\StandardTestSite;
-use Cspray\Jasg\Test\Support\StaticAssetTestSite;
+use Laminas\Escaper\Escaper;
+use PHPUnit\Framework\TestCase;
 use Vfs\FileSystem as VfsFileSystem;
-use Zend\Escaper\Escaper;
 use DateTimeImmutable;
-use function Amp\File\filesystem;
 
-class EngineTest extends AsyncTestCase {
+/**
+ * @covers \Cspray\Jasg\Engine
+ */
+class EngineTest extends TestCase {
 
     /**
      * @var Engine
@@ -40,7 +40,7 @@ class EngineTest extends AsyncTestCase {
     /**
      * @throws \Throwable
      */
-    public function setUp() {
+    public function setUp() : void {
         parent::setUp();
         $this->rootDir = 'vfs://install_dir';
         $contextFactory = new ContextFactory(new Escaper(), new MethodDelegator());
@@ -51,12 +51,9 @@ class EngineTest extends AsyncTestCase {
         );
         $this->vfs = VfsFileSystem::factory('vfs://');
         $this->vfs->mount();
-        // we need to use the BlockingDriver because our files are stored  in-memory in this process
-        // and the default driver runs in a parallel process.
-        filesystem(new BlockingDriver());
     }
 
-    public function tearDown() {
+    public function tearDown() : void {
         parent::tearDown();
         $this->vfs->unmount();
     }
@@ -67,7 +64,7 @@ class EngineTest extends AsyncTestCase {
 
     public function testValidBuildSiteResolvesPromiseWithSite() {
         $this->useStandardTestSite();
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
 
         $this->assertInstanceOf(Site::class, $site, 'Expected buildSitePromise to resolve with a Promise');
     }
@@ -75,7 +72,7 @@ class EngineTest extends AsyncTestCase {
     public function testSiteConfigurationComesFromDotBlogisthenicsFolder() {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
         $siteConfig = $site->getConfiguration();
         $this->assertSame('_layouts', $siteConfig->getLayoutDirectory(), 'Layout directory is not set from config');
         $this->assertSame('_site', $siteConfig->getOutputDirectory(), 'Output directory is not set from config');
@@ -85,7 +82,7 @@ class EngineTest extends AsyncTestCase {
     public function testSiteLayoutCount() {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
 
         $layouts = $site->getAllLayouts();
         $this->assertCount(2, $layouts, 'Expected there to be 1 layout added');
@@ -94,7 +91,7 @@ class EngineTest extends AsyncTestCase {
     public function testSitePageCount() {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
 
         $this->assertCount(3, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
     }
@@ -102,7 +99,7 @@ class EngineTest extends AsyncTestCase {
     public function testSiteStaticAssetCount() {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
 
         $this->assertCount(2, $site->getAllStaticAssets(), 'Expected to have 2 static asset');
     }
@@ -130,7 +127,7 @@ class EngineTest extends AsyncTestCase {
     public function testSitePagesHaveCorrectDate(string $method, int $index, DateTimeImmutable $expectedDate) {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
         $date = $site->$method()[$index]->getDate();
 
         // DateTimeImmutable are not the same object, we care about equality here
@@ -140,7 +137,8 @@ class EngineTest extends AsyncTestCase {
     public function sitePagesFrontMatters() : array {
         return [
             ['getAllLayouts', 0, [
-                'date' => '2018-07-02'
+                'date' => '2018-07-02',
+                'layout' => 'default.html'
             ]],
             ['getAllLayouts', 1, [
                 'date' => '2018-07-11'
@@ -178,10 +176,13 @@ class EngineTest extends AsyncTestCase {
     public function testSitePagesHaveCorrectRawFrontMatter(string $method, int $index, array $expectedFrontMatter) {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
         $frontMatter = iterator_to_array($site->$method()[$index]->getFrontMatter());
 
-        $this->assertArraySubset($expectedFrontMatter, $frontMatter, false, 'Expected the front matter data to be an empty array');
+        ksort($frontMatter);
+        ksort($expectedFrontMatter);
+
+        $this->assertSame($expectedFrontMatter, $frontMatter);
     }
 
     public function sitePagesFormats() : array {
@@ -202,7 +203,7 @@ class EngineTest extends AsyncTestCase {
     public function testSitePagesFormatIsAlwaysPresent(string $method, int $index, string $expectedFormat) {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
 
         /** @var Page $layoutPage */
         $layoutPage = $site->$method()[$index];
@@ -228,7 +229,7 @@ class EngineTest extends AsyncTestCase {
     public function testSitePagesSourcePathIsAccurate(string $method, int $index, string $expectedSourcePath) {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
         /** @var Page $layoutPage */
         $sourcePath = $site->$method()[$index]->getSourcePath();
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
@@ -250,13 +251,13 @@ class EngineTest extends AsyncTestCase {
     public function testSitePagesOutputFileHasCorrectContent(string $method, int $pageIndex, string $filePath) {
         $this->useStandardTestSite();
         /** @var Site $site */
-        $site = yield $this->subject->buildSite();
+        $site = $this->subject->buildSite();
         $outputPath = $site->$method()[$pageIndex]->getFrontMatter()->get('output_path');
-        $fileExists = yield filesystem()->exists($outputPath);
+        $fileExists = file_exists($outputPath);
         $this->assertTrue($fileExists, 'A file was expected to exist at the output path');
 
-        $actualContents = yield filesystem()->get($outputPath);
-        $expectedContents = yield filesystem()->get($filePath);
+        $actualContents = file_get_contents($outputPath);
+        $expectedContents = file_get_contents($filePath);
         $this->assertEquals(
             trim($expectedContents),
             trim($actualContents),
@@ -285,25 +286,31 @@ class EngineTest extends AsyncTestCase {
      * @dataProvider siteValidationErrors
      */
     public function testSiteValidationErrors(string $expectedMessage, AbstractTestSite $testSite) {
-        return $this->assertExceptionThrown(
+        $this->assertExceptionThrown(
             SiteValidationException::class,
             $expectedMessage,
-            function() use($testSite) {
+            function () use ($testSite) {
                 $testSite->populateVirtualFilesystem($this->vfs);
-                yield $this->subject->buildSite();
+                $this->subject->buildSite();
             }
         );
     }
 
     public function testSitePageWithLayoutNotFoundThrowsError() {
-        return $this->assertExceptionThrown(
+        $this->assertExceptionThrown(
             SiteGenerationException::class,
             'The page "2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
-            function() {
+            function () {
                 (new PageSpecifiesNotFoundLayoutTestSite())->populateVirtualFileSystem($this->vfs);
-                yield $this->subject->buildSite();
+                $this->subject->buildSite();
             }
         );
+    }
+
+    private function assertExceptionThrown(string $exception, string $message, callable $callable) {
+        $this->expectException($exception);
+        $this->expectDeprecationMessage($message);
+        $callable();
     }
 
 }

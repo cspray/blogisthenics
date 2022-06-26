@@ -8,6 +8,6 @@ interface Template {
 
     public function getFormat() : string;
 
-    public function render(Template\Context $context) : Promise;
+    public function render(Template\Context $context) : string;
 
 }

@@ -21,15 +21,13 @@ class PhpTemplate implements Template {
         return $this->format;
     }
 
-    public function render(Template\Context $context): Promise {
-        return call(function() use($context) {
-            $filePath = $this->filePath;
-            $renderFunc = function() use($filePath) {
-                ob_start();
-                require $filePath;
-                return ob_get_clean();
-            };
-            return \Closure::bind($renderFunc, $context)();
-        });
+    public function render(Template\Context $context): string {
+        $filePath = $this->filePath;
+        $renderFunc = function() use($filePath) {
+            ob_start();
+            require $filePath;
+            return ob_get_clean();
+        };
+        return \Closure::bind($renderFunc, $context)();
     }
 }
