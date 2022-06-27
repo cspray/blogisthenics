@@ -1,17 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Test\Template;
+namespace Cspray\Jasg\Test;
 
-use Cspray\Jasg\Template\Context;
-use Cspray\Jasg\Template\MethodDelegator;
-use Cspray\Jasg\Template\SafeToNotEncode;
+use BadMethodCallException;
+use Cspray\Jasg\Context;
+use Cspray\Jasg\MethodDelegator;
+use Cspray\Jasg\SafeToNotEncode;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
-use BadMethodCallException;
 
-/**
- * @covers \Cspray\Jasg\Template\Context
- */
 class ContextTest extends TestCase {
 
     private $escaper;

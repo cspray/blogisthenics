@@ -2,12 +2,10 @@
 
 namespace Cspray\Jasg;
 
-use Amp\Promise;
-
 interface Template {
 
-    public function getFormat() : string;
+    public function getFormats() : array;
 
-    public function render(Template\Context $context) : string;
+    public function getContents() : string;
 
 }

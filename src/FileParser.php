@@ -2,12 +2,12 @@
 
 namespace Cspray\Jasg;
 
-use Cspray\Jasg\FileParser\Results as ParserResults;
 use Cspray\Jasg\Exception\ParsingException;
+use Cspray\Jasg\FileParserResults;
 
 final class FileParser {
 
-    public function parse(string $fileContents) : ParserResults {
+    public function parse(string $filePath, string $fileContents) : FileParserResults {
         list($hasFrontMatter, $frontMatterBuffer, $contentBuffer) = $this->parseIntoRawBuffers($fileContents);
         $frontMatter = [];
         if ($hasFrontMatter) {
@@ -18,7 +18,7 @@ final class FileParser {
             }
         }
 
-        return new ParserResults($frontMatter, trim($contentBuffer));
+        return new FileParserResults($filePath, $frontMatter, trim($contentBuffer));
     }
 
     private function parseIntoRawBuffers(string $fileContents) : array {

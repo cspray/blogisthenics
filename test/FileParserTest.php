@@ -10,9 +10,6 @@ use Cspray\Jasg\Exception\ParsingException;
 use Cspray\Jasg\FileParser;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Cspray\Jasg\FileParser
- */
 class FileParserTest extends TestCase {
 
     /**
@@ -36,7 +33,7 @@ class FileParserTest extends TestCase {
 This is the content of the post it can be intermingling of PHP, HTML and Markdown.
 POST;
 
-        $results = $this->parser->parse($post);
+        $results = $this->parser->parse('my-path', $post);
         $expectedFrontMatter = [
             'foo' => 'bar',
             'bar' => 'baz',
@@ -55,7 +52,7 @@ POST;
 A post that does not have any front matter
 POST;
 
-        $results = $this->parser->parse($post);
+        $results = $this->parser->parse('my-path', $post);
         $expectedContent = "### some markdown\n\nA post that does not have any front matter";
 
         $this->assertSame([], $results->getRawFrontMatter(), 'Expected to have a blank front matter');
@@ -78,7 +75,7 @@ POST;
 Some content
 POST;
 
-        $results = $this->parser->parse($post);
+        $results = $this->parser->parse('my-path', $post);
         $expectedFrontMatter = [
             'foo' => [
                 'bar' => [
@@ -102,7 +99,7 @@ POST;
 This is some content that has a opening curly brace ({) and a closing curly brace (})
 POST;
 
-        $results = $this->parser->parse($post);
+        $results = $this->parser->parse('my-path', $post);
 
         $expectedFrontMatter = [
             'my' => 'frontmatter'
@@ -118,7 +115,7 @@ POST;
 This is <?= $somePhp ?> some php content that should not be evaluated
 POST;
 
-        $results = $this->parser->parse($post);
+        $results = $this->parser->parse('my-path', $post);
         $expectedContent = 'This is <?= $somePhp ?> some php content that should not be evaluated';
         $this->assertSame($expectedContent, $results->getRawContents(), 'Expected PHP content to not be evaluated');
     }
@@ -135,7 +132,7 @@ INVALID_FRONTMATTER;
         $this->expectException(ParsingException::class);
         $this->expectExceptionMessage('An error was encountered parsing FrontMatter: Syntax error');
 
-        $this->parser->parse($post);
+        $this->parser->parse('my-path', $post);
     }
 
 }

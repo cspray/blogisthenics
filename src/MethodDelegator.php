@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Template;
+namespace Cspray\Jasg;
 
-use Closure;
 use BadMethodCallException;
+use Closure;
 
 final class MethodDelegator {
 

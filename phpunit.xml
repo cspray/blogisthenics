@@ -4,7 +4,7 @@
          bootstrap="vendor/autoload.php"
          cacheResultFile=".phpunit.cache/test-results"
          executionOrder="depends,defects"
-         forceCoversAnnotation="true"
+         forceCoversAnnotation="false"
          beStrictAboutCoversAnnotation="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTodoAnnotatedTests="true"
@@ -23,5 +23,9 @@
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <report>
+            <text outputFile="php://stdout" showOnlySummary="true" />
+            <!-- <html outputDirectory="build/code-coverage/html" /> -->
+        </report>
     </coverage>
 </phpunit>

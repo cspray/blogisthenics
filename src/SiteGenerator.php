@@ -1,19 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Engine;
+namespace Cspray\Jasg;
 
-use Cspray\Jasg\Content;
-use Cspray\Jasg\Layout;
-use Cspray\Jasg\Page;
-use Cspray\Jasg\FrontMatter;
-use Cspray\Jasg\FileParser;
-use Cspray\Jasg\FileParser\Results as ParserResults;
-use Cspray\Jasg\Site;
-use Cspray\Jasg\SiteConfiguration;
-use Cspray\Jasg\StaticAsset;
-use Cspray\Jasg\Template;
-use Cspray\Jasg\Template\PhpTemplate;
-use Cspray\Jasg\Template\StaticTemplate;
+use Cspray\Jasg\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use Iterator;
 use RecursiveDirectoryIterator;
@@ -26,13 +15,10 @@ use function Stringy\create as s;
  */
 final class SiteGenerator {
 
-    private $parser;
-    private $rootDirectory;
-
-    public function __construct(string $rootDirectory, FileParser $pageParser) {
-        $this->rootDirectory = $rootDirectory;
-        $this->parser = $pageParser;
-    }
+    public function __construct(
+        private readonly string $rootDirectory,
+        private readonly FileParser $parser
+    ) {}
 
     public function generateSite(SiteConfiguration $siteConfiguration) : Site {
         $site = new Site($siteConfiguration);
@@ -44,14 +30,14 @@ final class SiteGenerator {
                 $filePath = $fileInfo->getPathname();
                 $mtime = filemtime($filePath);
                 $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
-                $filePathParts = explode('.', basename($filePath));
-                $staticContent = new StaticAsset(
+                $staticContent = new Content(
                     $filePath,
                     (new DateTimeImmutable())->setTimestamp($mtime),
                     new FrontMatter([
-                        'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
+                        'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath),
+                        'is_static_asset' => true
                     ]),
-                    new StaticTemplate(array_pop($filePathParts), $filePath)
+                    new FileTemplate($filePath)
                 );
                 $site->addContent($staticContent);
             }
@@ -59,7 +45,6 @@ final class SiteGenerator {
 
         return $site;
     }
-
 
     private function getSourceIterator() : Iterator {
         $directoryIterator = new RecursiveDirectoryIterator($this->rootDirectory);
@@ -82,7 +67,7 @@ final class SiteGenerator {
             && !$this->isConfigOrSitePath($filePath);
     }
 
-    private function isConfigOrSitePath(string $filePath) {
+    private function isConfigOrSitePath(string $filePath) : bool {
         $configPattern = '<^' . $this->rootDirectory . '/.jasg' . '>';
         $outputPattern = '<^' . $this->rootDirectory . '/_site>';
         return preg_match($configPattern, $filePath) || preg_match($outputPattern, $filePath);
@@ -114,9 +99,9 @@ final class SiteGenerator {
         $site->addContent($content);
     }
 
-    private function parseFile(string $filePath) : FileParser\Results {
+    private function parseFile(string $filePath) : FileParserResults {
         $rawContents = file_get_contents($filePath);
-        return $this->parser->parse($rawContents);
+        return $this->parser->parse($filePath, $rawContents);
     }
 
     private function getPageDate(string $filePath, string $fileName) : DateTimeImmutable {
@@ -156,8 +141,7 @@ final class SiteGenerator {
             $dataToAdd['output_path'] = $this->rootDirectory . '/_site' . $outputDir . '/' . $fileNameWithoutFormat . '.html';
         }
 
-        $frontMatter = $frontMatter->withData($dataToAdd);
-        return $frontMatter;
+        return $frontMatter->withData($dataToAdd);
     }
 
     private function isLayoutPath(SiteConfiguration $siteConfig, string $filePath) : bool {
@@ -167,11 +151,11 @@ final class SiteGenerator {
 
     private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
         $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
-        $format = explode('.', basename($fileInfo->getPathname()))[1];
+        //$format = explode('.', basename($fileInfo->getPathname()))[1];
         $contents = $parsedFile->getRawContents();
 
         file_put_contents($tempName, $contents);
-        return new PhpTemplate($format, $tempName);
+        return new FileTemplate($tempName);
     }
 
     private function createContent(
@@ -182,11 +166,9 @@ final class SiteGenerator {
         Template $template
     ) : Content {
         if ($this->isLayoutPath($siteConfig, $filePath)) {
-            $content = new Layout($filePath, $pageDate, $frontMatter, $template);
-        } else {
-            $content = new Page($filePath, $pageDate, $frontMatter, $template);
+            $frontMatter = $frontMatter->withData(['is_layout' => true]);
         }
 
-        return $content;
+        return new Content($filePath, $pageDate, $frontMatter, $template);
     }
 }

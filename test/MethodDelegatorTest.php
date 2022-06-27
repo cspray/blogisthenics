@@ -4,17 +4,14 @@
  *
  */
 
-namespace Cspray\Jasg\Test\Template;
+namespace Cspray\Jasg\Test;
 
-use Cspray\Jasg\Template\Context;
-use Cspray\Jasg\Template\MethodDelegator;
+use BadMethodCallException;
+use Cspray\Jasg\Context;
+use Cspray\Jasg\MethodDelegator;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
-use BadMethodCallException;
 
-/**
- * @covers \Cspray\Jasg\Template\MethodDelegator
- */
 class MethodDelegatorTest extends TestCase {
 
     private function context() : Context {

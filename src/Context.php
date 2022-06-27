@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Template;
+namespace Cspray\Jasg;
 
 use ArrayAccess;
 use BadMethodCallException;
@@ -8,13 +8,13 @@ use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
 
-    private $escaper;
-    private $methodDelegator;
     private $data;
 
-    public function __construct(Escaper $escaper, MethodDelegator $methodDelegator, array $data) {
-        $this->escaper = $escaper;
-        $this->methodDelegator = $methodDelegator;
+    public function __construct(
+        private readonly Escaper $escaper,
+        private readonly MethodDelegator $methodDelegator,
+        array $data
+    ) {
         $this->data = $this->convertNestedArraysToContexts($data);
     }
 

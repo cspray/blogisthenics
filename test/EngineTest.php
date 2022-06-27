@@ -2,30 +2,26 @@
 
 namespace Cspray\Jasg\Test;
 
+use Cspray\Jasg\ContextFactory;
 use Cspray\Jasg\Engine;
 use Cspray\Jasg\Exception\SiteGenerationException;
 use Cspray\Jasg\Exception\SiteValidationException;
-use Cspray\Jasg\Page;
 use Cspray\Jasg\FileParser;
+use Cspray\Jasg\MethodDelegator;
 use Cspray\Jasg\Site;
-use Cspray\Jasg\Engine\SiteGenerator;
-use Cspray\Jasg\Engine\SiteWriter;
-use Cspray\Jasg\Template\ContextFactory;
-use Cspray\Jasg\Template\MethodDelegator;
+use Cspray\Jasg\SiteGenerator;
+use Cspray\Jasg\SiteWriter;
 use Cspray\Jasg\Test\Support\AbstractTestSite;
 use Cspray\Jasg\Test\Support\EmptyLayoutDirectoryConfigurationTestSite;
-use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\EmptyOutputDirectoryConfigurationTestSite;
+use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Jasg\Test\Support\StandardTestSite;
+use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
 use Vfs\FileSystem as VfsFileSystem;
-use DateTimeImmutable;
 
-/**
- * @covers \Cspray\Jasg\Engine
- */
 class EngineTest extends TestCase {
 
     /**
@@ -207,7 +203,7 @@ class EngineTest extends TestCase {
 
         /** @var Page $layoutPage */
         $layoutPage = $site->$method()[$index];
-        $format = $layoutPage->getTemplate()->getFormat();
+        $format = $layoutPage->getTemplate()->getFormats();
         $this->assertSame($expectedFormat, $format, 'Expected the format to match the convention for the file name');
     }
 
@@ -231,7 +227,7 @@ class EngineTest extends TestCase {
         /** @var Site $site */
         $site = $this->subject->buildSite();
         /** @var Page $layoutPage */
-        $sourcePath = $site->$method()[$index]->getSourcePath();
+        $sourcePath = $site->$method()[$index]->getName();
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
     }
 

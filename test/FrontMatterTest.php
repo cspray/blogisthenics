@@ -9,9 +9,6 @@ namespace Cspray\Jasg\Test;
 use Cspray\Jasg\FrontMatter;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Cspray\Jasg\FrontMatter
- */
 class FrontMatterTest extends TestCase {
 
     public function testGettingCustomKeyPresent() {

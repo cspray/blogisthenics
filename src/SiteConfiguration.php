@@ -4,11 +4,7 @@ namespace Cspray\Jasg;
 
 final class SiteConfiguration {
 
-    private $data;
-
-    public function __construct(array $config) {
-        $this->data = $config;
-    }
+    public function __construct(private readonly array $data) {}
 
     public function getLayoutDirectory() : string {
         return $this->data['layout_directory'];
@@ -18,7 +14,7 @@ final class SiteConfiguration {
         return $this->data['output_directory'];
     }
 
-    public function getDefaultLayoutName() : string {
+    public function getDefaultLayoutName() : ?string {
         return $this->data['default_layout'];
     }
 
