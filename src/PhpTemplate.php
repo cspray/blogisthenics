@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
 final class PhpTemplate implements Template {
 

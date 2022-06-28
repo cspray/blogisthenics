@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
-use Cspray\Jasg\FileParserResults as ParserResults;
+use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use Iterator;
 use RecursiveDirectoryIterator;

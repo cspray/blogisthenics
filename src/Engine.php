@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
 use Amp\Promise;
-use Cspray\Jasg\Exception\SiteValidationException;
+use Cspray\Blogisthenics\Exception\SiteValidationException;
 use function Amp\call;
 use function Amp\File\filesystem;
 

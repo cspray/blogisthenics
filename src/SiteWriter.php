@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
-use Cspray\Jasg\Exception\SiteGenerationException;
+use Cspray\Blogisthenics\Exception\SiteGenerationException;
 
 /**
  * @internal This class should only be utilized by Engine implementations; use outside of this context is unsupported.

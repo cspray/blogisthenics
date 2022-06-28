@@ -4,11 +4,11 @@
  *
  */
 
-namespace Cspray\Jasg\Test;
+namespace Cspray\Blogisthenics\Test;
 
 use BadMethodCallException;
-use Cspray\Jasg\Context;
-use Cspray\Jasg\MethodDelegator;
+use Cspray\Blogisthenics\Context;
+use Cspray\Blogisthenics\MethodDelegator;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
 

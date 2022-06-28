@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
 use DateTimeImmutable;
 

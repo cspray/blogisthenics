@@ -4,10 +4,10 @@
  *
  */
 
-namespace Cspray\Jasg\Test;
+namespace Cspray\Blogisthenics\Test;
 
-use Cspray\Jasg\Exception\ParsingException;
-use Cspray\Jasg\FileParser;
+use Cspray\Blogisthenics\Exception\ParsingException;
+use Cspray\Blogisthenics\FileParser;
 use PHPUnit\Framework\TestCase;
 
 class FileParserTest extends TestCase {

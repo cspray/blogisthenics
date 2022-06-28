@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 
-namespace Cspray\Jasg\Test\Support;
+namespace Cspray\Blogisthenics\Test\Support;
 
 use Vfs\FileSystem as VfsFileSystem;
 

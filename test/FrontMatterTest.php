@@ -4,9 +4,9 @@
  *
  */
 
-namespace Cspray\Jasg\Test;
+namespace Cspray\Blogisthenics\Test;
 
-use Cspray\Jasg\FrontMatter;
+use Cspray\Blogisthenics\FrontMatter;
 use PHPUnit\Framework\TestCase;
 
 class FrontMatterTest extends TestCase {

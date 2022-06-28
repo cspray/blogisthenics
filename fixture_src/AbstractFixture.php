@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\JasgFixture;
+namespace Cspray\BlogisthenicsFixture;
 
 abstract class AbstractFixture implements Fixture {
 

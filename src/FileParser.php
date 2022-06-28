@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
-use Cspray\Jasg\Exception\ParsingException;
-use Cspray\Jasg\FileParserResults;
+use Cspray\Blogisthenics\Exception\ParsingException;
+use Cspray\Blogisthenics\FileParserResults;
 
 final class FileParser {
 

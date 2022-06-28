@@ -1,6 +1,6 @@
 {
-  "name": "cspray/jasg",
-  "description": "Just a site generator.",
+  "name": "cspray/blogisthenics",
+  "description": "Put your blog generation on a diet with Blogisthenics!",
   "require": {
     "php": "^8.1",
     "laminas/laminas-escaper": "^2.10.0",
@@ -12,13 +12,13 @@
   },
   "autoload": {
     "psr-4": {
-      "Cspray\\Jasg\\": "src"
+      "Cspray\\Blogisthenics\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Cspray\\Jasg\\Test\\": "test",
-      "Cspray\\JasgFixture\\": "fixture_src"
+      "Cspray\\Blogisthenics\\Test\\": "test",
+      "Cspray\\Blogisthenics\\": "fixture_src"
     }
   }
 }
