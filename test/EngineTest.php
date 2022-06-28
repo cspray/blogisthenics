@@ -11,12 +11,14 @@ use Cspray\Jasg\MethodDelegator;
 use Cspray\Jasg\Site;
 use Cspray\Jasg\SiteGenerator;
 use Cspray\Jasg\SiteWriter;
+use Cspray\Jasg\TemplateFormatter;
 use Cspray\Jasg\Test\Support\AbstractTestSite;
 use Cspray\Jasg\Test\Support\EmptyLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\EmptyOutputDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Jasg\Test\Support\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Jasg\Test\Support\StandardTestSite;
+use Cspray\JasgFixture\Fixtures;
 use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +45,7 @@ class EngineTest extends TestCase {
         $this->subject = new Engine(
             $this->rootDir,
             new SiteGenerator($this->rootDir, new FileParser()),
-            new SiteWriter($contextFactory)
+            new SiteWriter(new TemplateFormatter(), $contextFactory)
         );
         $this->vfs = VfsFileSystem::factory('vfs://');
         $this->vfs->mount();
@@ -134,10 +136,12 @@ class EngineTest extends TestCase {
         return [
             ['getAllLayouts', 0, [
                 'date' => '2018-07-02',
+                'is_layout' => true,
                 'layout' => 'default.html'
             ]],
             ['getAllLayouts', 1, [
-                'date' => '2018-07-11'
+                'date' => '2018-07-11',
+                'is_layout' => true
             ]],
             ['getAllPages', 0, [
                 'date' => '2018-06-23',
@@ -158,10 +162,12 @@ class EngineTest extends TestCase {
                 'output_path' => 'vfs://install_dir/_site/posts/2018-07-01-nested-layout-article.html'
             ]],
             ['getAllStaticAssets', 0, [
-                'output_path' => 'vfs://install_dir/_site/css/styles.css'
+                'output_path' => 'vfs://install_dir/_site/css/styles.css',
+                'is_static_asset' => true
             ]],
             ['getAllStaticAssets', 1, [
-                'output_path' => 'vfs://install_dir/_site/js/code.js'
+                'output_path' => 'vfs://install_dir/_site/js/code.js',
+                'is_static_asset' => true
             ]]
         ];
     }
@@ -179,32 +185,6 @@ class EngineTest extends TestCase {
         ksort($expectedFrontMatter);
 
         $this->assertSame($expectedFrontMatter, $frontMatter);
-    }
-
-    public function sitePagesFormats() : array {
-        return [
-            ['getAllLayouts', 0, 'md'],
-            ['getAllLayouts', 1, 'html'],
-            ['getAllPages', 0, 'md'],
-            ['getAllPages', 1, 'html'],
-            ['getAllPages', 2, 'md'],
-            ['getAllStaticAssets', 0, 'css'],
-            ['getAllStaticAssets', 1, 'js']
-        ];
-    }
-
-    /**
-     * @dataProvider sitePagesFormats
-     */
-    public function testSitePagesFormatIsAlwaysPresent(string $method, int $index, string $expectedFormat) {
-        $this->useStandardTestSite();
-        /** @var Site $site */
-        $site = $this->subject->buildSite();
-
-        /** @var Page $layoutPage */
-        $layoutPage = $site->$method()[$index];
-        $format = $layoutPage->getTemplate()->getFormats();
-        $this->assertSame($expectedFormat, $format, 'Expected the format to match the convention for the file name');
     }
 
     public function sitePagesSourcePaths() : array {
@@ -232,12 +212,13 @@ class EngineTest extends TestCase {
     }
 
     public function sitePagesOutputContents() : array {
+        $fixture = Fixtures::basicHtmlSite();
         return [
-            ['getAllPages', 0, __DIR__ . '/_fixtures/standard_test_site/2018-06-23-the-blog-article-title.html'],
-            ['getAllPages', 1, __DIR__ . '/_fixtures/standard_test_site/2018-06-30-another-blog-article.html'],
-            ['getAllPages', 2, __DIR__ . '/_fixtures/standard_test_site/2018-07-01-nested-layout-article.html'],
-            ['getAllStaticAssets', 0, __DIR__ . '/_fixtures/standard_test_site/styles.css'],
-            ['getAllStaticAssets', 1, __DIR__ . '/_fixtures/standard_test_site/code.js']
+            ['getAllPages', 0, $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
+            ['getAllPages', 1, $fixture->getContentPath($fixture::SECOND_BLOG_ARTICLE)],
+            ['getAllPages', 2, $fixture->getContentPath($fixture::THIRD_BLOG_ARTICLE)],
+            ['getAllStaticAssets', 0, $fixture->getContentPath($fixture::STYLES_CSS)],
+            ['getAllStaticAssets', 1, $fixture->getContentPath($fixture::CODE_JS)]
         ];
     }
 

@@ -37,7 +37,7 @@ final class SiteGenerator {
                         'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath),
                         'is_static_asset' => true
                     ]),
-                    new FileTemplate($filePath)
+                    new StaticTemplate($filePath)
                 );
                 $site->addContent($staticContent);
             }
@@ -155,7 +155,11 @@ final class SiteGenerator {
         $contents = $parsedFile->getRawContents();
 
         file_put_contents($tempName, $contents);
-        return new FileTemplate($tempName);
+        if ($fileInfo->getExtension() === 'php') {
+            return new PhpTemplate($tempName);
+        } else {
+            return new StaticTemplate($tempName);
+        }
     }
 
     private function createContent(

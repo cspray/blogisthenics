@@ -10,8 +10,10 @@ use Cspray\Jasg\Exception\SiteGenerationException;
 final class SiteWriter {
 
 
-    public function __construct(private readonly ContextFactory $contextFactory) {
-    }
+    public function __construct(
+        private readonly TemplateFormatter $templateFormatter,
+        private readonly ContextFactory $contextFactory
+    ) {}
 
     public function writeSite(Site $site) : void {
         /** @var Content $page */
@@ -28,7 +30,7 @@ final class SiteWriter {
             $this->ensureDirectoryExists(dirname($outputFile));
 
             $context = $this->contextFactory->create([]);
-            $contents = 'Need to render the static asset';
+            $contents = $staticAsset->getTemplate()->render($this->templateFormatter, $context);
             file_put_contents($outputFile, $contents);
         }
     }
@@ -42,19 +44,20 @@ final class SiteWriter {
     private function buildTemplateContents(Site $site, Content $page) : string {
         $pageTemplatesToRender = $this->getPagesToRender($site, $page);
         $pageFrontMatter = $page->getFrontMatter();
+
         $finalLayout = array_pop($pageTemplatesToRender);
         $contents = null;
         foreach ($pageTemplatesToRender as $contentPage) {
             $templateData = $this->mergeAndConvertToArray($pageFrontMatter->withData(['content' => $contents]), $contentPage->getFrontMatter());
             $context = $this->contextFactory->create($templateData);
-            $markup = 'Need to render the template with the context';
+            $markup = $contentPage->getTemplate()->render($this->templateFormatter, $context);
 
             $contents = new SafeToNotEncode($markup . PHP_EOL);
         }
 
         $templateData = $this->mergeAndConvertToArray($pageFrontMatter->withData(['content' => $contents]), $finalLayout->getFrontMatter());
         $context = $this->contextFactory->create($templateData);
-        return 'Need to render the layout with the context';
+        return $finalLayout->getTemplate()->render($this->templateFormatter, $context);
     }
 
     private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {
@@ -62,13 +65,18 @@ final class SiteWriter {
         return iterator_to_array($second->withData($firstData));
     }
 
+    /**
+     * @param Site $site
+     * @param Content $page
+     * @return Content[]
+     */
     private function getPagesToRender(Site $site, Content $page) : array {
         $pages = [];
         $pages[] = $page;
         $layoutName = $page->getFrontMatter()->get('layout');
 
         while ($layoutName !== null) {
-            $layout = $site->findLayout((string)$layoutName);
+            $layout = $site->findLayout((string) $layoutName);
             if (is_null($layout)) {
                 $msg = 'Content specified a layout "' . $layoutName . '" but the layout is not present.';
                 throw new SiteGenerationException($msg);

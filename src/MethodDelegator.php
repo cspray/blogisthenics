@@ -7,7 +7,7 @@ use Closure;
 
 final class MethodDelegator {
 
-    private $methods = [];
+    private array $methods = [];
 
     public function addMethod(string $name, callable $callable) : void {
         $this->methods[$name] = $callable;

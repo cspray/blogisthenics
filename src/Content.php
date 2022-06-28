@@ -8,26 +8,11 @@ use DateTimeImmutable;
 final class Content {
 
     public function __construct(
-        private readonly string $name,
-        private readonly DateTimeImmutable $postDate,
-        private readonly FrontMatter $frontMatter,
-        private readonly Template $template
+        public readonly string $name,
+        public readonly DateTimeImmutable $postDate,
+        public readonly FrontMatter $frontMatter,
+        public readonly Template $template,
+        public readonly string $outputPath
     ) {}
-
-    public function getName() : string {
-        return $this->name;
-    }
-
-    public function getDate() : DateTimeImmutable {
-        return $this->postDate;
-    }
-
-    public function getFrontMatter() : FrontMatter {
-        return $this->frontMatter;
-    }
-
-    public function getTemplate() : Template {
-        return $this->template;
-    }
 
 }

@@ -33,18 +33,25 @@ final class Site {
         return null;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllLayouts() : array {
         return $this->layouts;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllPages() : array {
         $pages = $this->pages;
-        usort($pages, function(Content $a, Content $b) {
-            return ($a->getDate() > $b->getDate()) ? 1 : -1;
-        });
+        usort($pages, fn(Content $a, Content $b)  => $a->getDate() <=> $b->getDate());
         return $pages;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllStaticAssets() : array {
         return $this->staticAssets;
     }

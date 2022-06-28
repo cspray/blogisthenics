@@ -4,8 +4,6 @@ namespace Cspray\Jasg;
 
 interface Template {
 
-    public function getFormats() : array;
-
-    public function getContents() : string;
+    public function render(TemplateFormatter $templateFormatter, Context $context) : string;
 
 }
