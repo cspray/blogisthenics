@@ -9,34 +9,21 @@ use Cspray\Blogisthenics\Exception\SiteGenerationException;
  */
 final class SiteWriter {
 
-
     public function __construct(
         private readonly TemplateFormatter $templateFormatter,
         private readonly ContextFactory $contextFactory
     ) {}
 
     public function writeSite(Site $site) : void {
-        foreach ($site->getAllPages() as $page) {
-            $outputFile = $page->outputPath;
-            $this->ensureDirectoryExists(dirname($outputFile));
+        $contentsToWrite = [...$site->getAllPages(), ...$site->getAllStaticAssets()];
+        foreach ($contentsToWrite as $content) {
+            $outputFile = $content->outputPath;
+            if (!is_dir($dirPath = dirname($outputFile))) {
+                mkdir($dirPath, 0777, true);
+            }
 
-            $contents = $this->buildTemplateContents($site, $page);
+            $contents = $this->buildTemplateContents($site, $content);
             file_put_contents($outputFile, $contents);
-        }
-
-        foreach ($site->getAllStaticAssets() as $staticAsset) {
-            $outputFile = $staticAsset->outputPath;
-            $this->ensureDirectoryExists(dirname($outputFile));
-
-            $context = $this->contextFactory->create([]);
-            $contents = $staticAsset->template->render($this->templateFormatter, $context);
-            file_put_contents($outputFile, $contents);
-        }
-    }
-
-    private function ensureDirectoryExists(string $filePath) : void {
-        if (!is_dir($filePath)) {
-            mkdir($filePath, 0777, true);
         }
     }
 
@@ -59,8 +46,7 @@ final class SiteWriter {
     }
 
     private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {
-        $firstData = iterator_to_array($first);
-        return iterator_to_array($second->withData($firstData));
+        return iterator_to_array($second->withData(iterator_to_array($first)));
     }
 
     /**
