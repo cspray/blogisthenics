@@ -4,6 +4,7 @@ namespace Cspray\Blogisthenics;
 
 use ArrayAccess;
 use BadMethodCallException;
+use Cspray\Blogisthenics\Exception\InvalidYieldException;
 use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
@@ -36,7 +37,7 @@ final class Context implements ArrayAccess {
 
     public function yield() : string {
         if (!isset($this->yield)) {
-            throw new BadMethodCallException('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
+            throw new InvalidYieldException('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
         }
 
         return ($this->yield)();

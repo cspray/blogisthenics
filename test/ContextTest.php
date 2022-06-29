@@ -4,6 +4,7 @@ namespace Cspray\Blogisthenics\Test;
 
 use BadMethodCallException;
 use Cspray\Blogisthenics\Context;
+use Cspray\Blogisthenics\Exception\InvalidYieldException;
 use Cspray\Blogisthenics\MethodDelegator;
 use Cspray\Blogisthenics\SafeToNotEncode;
 use Laminas\Escaper\Escaper;
@@ -136,7 +137,7 @@ class ContextTest extends TestCase {
     public function testYieldThrowsExceptionIfNothingToYield() {
         $context = new Context($this->escaper, $this->methodDelegator, []);
 
-        $this->expectException(BadMethodCallException::class);
+        $this->expectException(InvalidYieldException::class);
         $this->expectExceptionMessage('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
 
         $context->yield();

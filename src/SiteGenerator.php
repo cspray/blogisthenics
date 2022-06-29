@@ -148,7 +148,7 @@ final class SiteGenerator {
 
         file_put_contents($tempName, $contents);
         if ($fileInfo->getExtension() === 'php') {
-            return new PhpTemplate($tempName);
+            return new DynamicTemplate($tempName);
         } else {
             return new StaticTemplate($tempName);
         }

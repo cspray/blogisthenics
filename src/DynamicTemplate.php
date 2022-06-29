@@ -2,7 +2,9 @@
 
 namespace Cspray\Blogisthenics;
 
-final class PhpTemplate implements Template {
+use Closure;
+
+final class DynamicTemplate implements Template {
 
     public function __construct(private readonly string $path) {}
 
@@ -13,6 +15,6 @@ final class PhpTemplate implements Template {
             require $filePath;
             return ob_get_clean();
         };
-        return \Closure::bind($renderFunc, $context)();
+        return Closure::bind($renderFunc, $context)();
     }
 }
