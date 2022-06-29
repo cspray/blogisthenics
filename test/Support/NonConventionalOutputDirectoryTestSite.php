@@ -8,7 +8,7 @@ class NonConventionalOutputDirectoryTestSite extends AbstractTestSite {
 
     protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) {
         $vfs->get('/')->add('install_dir', $this->dir([
-            '.jasg' => $this->dir([
+            '.blogisthenics' => $this->dir([
                 'config.json' => $this->file(json_encode([
                     'output_directory' => '_something_not_conventional',
                     'layout_directory' => '_layouts',

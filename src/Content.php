@@ -12,7 +12,9 @@ final class Content {
         public readonly DateTimeImmutable $postDate,
         public readonly FrontMatter $frontMatter,
         public readonly Template $template,
-        public readonly string $outputPath
+        public readonly string $outputPath,
+        public readonly bool $isLayout = false,
+        public readonly bool $isStaticAsset = false
     ) {}
 
 }

@@ -11,8 +11,8 @@ final class ContextFactory {
         private readonly MethodDelegator $delegator
     ) {}
 
-    public function create(array $data) : Context {
-        return new Context($this->escaper, $this->delegator, $data);
+    public function create(array $data, callable $yield = null) : Context {
+        return new Context($this->escaper, $this->delegator, $data, $yield);
     }
 
 }

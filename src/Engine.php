@@ -41,9 +41,13 @@ final class Engine {
     }
 
     private function getSiteConfiguration() : SiteConfiguration {
-        $rawConfig = file_get_contents($this->rootDirectory . '/.jasg/config.json');
+        $rawConfig = file_get_contents($this->rootDirectory . '/.blogisthenics/config.json');
         $config = json_decode($rawConfig, true);
-        return new SiteConfiguration($config);
+        return new SiteConfiguration(
+            $config['layout_directory'],
+            $config['output_directory'],
+            $config['default_layout']
+        );
     }
 
     private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
@@ -52,23 +56,23 @@ final class Engine {
     }
 
     private function validateLayoutDirectory(SiteConfiguration $siteConfiguration) : void {
-        $configuredDir = $siteConfiguration->getLayoutDirectory();
+        $configuredDir = $siteConfiguration->layoutDirectory;
         if (empty($configuredDir)) {
-            $msg = 'There is no layouts directory specified in your .jasg/config.json configuration.';
+            $msg = 'There is no layouts directory specified in your .blogisthenics/config.json configuration.';
             throw new SiteValidationException($msg);
         }
 
         $layoutDir = $this->rootDirectory . '/' . $configuredDir;
         if (!is_dir($layoutDir)) {
-            $msg = "The layouts directory in your .jasg/config.json configuration, \"$configuredDir\", does not exist.";
+            $msg = "The layouts directory in your .blogisthenics/config.json configuration, \"$configuredDir\", does not exist.";
             throw new SiteValidationException($msg);
         }
     }
 
     private function validateSiteDirectory(SiteConfiguration $siteConfiguration) : void {
-        $configuredDir = $siteConfiguration->getOutputDirectory();
+        $configuredDir = $siteConfiguration->outputDirectory;
         if (empty($configuredDir)) {
-            $msg = 'There is no output directory specified in your .jasg/config.json configuration.';
+            $msg = 'There is no output directory specified in your .blogisthenics/config.json configuration.';
             throw new SiteValidationException($msg);
         }
     }

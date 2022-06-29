@@ -2,4 +2,4 @@
 
 namespace Cspray\Blogisthenics\Exception;
 
-class ParsingException extends JasgException {}
+class ParsingException extends BlogisthenicsException {}

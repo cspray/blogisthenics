@@ -69,17 +69,15 @@ class EngineTest extends TestCase {
 
     public function testSiteConfigurationComesFromDotBlogisthenicsFolder() {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
         $siteConfig = $site->getConfiguration();
-        $this->assertSame('_layouts', $siteConfig->getLayoutDirectory(), 'Layout directory is not set from config');
-        $this->assertSame('_site', $siteConfig->getOutputDirectory(), 'Output directory is not set from config');
-        $this->assertSame('default.html', $siteConfig->getDefaultLayoutName(), 'Default layout is not set from config');
+        $this->assertSame('_layouts', $siteConfig->layoutDirectory, 'Layout directory is not set from config');
+        $this->assertSame('_site', $siteConfig->outputDirectory, 'Output directory is not set from config');
+        $this->assertSame('default.html', $siteConfig->defaultLayout, 'Default layout is not set from config');
     }
 
     public function testSiteLayoutCount() {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
 
         $layouts = $site->getAllLayouts();
@@ -88,7 +86,6 @@ class EngineTest extends TestCase {
 
     public function testSitePageCount() {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
 
         $this->assertCount(3, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
@@ -96,7 +93,6 @@ class EngineTest extends TestCase {
 
     public function testSiteStaticAssetCount() {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
 
         $this->assertCount(2, $site->getAllStaticAssets(), 'Expected to have 2 static asset');
@@ -135,12 +131,10 @@ class EngineTest extends TestCase {
         return [
             ['getAllLayouts', 0, [
                 'date' => '2018-07-02',
-                'is_layout' => true,
                 'layout' => 'default.html'
             ]],
             ['getAllLayouts', 1, [
                 'date' => '2018-07-11',
-                'is_layout' => true
             ]],
             ['getAllPages', 0, [
                 'date' => '2018-06-23',
@@ -157,12 +151,8 @@ class EngineTest extends TestCase {
                 'layout' => 'article.md',
                 'title' => 'Nested Layout Article',
             ]],
-            ['getAllStaticAssets', 0, [
-                'is_static_asset' => true
-            ]],
-            ['getAllStaticAssets', 1, [
-                'is_static_asset' => true
-            ]]
+            ['getAllStaticAssets', 0, []],
+            ['getAllStaticAssets', 1, []]
         ];
     }
 
@@ -235,15 +225,15 @@ class EngineTest extends TestCase {
     public function siteValidationErrors() : array {
         return [
             [
-                'The layouts directory in your .jasg/config.json configuration, "_layouts", does not exist.',
+                'The layouts directory in your .blogisthenics/config.json configuration, "_layouts", does not exist.',
                 new NotFoundLayoutDirectoryConfigurationTestSite()
             ],
             [
-                'There is no output directory specified in your .jasg/config.json configuration.',
+                'There is no output directory specified in your .blogisthenics/config.json configuration.',
                 new EmptyOutputDirectoryConfigurationTestSite()
             ],
             [
-                'There is no layouts directory specified in your .jasg/config.json configuration.',
+                'There is no layouts directory specified in your .blogisthenics/config.json configuration.',
                 new EmptyLayoutDirectoryConfigurationTestSite()
             ],
         ];

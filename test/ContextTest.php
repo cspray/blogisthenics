@@ -120,4 +120,33 @@ class ContextTest extends TestCase {
 
         $this->assertSame('baz', $context->foo(), 'Expected the method call to be available based on delegator');
     }
+
+    public function testHasYieldReturnsFalseIfNoYield() {
+        $context = new Context($this->escaper, $this->methodDelegator, []);
+
+        $this->assertFalse($context->hasYield());
+    }
+
+    public function testHasYieldReturnsTrueIfYield() {
+        $context = new Context($this->escaper, $this->methodDelegator, [], fn() => 'yielded content');
+
+        $this->assertTrue($context->hasYield());
+    }
+
+    public function testYieldThrowsExceptionIfNothingToYield() {
+        $context = new Context($this->escaper, $this->methodDelegator, []);
+
+        $this->expectException(BadMethodCallException::class);
+        $this->expectExceptionMessage('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
+
+        $context->yield();
+    }
+
+    public function testYieldWithSomethingReturnsValue() {
+        $context = new Context($this->escaper, $this->methodDelegator, [], fn() => 'returned value');
+
+        $actual = $context->yield();
+
+        $this->assertSame('returned value', $actual);
+    }
 }

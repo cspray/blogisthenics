@@ -14,7 +14,7 @@ class StandardTestSite extends AbstractTestSite {
     <meta charset="utf-8" />
   </head>
   <body>
-    <?= $this->content ?>
+    <?= $this->yield() ?>
   </body>
 </html>
 HTML;
@@ -37,7 +37,7 @@ But _should not_ parse Markdown.
 HTML;
 
         $vfs->get('/')->add('install_dir', $this->dir([
-            '.jasg' => $this->dir([
+            '.blogisthenics' => $this->dir([
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
@@ -47,7 +47,7 @@ HTML;
             '_layouts' => $this->dir([
                 'article.md.php' => $this->content(
                     ['layout' => 'default.html'],
-                    '# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->content ?>',
+                    '# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->yield() ?>',
                     new \DateTime('2018-07-02 22:01:35')
                 ),
                 'default.html.php' => $this->content(

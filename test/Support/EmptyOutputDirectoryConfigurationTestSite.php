@@ -8,7 +8,7 @@ class EmptyOutputDirectoryConfigurationTestSite extends AbstractTestSite {
 
     protected function doPopulateVirtualFilesystem(VfsFileSystem $vfs) {
         $vfs->get('/')->add('install_dir', $this->dir([
-            '.jasg' => $this->dir([
+            '.blogisthenics' => $this->dir([
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '',

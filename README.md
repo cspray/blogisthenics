@@ -1,87 +1,44 @@
-# Jasg
+# Blogisthenics
 
-Just a site generator (Jasg) written on top of PHP 7+ and [Amp], its primary use case being the creation of my personal blog at 
-[cspray.github.io]. Though the primary use case is a blog there is nothing blog-aware in this library; blog-specific 
-functionality is provided by a series of plugins. This makes Jasg suitable for any type of statically generated site.
+A site generator written in PHP. Are you looking for a static site generator with the following features:
 
-Many aspects of this library and its supported plugins are inspired by my time creating content with [Jekyll]. Much :heart: 
-and respect to the developers of this project. That being said, if you're curious why I decided to create my own static 
-site generator instead of using the aforementioned software please checkout [Why not Jekyll?].
+- A [SPA](https://en.wikipedia.org/wiki/Single-page_application) using the latest JavaScript Web Components?
+- The newest CSS frameworks baked right in?
+- Access to the fanciest, most modern templating engine?
+- Integration with your favorite framework?
 
-> This software is still in alpha phase and may not be feature complete and is likely to have bugs in more complex sites.
+Then this project isn't for you because Blogisthenics doesn't offer any of those things! And never will! What do we give you instead?
 
-## Features
-
-- **Lean and minimalistic.** Out of the box Blogisthenics has a small amount of functionality. All bells and whistles are 
-provided by plugins that must be explicitly defined. For more information see the [Usage Guide](#Usage_Guide). Additionally 
-we are very stringent about which dependencies we use; there are currently only 4 Composer dependencies and many design 
-decisions were made with the idea of limiting the number of dependencies we require.
-- **JSON as Front Matter, PHP as templating engine.** I prefer JSON over YAML; complex structures are easier for me to reason 
-about and parsing YAML in PHP requires more dependencies. I also believe that for generating simple static sites PHP is 
-perfectly reasonable default templating engine. _There are plans to allow the Front Matter type and Templating engines to 
-be more dynamic in the future._
-- **Asynchronous I/O.** While unlikely to be a noticeable benefit unless your site is incredibly large plugins can take 
-advantage of the functionality if network requests are necessary to generate data files. For more information about 
-the benefits and usage of async I/O and network requests please read the documentation at [Amp].
-- **CLI Tool**. _NYI_
+- A way to create a boring ol' [MPA]() using Markdown and HTML, where clicking on a link makes the whole page refresh. So old school!
+- A powerful, no-frills templating engine that's been in use for over 20 years. PHP itself!
+- Absolutely no JavaScript or related tooling out-of-the-box. I prefer to have just 1 shitty language in my site generators, thank-you-very-much!
 
 ## Usage Guide
 
-> All directory paths below are given assuming that root is the root directory of your Jasg installation.
+Oh, shit. You're still here? In all honesty, you probably shouldn't use this software! There's just an ass-load of site generators out there and nearly all of them are going to be more supported than whatever this ball of crap turns into. The stuff I write below is mostly for my own benefit so when I come back here in 6 months I can figure out what the hell is going on.
 
-### Types of Content 
+### Directory Structure
 
-Each file, in each directory, in your Jasg site's root will ultimately be converted to a specific PHP type that represents
-the state of the file and determines where it is located in your built site, if the file is to be included at all.
+Blogisthenics follows a principle that we provide reasonable defaults for your site configuration, but can override any of the defaults to customize your installation. We suggest that you have a directory structure that resembles the following:
 
-- `Page`
-
-- `StaticAsset`
-- `Layout` 
-
-### Site Configuration
-
-All Jasg-powered sites are required to have a configuration file present at `/.jasg/config.json`. This file 
-defines your site's configuration and determines a small amount of core functionality, primarily where your template 
-layouts are located and what directory you want your site output to. Additionally this may be where you define plugin 
-specific configuration, this is talked about in more detail in the _Plugin Guide_.
-
-Here's an example configuration with the default values for Jasg site's created by the CLI tool. Explanations for each 
-attribute is provided below:
-
-```json
-{
-  "layout_directory": "_layouts",
-  "output_directory": "_site",
-  "default_layout": "default.html"
-}
+```
+/.blogisthenics
+    config.json         # Configure this library, if not provided default values will be utilized
+/content                # The actual content for your site goes here
+    /assets             # CSS, JS, images ... isn't treated specially, convention to put stuff here
+    /blog               # Your blog articles ... could be named whatever you want
+    index.md            # Markdown files are ok. Front-matter parsing and layouts are supported
+    about.html          # HTML files are ok too, you won't get any parsing or layout support though
+    contact.html.php    # Add a PHP extension to enable front-matter parsing and layout support
+/data
+    ...                 # Store JSON files here to access in the KeyValueStore
+/layouts
+    main.html.php       # Store PHP template files here to use as layouts
+    article.html.php    # Layouts can be nested as deep as you want, but there's probably a logical limit
+/src
+    ...                 # PHP code for whatever is required to build your site
 ```
 
-**`layout_directory`**
+### Content Overview
 
-Relative to the site's root directory this is where all of your layout templates are located. For more information 
-about layouts please see the "Layouts" section in the _Types of Content_ below.
 
-**`output_directory`**
-
-Relative to the site's root directory this is where your generated site will be output. You shouldn't ever put anything 
-into this directory as it will be destroyed and regenerated whenever the site is built. Ultimately this will be a collection 
-of HTML, CSS, and JS files.
-
-**`default_layout`**
-
-The name of the default `Layout` that all `Pages` will inherit if they do not specify one in their FrontMatter.
-
-### Author Guide
-
-Writing content with Jasg is intended to be explicit and straightforward. 
-
-### Plugin Guide
-
-## How the sausage is made
-
-## Haven't you heard of Jekyll?
-
-[cspray.github.io]: https://cspray.github.io
-[Amp]: https://amphp.org
-[Jekyll]: https://jekyllrb.com/

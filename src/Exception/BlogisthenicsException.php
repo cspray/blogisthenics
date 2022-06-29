@@ -4,6 +4,6 @@ namespace Cspray\Blogisthenics\Exception;
 
 use RuntimeException;
 
-class JasgException extends RuntimeException {
+class BlogisthenicsException extends RuntimeException {
 
 }

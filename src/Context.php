@@ -8,14 +8,18 @@ use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
 
-    private $data;
+    private array $data;
+
+    private $yield;
 
     public function __construct(
         private readonly Escaper $escaper,
         private readonly MethodDelegator $methodDelegator,
-        array $data
+        array $data,
+        callable $yield = null
     ) {
         $this->data = $this->convertNestedArraysToContexts($data);
+        $this->yield = $yield;
     }
 
     private function convertNestedArraysToContexts(array $data) : array {
@@ -26,11 +30,23 @@ final class Context implements ArrayAccess {
         return $cleanData;
     }
 
-    public function __set(string $name, $value) : void {
+    public function hasYield() : bool {
+        return isset($this->yield);
+    }
+
+    public function yield() : string {
+        if (!isset($this->yield)) {
+            throw new BadMethodCallException('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
+        }
+
+        return ($this->yield)();
+    }
+
+    public function __set(string $name, mixed $value) : void {
         throw new BadMethodCallException('Attempted to set a value on an immutable object');
     }
 
-    public function __get(string $name) {
+    public function __get(string $name) : Context|string|null {
         $value = $this->data[$name] ?? null;
         if ($value instanceof Context) {
             return $value;
@@ -55,61 +71,19 @@ final class Context implements ArrayAccess {
         return $this->methodDelegator->executeMethod($this, $name, $arguments);
     }
 
-    /**
-     * Whether a offset exists
-     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
-     * @param mixed $offset <p>
-     * An offset to check for.
-     * </p>
-     * @return boolean true on success or false on failure.
-     * </p>
-     * <p>
-     * The return value will be casted to boolean if non-boolean was returned.
-     * @since 5.0.0
-     */
-    public function offsetExists($offset) {
+    public function offsetExists(mixed $offset) : bool {
         return $this->__isset((string) $offset);
     }
 
-    /**
-     * Offset to retrieve
-     * @link http://php.net/manual/en/arrayaccess.offsetget.php
-     * @param mixed $offset <p>
-     * The offset to retrieve.
-     * </p>
-     * @return mixed Can return all value types.
-     * @since 5.0.0
-     */
-    public function offsetGet($offset) {
+    public function offsetGet(mixed $offset) : Context|string|null {
         return $this->__get((string) $offset);
     }
 
-    /**
-     * Offset to set
-     * @link http://php.net/manual/en/arrayaccess.offsetset.php
-     * @param mixed $offset <p>
-     * The offset to assign the value to.
-     * </p>
-     * @param mixed $value <p>
-     * The value to set.
-     * </p>
-     * @return void
-     * @since 5.0.0
-     */
-    public function offsetSet($offset, $value) {
+    public function offsetSet(mixed $offset, mixed $value) : void {
         throw new BadMethodCallException('Attempted to set a value on an immutable object');
     }
 
-    /**
-     * Offset to unset
-     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
-     * @param mixed $offset <p>
-     * The offset to unset.
-     * </p>
-     * @return void
-     * @since 5.0.0
-     */
-    public function offsetUnset($offset) {
+    public function offsetUnset(mixed $offset) : void {
         throw new BadMethodCallException('Attempted to unset a value on an immutable object');
     }
 }

@@ -2,4 +2,4 @@
 
 namespace Cspray\Blogisthenics\Exception;
 
-class SiteValidationException extends JasgException {}
+class SiteValidationException extends BlogisthenicsException {}

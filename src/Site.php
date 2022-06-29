@@ -26,9 +26,9 @@ final class Site {
     }
 
     public function addContent(Content $content) : void {
-        if ($content->frontMatter->get('is_layout')) {
+        if ($content->isLayout) {
             $this->layouts[] = $content;
-        } else if ($content->frontMatter->get('is_static_asset')) {
+        } else if ($content->isStaticAsset) {
             $this->staticAssets[] = $content;
         } else {
             $this->pages[] = $content;
@@ -37,7 +37,7 @@ final class Site {
 
     public function findLayout(string $name) : ?Content {
         foreach ($this->layouts as $layout) {
-            if (preg_match('<' . $name . '.php$>', $layout->name)) {
+            if (preg_match('<' . $name . '\.php$>', $layout->name)) {
                 return $layout;
             }
         }
