@@ -4,8 +4,19 @@ namespace Cspray\Blogisthenics;
 
 final class Site {
 
+    /**
+     * @var Content[]
+     */
     private array $layouts = [];
+
+    /**
+     * @var Content[]
+     */
     private array $pages = [];
+
+    /**
+     * @var Content[]
+     */
     private array $staticAssets = [];
 
     public function __construct(private readonly SiteConfiguration $siteConfiguration) {}
@@ -15,9 +26,9 @@ final class Site {
     }
 
     public function addContent(Content $content) : void {
-        if ($content->getFrontMatter()->get('is_layout')) {
+        if ($content->frontMatter->get('is_layout')) {
             $this->layouts[] = $content;
-        } else if ($content->getFrontMatter()->get('is_static_asset')) {
+        } else if ($content->frontMatter->get('is_static_asset')) {
             $this->staticAssets[] = $content;
         } else {
             $this->pages[] = $content;
@@ -26,7 +37,7 @@ final class Site {
 
     public function findLayout(string $name) : ?Content {
         foreach ($this->layouts as $layout) {
-            if (preg_match('<' . $name . '.php$>', $layout->getName())) {
+            if (preg_match('<' . $name . '.php$>', $layout->name)) {
                 return $layout;
             }
         }
@@ -45,7 +56,7 @@ final class Site {
      */
     public function getAllPages() : array {
         $pages = $this->pages;
-        usort($pages, fn(Content $a, Content $b)  => $a->getDate() <=> $b->getDate());
+        usort($pages, fn(Content $a, Content $b)  => $a->postDate <=> $b->postDate);
         return $pages;
     }
 

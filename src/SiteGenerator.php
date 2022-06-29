@@ -33,11 +33,9 @@ final class SiteGenerator {
                 $staticContent = new Content(
                     $filePath,
                     (new DateTimeImmutable())->setTimestamp($mtime),
-                    new FrontMatter([
-                        'output_path' => $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath),
-                        'is_static_asset' => true
-                    ]),
-                    new StaticTemplate($filePath)
+                    new FrontMatter(['is_static_asset' => true]),
+                    new StaticTemplate($filePath),
+                    $this->rootDirectory . '/_site' . $outputDir . '/' . basename($filePath)
                 );
                 $site->addContent($staticContent);
             }
@@ -93,7 +91,8 @@ final class SiteGenerator {
             $filePath,
             $pageDate,
             $frontMatter,
-            $template
+            $template,
+            $this->getOutputPath($filePath, $fileName)
         );
 
         $site->addContent($content);
@@ -137,8 +136,6 @@ final class SiteGenerator {
                 $dataToAdd['title'] = (string) s($potentialTitle)->replace('-', ' ')->titleize();
             }
 
-            $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
-            $dataToAdd['output_path'] = $this->rootDirectory . '/_site' . $outputDir . '/' . $fileNameWithoutFormat . '.html';
         }
 
         return $frontMatter->withData($dataToAdd);
@@ -151,7 +148,6 @@ final class SiteGenerator {
 
     private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
         $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
-        //$format = explode('.', basename($fileInfo->getPathname()))[1];
         $contents = $parsedFile->getRawContents();
 
         file_put_contents($tempName, $contents);
@@ -167,12 +163,19 @@ final class SiteGenerator {
         string $filePath,
         DateTimeImmutable $pageDate,
         FrontMatter $frontMatter,
-        Template $template
+        Template $template,
+        string $outputPath
     ) : Content {
         if ($this->isLayoutPath($siteConfig, $filePath)) {
             $frontMatter = $frontMatter->withData(['is_layout' => true]);
         }
 
-        return new Content($filePath, $pageDate, $frontMatter, $template);
+        return new Content($filePath, $pageDate, $frontMatter, $template, $outputPath);
+    }
+
+    private function getOutputPath(string $filePath, string $fileName) : string {
+        $fileNameWithoutFormat = explode('.', $fileName)[0];
+        $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
+        return $this->rootDirectory . '/_site' . $outputDir . '/' . $fileNameWithoutFormat . '.html';
     }
 }

@@ -124,9 +124,8 @@ class EngineTest extends TestCase {
      */
     public function testSitePagesHaveCorrectDate(string $method, int $index, DateTimeImmutable $expectedDate) {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
-        $date = $site->$method()[$index]->getDate();
+        $date = $site->$method()[$index]->postDate;
 
         // DateTimeImmutable are not the same object, we care about equality here
         $this->assertEquals($expectedDate, $date, 'Expected the date to be the last modification time');
@@ -147,26 +146,21 @@ class EngineTest extends TestCase {
                 'date' => '2018-06-23',
                 'layout' => 'default.html',
                 'title' => 'The Blog Title',
-                'output_path' => 'vfs://install_dir/_site/posts/2018-06-23-the-blog-article-title.html'
             ]],
             ['getAllPages', 1, [
                 'date' => '2018-06-30',
                 'layout' => 'default.html',
                 'title' => 'Another Blog Article',
-                'output_path' => 'vfs://install_dir/_site/posts/2018-06-30-another-blog-article.html'
             ]],
             ['getAllPages', 2, [
                 'date' => '2018-07-01',
                 'layout' => 'article.md',
                 'title' => 'Nested Layout Article',
-                'output_path' => 'vfs://install_dir/_site/posts/2018-07-01-nested-layout-article.html'
             ]],
             ['getAllStaticAssets', 0, [
-                'output_path' => 'vfs://install_dir/_site/css/styles.css',
                 'is_static_asset' => true
             ]],
             ['getAllStaticAssets', 1, [
-                'output_path' => 'vfs://install_dir/_site/js/code.js',
                 'is_static_asset' => true
             ]]
         ];
@@ -177,9 +171,8 @@ class EngineTest extends TestCase {
      */
     public function testSitePagesHaveCorrectRawFrontMatter(string $method, int $index, array $expectedFrontMatter) {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
-        $frontMatter = iterator_to_array($site->$method()[$index]->getFrontMatter());
+        $frontMatter = iterator_to_array($site->$method()[$index]->frontMatter);
 
         ksort($frontMatter);
         ksort($expectedFrontMatter);
@@ -204,10 +197,8 @@ class EngineTest extends TestCase {
      */
     public function testSitePagesSourcePathIsAccurate(string $method, int $index, string $expectedSourcePath) {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
-        /** @var Page $layoutPage */
-        $sourcePath = $site->$method()[$index]->getName();
+        $sourcePath = $site->$method()[$index]->name;
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
     }
 
@@ -227,9 +218,8 @@ class EngineTest extends TestCase {
      */
     public function testSitePagesOutputFileHasCorrectContent(string $method, int $pageIndex, string $filePath) {
         $this->useStandardTestSite();
-        /** @var Site $site */
         $site = $this->subject->buildSite();
-        $outputPath = $site->$method()[$pageIndex]->getFrontMatter()->get('output_path');
+        $outputPath = $site->$method()[$pageIndex]->outputPath;
         $fileExists = file_exists($outputPath);
         $this->assertTrue($fileExists, 'A file was expected to exist at the output path');
 
@@ -276,7 +266,7 @@ class EngineTest extends TestCase {
     public function testSitePageWithLayoutNotFoundThrowsError() {
         $this->assertExceptionThrown(
             SiteGenerationException::class,
-            'The page "2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
+            'The page "vfs://install_dir/2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
             function () {
                 (new PageSpecifiesNotFoundLayoutTestSite())->populateVirtualFileSystem($this->vfs);
                 $this->subject->buildSite();

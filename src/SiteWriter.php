@@ -16,9 +16,8 @@ final class SiteWriter {
     ) {}
 
     public function writeSite(Site $site) : void {
-        /** @var Content $page */
         foreach ($site->getAllPages() as $page) {
-            $outputFile = (string)$page->getFrontMatter()->get('output_path');
+            $outputFile = $page->outputPath;
             $this->ensureDirectoryExists(dirname($outputFile));
 
             $contents = $this->buildTemplateContents($site, $page);
@@ -26,11 +25,11 @@ final class SiteWriter {
         }
 
         foreach ($site->getAllStaticAssets() as $staticAsset) {
-            $outputFile = (string)$staticAsset->getFrontMatter()->get('output_path');
+            $outputFile = $staticAsset->outputPath;
             $this->ensureDirectoryExists(dirname($outputFile));
 
             $context = $this->contextFactory->create([]);
-            $contents = $staticAsset->getTemplate()->render($this->templateFormatter, $context);
+            $contents = $staticAsset->template->render($this->templateFormatter, $context);
             file_put_contents($outputFile, $contents);
         }
     }
@@ -43,21 +42,20 @@ final class SiteWriter {
 
     private function buildTemplateContents(Site $site, Content $page) : string {
         $pageTemplatesToRender = $this->getPagesToRender($site, $page);
-        $pageFrontMatter = $page->getFrontMatter();
 
         $finalLayout = array_pop($pageTemplatesToRender);
         $contents = null;
         foreach ($pageTemplatesToRender as $contentPage) {
-            $templateData = $this->mergeAndConvertToArray($pageFrontMatter->withData(['content' => $contents]), $contentPage->getFrontMatter());
+            $templateData = $this->mergeAndConvertToArray($page->frontMatter->withData(['content' => $contents]), $contentPage->frontMatter);
             $context = $this->contextFactory->create($templateData);
-            $markup = $contentPage->getTemplate()->render($this->templateFormatter, $context);
+            $markup = $contentPage->template->render($this->templateFormatter, $context);
 
             $contents = new SafeToNotEncode($markup . PHP_EOL);
         }
 
-        $templateData = $this->mergeAndConvertToArray($pageFrontMatter->withData(['content' => $contents]), $finalLayout->getFrontMatter());
+        $templateData = $this->mergeAndConvertToArray($page->frontMatter->withData(['content' => $contents]), $finalLayout->frontMatter);
         $context = $this->contextFactory->create($templateData);
-        return $finalLayout->getTemplate()->render($this->templateFormatter, $context);
+        return $finalLayout->template->render($this->templateFormatter, $context);
     }
 
     private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {
@@ -73,16 +71,16 @@ final class SiteWriter {
     private function getPagesToRender(Site $site, Content $page) : array {
         $pages = [];
         $pages[] = $page;
-        $layoutName = $page->getFrontMatter()->get('layout');
+        $layoutName = $page->frontMatter->get('layout');
 
         while ($layoutName !== null) {
             $layout = $site->findLayout((string) $layoutName);
             if (is_null($layout)) {
-                $msg = 'Content specified a layout "' . $layoutName . '" but the layout is not present.';
+                $msg = 'The page "' . $page->name . '" specified a layout "' . $layoutName . '" but the layout is not present.';
                 throw new SiteGenerationException($msg);
             }
             $pages[] = $layout;
-            $layoutName = $layout->getFrontMatter()->get('layout');
+            $layoutName = $layout->frontMatter->get('layout');
         }
 
         return $pages;

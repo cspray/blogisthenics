@@ -18,7 +18,7 @@
   "autoload-dev": {
     "psr-4": {
       "Cspray\\Blogisthenics\\Test\\": "test",
-      "Cspray\\Blogisthenics\\": "fixture_src"
+      "Cspray\\BlogisthenicsFixture\\": "fixture_src"
     }
   }
 }
