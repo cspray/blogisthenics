@@ -23,22 +23,27 @@ final class SiteGenerator {
     public function generateSite(SiteConfiguration $siteConfiguration) : Site {
         $site = new Site($siteConfiguration);
 
+        /** @var SplFileInfo $fileInfo */
         foreach ($this->getSourceIterator() as $fileInfo) {
             if ($this->isParseablePath($siteConfiguration, $fileInfo)) {
                 $this->doParsing($site, $fileInfo);
-            } else if ($this->isStaticAssetPath($siteConfiguration, $fileInfo)) {
-                $filePath = $fileInfo->getPathname();
-                $mtime = filemtime($filePath);
-                $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
-                $staticContent = new Content(
-                    $filePath,
-                    (new DateTimeImmutable())->setTimestamp($mtime),
+            } else if(!$this->isConfigOrOutputPath($siteConfiguration, $fileInfo)) {
+                $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
+                $content = $this->createContent(
+                    $siteConfiguration,
+                    $fileInfo,
+                    (new DateTimeImmutable())->setTimestamp($fileInfo->getMTime()),
                     new FrontMatter([]),
-                    new StaticTemplate($filePath),
-                    $this->rootDirectory . '/' . $siteConfiguration->outputDirectory . $outputDir . '/' . basename($filePath),
-                    isStaticAsset: true
+                    new StaticTemplate($fileInfo->getPathname()),
+                    sprintf(
+                        '%s/%s%s/%s',
+                        $this->rootDirectory,
+                        $siteConfiguration->outputDirectory,
+                        $contentOutputDir,
+                        $fileInfo->getBasename()
+                    )
                 );
-                $site->addContent($staticContent);
+                $site->addContent($content);
             }
         }
 
@@ -51,21 +56,24 @@ final class SiteGenerator {
     }
 
     private function isParseablePath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        return $fileInfo->isFile()
-            && !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo->getPathname())
-            && $fileInfo->getExtension() === 'php';
+        return !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
+            $fileInfo->isFile() &&
+            $fileInfo->getExtension() === 'php';
     }
 
     private function isStaticAssetPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        return $fileInfo->isFile()
-            && !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo->getPathname());
+        return !$this->isParseablePath($siteConfiguration, $fileInfo) &&
+            !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
+            !$this->isLayoutPath($siteConfiguration, $fileInfo);
     }
 
-    private function isConfigOrOutputPath(SiteConfiguration $siteConfiguration, string $filePath) : bool {
-        $configPattern = '<^' . $this->rootDirectory . '/\.blogisthenics' . '>';
-        $outputPattern = '<^' . $this->rootDirectory . '/' . $siteConfiguration->outputDirectory . '>';
-        return preg_match($configPattern, $filePath) || preg_match($outputPattern, $filePath);
-
+    private function isConfigOrOutputPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
+        $pattern = sprintf(
+            '<^%s/(\.blogisthenics|%s)>',
+            $this->rootDirectory,
+            $siteConfiguration->outputDirectory
+        );
+        return (bool) preg_match($pattern, $fileInfo->getPathname());
     }
 
     private function doParsing(Site $site, SplFileInfo $fileInfo) : void {
@@ -78,13 +86,12 @@ final class SiteGenerator {
             $site->getConfiguration(),
             $parsedFile,
             $pageDate,
-            $filePath,
-            $fileName
+            $fileInfo
         );
         $template = $this->createTemplate($fileInfo, $parsedFile);
         $content = $this->createContent(
             $site->getConfiguration(),
-            $filePath,
+            $fileInfo,
             $pageDate,
             $frontMatter,
             $template,
@@ -113,20 +120,19 @@ final class SiteGenerator {
         SiteConfiguration $siteConfig,
         ParserResults $parsedFile,
         DateTimeImmutable $pageDate,
-        string $filePath,
-        string $fileName
+        SplFileInfo $fileInfo
     ) : FrontMatter {
         $frontMatter = new FrontMatter($parsedFile->rawFrontMatter);
         $dataToAdd = [
             'date' => $pageDate->format('Y-m-d')
         ];
 
-        if (!$this->isLayoutPath($siteConfig, $filePath)) {
+        if (!$this->isLayoutPath($siteConfig, $fileInfo)) {
             if (is_null($frontMatter->get('layout'))) {
                 $dataToAdd['layout'] = $siteConfig->defaultLayout;
             }
 
-            $fileNameWithoutFormat = explode('.', $fileName)[0];
+            $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
             if (is_null($frontMatter->get('title'))) {
                 $potentialTitle = preg_replace('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\-/', '', $fileNameWithoutFormat);
                 $dataToAdd['title'] = (string) s($potentialTitle)->replace('-', ' ')->titleize();
@@ -137,9 +143,9 @@ final class SiteGenerator {
         return $frontMatter->withData($dataToAdd);
     }
 
-    private function isLayoutPath(SiteConfiguration $siteConfig, string $filePath) : bool {
+    private function isLayoutPath(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : bool {
         $layoutsPath = '(^' . $this->rootDirectory . '/' . $siteConfig->layoutDirectory. ')';
-        return (bool) preg_match($layoutsPath, $filePath);
+        return (bool) preg_match($layoutsPath, $fileInfo->getPathname());
     }
 
     private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
@@ -156,15 +162,24 @@ final class SiteGenerator {
 
     private function createContent(
         SiteConfiguration $siteConfig,
-        string $filePath,
+        SplFileInfo $fileInfo,
         DateTimeImmutable $pageDate,
         FrontMatter $frontMatter,
         Template $template,
         string $outputPath
     ) : Content {
-        $isLayout = $this->isLayoutPath($siteConfig, $filePath);
+        $isStaticAsset = $this->isStaticAssetPath($siteConfig, $fileInfo);
+        $isLayout = $this->isLayoutPath($siteConfig, $fileInfo);
 
-        return new Content($filePath, $pageDate, $frontMatter, $template, $outputPath, isLayout: $isLayout);
+        return new Content(
+            $fileInfo->getPathname(),
+            $pageDate,
+            $frontMatter,
+            $template,
+            $outputPath,
+            isLayout: $isLayout,
+            isStaticAsset: $isStaticAsset
+        );
     }
 
     private function getOutputPath(string $filePath, string $fileName) : string {
