@@ -17,12 +17,40 @@ use function Amp\File\filesystem;
  */
 final class Engine {
 
+    /**
+     * @var DataProvider[]
+     */
+    private array $dataProviders = [];
+
+    /**
+     * @var TemplateHelperProvider[]
+     */
+    private array $templateHelperProviders = [];
+
+    /**
+     * @var DynamicContentProvider[]
+     */
+    private array $dynamicContentProviders = [];
+
     public function __construct(
-        private readonly string        $rootDirectory,
+        private readonly string $rootDirectory,
         private readonly SiteGenerator $siteGenerator,
-        private readonly SiteWriter    $siteWriter
+        private readonly SiteWriter $siteWriter,
+        private readonly KeyValueStore $keyValueStore,
+        private readonly MethodDelegator $methodDelegator
     ) {}
 
+    public function addDataProvider(DataProvider $dataProvider) : void {
+        $this->dataProviders[] = $dataProvider;
+    }
+
+    public function addTemplateHelperProvider(TemplateHelperProvider $helperProvider) : void {
+        $this->templateHelperProviders[] = $helperProvider;
+    }
+
+    public function addDynamicContentProvider(DynamicContentProvider $dynamicContentProvider) : void {
+        $this->dynamicContentProviders[] = $dynamicContentProvider;
+    }
 
     /**
      * Promise will be resolved with a Site object that has had all of the content in your blog turned into the appropriate
@@ -35,7 +63,20 @@ final class Engine {
 
         $this->guardInvalidSiteConfigurationPreGeneration($siteConfig);
 
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->setData($this->keyValueStore);
+        }
+
+        foreach ($this->templateHelperProviders as $templateHelperProvider) {
+            $templateHelperProvider->addTemplateHelpers($this->methodDelegator);
+        }
+
         $site = $this->siteGenerator->generateSite($siteConfig);
+
+        foreach ($this->dynamicContentProviders as $dynamicContentProvider) {
+            $dynamicContentProvider->addContent($site);
+        }
+
         $this->siteWriter->writeSite($site);
         return $site;
     }

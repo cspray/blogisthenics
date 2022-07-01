@@ -2,13 +2,21 @@
 
 namespace Cspray\Blogisthenics;
 
+use League\CommonMark\GithubFlavoredMarkdownConverter;
+
 final class GitHubFlavoredMarkdownFormatter implements Formatter {
 
+    private readonly GithubFlavoredMarkdownConverter $converter;
+
+    public function __construct() {
+        $this->converter = new GithubFlavoredMarkdownConverter();
+    }
+
     public function getFormatType() : string {
-        // TODO: Implement getFormatType() method.
+        return 'md';
     }
 
     public function format(string $contents) : string {
-        // TODO: Implement format() method.
+        return $this->converter->convert($contents);
     }
 }

@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Test\Support;
+namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
 use Vfs\FileSystem as VfsFileSystem;
 
-class StandardTestSite extends AbstractTestSite {
+final class StandardTestSite extends AbstractTestSite {
 
-    protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) {
+    protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) : void {
         $defaultLayoutContent = <<<'HTML'
 <!DOCTYPE html>
 <html>
@@ -39,18 +39,18 @@ HTML;
         $vfs->get('/')->add('install_dir', $this->dir([
             '.blogisthenics' => $this->dir([
                 'config.json' => $this->file(json_encode([
-                    'layout_directory' => '_layouts',
-                    'output_directory' => '_site',
-                    'default_layout' => 'default.html'
+                    'layout_directory' => 'custom-layouts-dir',
+                    'output_directory' => 'custom-site-dir',
+                    'default_layout' => 'primary-layout.html'
                 ]))
             ]),
-            '_layouts' => $this->dir([
+            'custom-layouts-dir' => $this->dir([
                 'article.md.php' => $this->content(
-                    ['layout' => 'default.html'],
+                    ['layout' => 'primary-layout.html'],
                     '# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->yield() ?>',
                     new \DateTime('2018-07-02 22:01:35')
                 ),
-                'default.html.php' => $this->content(
+                'primary-layout.html.php' => $this->content(
                     [],
                     $defaultLayoutContent,
                     new \DateTime('2018-07-11 21:44:50')
@@ -68,7 +68,7 @@ HTML;
                     $theBlogArticleTitleContent
                 ),
                 '2018-06-30-another-blog-article.html.php' => $this->file($anotherBlogArticleContent),
-                '2018-07-01-nested-layout-article.md.php' => $this->content(
+                '2018-07-01-nested-layout-article.md' => $this->content(
                     ['layout' => 'article.md'],
                     'Some article that winds up in a nested layout'
                 )

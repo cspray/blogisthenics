@@ -1,18 +1,27 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Test\Support;
+namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
+use Cspray\Blogisthenics\Test\Support\VirtualFile;
 use Vfs\FileSystem as VfsFileSystem;
 use Vfs\Node\Directory as VfsDirectory;
 use Vfs\Node\File as VfsFile;
 
-abstract class AbstractTestSite {
+abstract class AbstractTestSite implements TestSite {
 
-    final public function populateVirtualFileSystem(VfsFileSystem $vfs) {
-        $this->doPopulateVirtualFileSystem($vfs);
+    final public function populateVirtualFileSystem(VfsFileSystem $fileSystem) : void {
+        $this->doPopulateVirtualFileSystem($fileSystem);
     }
 
-    abstract protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs);
+    public function getDataProviders() : array {
+        return [];
+    }
+
+    public function getTemplateHelperProviders() : array {
+        return [];
+    }
+
+    abstract protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) : void;
 
     protected function content(array $frontMatter, string $contents, \DateTime $mtime = null) : VfsFile {
         $file = (new VirtualFile())->withFrontMatter($frontMatter)->withContent($contents)->build();

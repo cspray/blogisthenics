@@ -4,6 +4,8 @@ namespace Cspray\Blogisthenics;
 
 interface Template {
 
-    public function render(TemplateFormatter $templateFormatter, Context $context) : string;
+    public function getFormatType() : string;
+
+    public function render(Context $context) : string;
 
 }

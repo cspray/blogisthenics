@@ -4,6 +4,7 @@ namespace Cspray\Blogisthenics;
 
 use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
+use FilesystemIterator;
 use Iterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -26,39 +27,29 @@ final class SiteGenerator {
         /** @var SplFileInfo $fileInfo */
         foreach ($this->getSourceIterator() as $fileInfo) {
             if ($this->isParseablePath($siteConfiguration, $fileInfo)) {
-                $this->doParsing($site, $fileInfo);
+                $content = $this->createDynamicContent($siteConfiguration, $fileInfo);
             } else if(!$this->isConfigOrOutputPath($siteConfiguration, $fileInfo)) {
-                $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
-                $content = $this->createContent(
-                    $siteConfiguration,
-                    $fileInfo,
-                    (new DateTimeImmutable())->setTimestamp($fileInfo->getMTime()),
-                    new FrontMatter([]),
-                    new StaticTemplate($fileInfo->getPathname()),
-                    sprintf(
-                        '%s/%s%s/%s',
-                        $this->rootDirectory,
-                        $siteConfiguration->outputDirectory,
-                        $contentOutputDir,
-                        $fileInfo->getBasename()
-                    )
-                );
-                $site->addContent($content);
+                $content = $this->createStaticContent($siteConfiguration, $fileInfo);
+            } else {
+                continue;
             }
+
+            $site->addContent($content);
         }
 
         return $site;
     }
 
     private function getSourceIterator() : Iterator {
-        $directoryIterator = new RecursiveDirectoryIterator($this->rootDirectory, \FilesystemIterator::SKIP_DOTS);
+        $directoryIterator = new RecursiveDirectoryIterator($this->rootDirectory, FilesystemIterator::SKIP_DOTS);
         return new RecursiveIteratorIterator($directoryIterator);
     }
 
     private function isParseablePath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
+        $parseableExtensions = ['php', 'md'];
         return !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
             $fileInfo->isFile() &&
-            $fileInfo->getExtension() === 'php';
+            in_array($fileInfo->getExtension(), $parseableExtensions);
     }
 
     private function isStaticAssetPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
@@ -76,29 +67,45 @@ final class SiteGenerator {
         return (bool) preg_match($pattern, $fileInfo->getPathname());
     }
 
-    private function doParsing(Site $site, SplFileInfo $fileInfo) : void {
+    private function createStaticContent(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : Content {
+        $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
+        return $this->createContent(
+            $siteConfiguration,
+            $fileInfo,
+            (new DateTimeImmutable())->setTimestamp($fileInfo->getMTime()),
+            new FrontMatter([]),
+            new StaticFileTemplate($fileInfo->getPathname(), $fileInfo->getExtension()),
+            sprintf(
+                '%s/%s%s/%s',
+                $this->rootDirectory,
+                $siteConfiguration->outputDirectory,
+                $contentOutputDir,
+                $fileInfo->getBasename()
+            )
+        );
+    }
+
+    private function createDynamicContent(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : Content {
         $filePath = $fileInfo->getPathname();
         $fileName = basename($filePath);
 
         $parsedFile = $this->parseFile($filePath);
         $pageDate = $this->getPageDate($filePath, $fileName);
         $frontMatter = $this->buildFrontMatter(
-            $site->getConfiguration(),
+            $siteConfig,
             $parsedFile,
             $pageDate,
             $fileInfo
         );
         $template = $this->createTemplate($fileInfo, $parsedFile);
-        $content = $this->createContent(
-            $site->getConfiguration(),
+        return $this->createContent(
+            $siteConfig,
             $fileInfo,
             $pageDate,
             $frontMatter,
             $template,
-            $this->getOutputPath($filePath, $fileName)
+            $this->getOutputPath($siteConfig, $fileInfo)
         );
-
-        $site->addContent($content);
     }
 
     private function parseFile(string $filePath) : FileParserResults {
@@ -154,9 +161,14 @@ final class SiteGenerator {
 
         file_put_contents($tempName, $contents);
         if ($fileInfo->getExtension() === 'php') {
-            return new DynamicTemplate($tempName);
+            $fileParts = explode('.', $fileInfo->getBasename());
+            array_shift($fileParts); // This is the file name itself
+            array_pop($fileParts); // This is the PHP extension
+            $format = $fileParts[count($fileParts) - 1];
+
+            return new DynamicFileTemplate($tempName, $format);
         } else {
-            return new StaticTemplate($tempName);
+            return new StaticFileTemplate($tempName, $fileInfo->getExtension());
         }
     }
 
@@ -182,9 +194,15 @@ final class SiteGenerator {
         );
     }
 
-    private function getOutputPath(string $filePath, string $fileName) : string {
-        $fileNameWithoutFormat = explode('.', $fileName)[0];
-        $outputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $filePath));
-        return $this->rootDirectory . '/_site' . $outputDir . '/' . $fileNameWithoutFormat . '.html';
+    private function getOutputPath(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : string {
+        $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
+        $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
+        return sprintf(
+            '%s/%s%s/%s.html',
+            $this->rootDirectory,
+            $siteConfig->outputDirectory,
+            $contentOutputDir,
+            $fileNameWithoutFormat
+        );
     }
 }

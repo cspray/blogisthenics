@@ -34,15 +34,16 @@ final class SiteWriter {
         $contents = null;
         foreach ($pageTemplatesToRender as $contentPage) {
             $templateData = $this->mergeAndConvertToArray($page->frontMatter, $contentPage->frontMatter);
-            $context = $this->contextFactory->create($templateData, is_null($contents) ? null : fn() => $contents);
-            $markup = $contentPage->template->render($this->templateFormatter, $context);
+            $yield = is_null($contents) ? null : fn() => new SafeToNotEncode($contents);
+            $context = $this->contextFactory->create($templateData, $yield);
+            $markup = $contentPage->template->render($context);
 
-            $contents = $markup . PHP_EOL;
+            $contents = $this->templateFormatter->format($contentPage->template->getFormatType(), $markup) . PHP_EOL;
         }
 
         $templateData = $this->mergeAndConvertToArray($page->frontMatter, $finalLayout->frontMatter);
-        $context = $this->contextFactory->create($templateData, fn() => $contents);
-        return $finalLayout->template->render($this->templateFormatter, $context);
+        $context = $this->contextFactory->create($templateData, fn() => new SafeToNotEncode($contents));
+        return $finalLayout->template->render($context);
     }
 
     private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {

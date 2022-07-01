@@ -1,6 +1,6 @@
 # Blogisthenics
 
-A site generator written in PHP. Are you looking for a static site generator with the following features:
+Are you looking for a static site generator with the following features:
 
 - A [SPA](https://en.wikipedia.org/wiki/Single-page_application) using the latest JavaScript Web Components?
 - The newest CSS frameworks baked right in?
@@ -9,9 +9,10 @@ A site generator written in PHP. Are you looking for a static site generator wit
 
 Then this project isn't for you because Blogisthenics doesn't offer any of those things! And never will! What do we give you instead?
 
-- A way to create a boring ol' [MPA]() using Markdown and HTML, where clicking on a link makes the whole page refresh. So old school!
+- A way to create a boring ol' multi-page application using Markdown and HTML, where clicking on a link makes the whole page refresh. So old school!
 - A powerful, no-frills templating engine that's been in use for over 20 years. PHP itself!
 - Absolutely no JavaScript or related tooling out-of-the-box. I prefer to have just 1 shitty language in my site generators, thank-you-very-much!
+- 
 
 ## Usage Guide
 
@@ -23,7 +24,7 @@ Blogisthenics follows a principle that we provide reasonable defaults for your s
 
 ```
 /.blogisthenics
-    config.json         # Configure this library, if not provided default values will be utilized
+    config.json         # Configure Blogisthenics, if not provided default config will be used
 /content                # The actual content for your site goes here
     /assets             # CSS, JS, images ... isn't treated specially, convention to put stuff here
     /blog               # Your blog articles ... could be named whatever you want
@@ -40,5 +41,6 @@ Blogisthenics follows a principle that we provide reasonable defaults for your s
 ```
 
 ### Content Overview
+
 
 

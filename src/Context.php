@@ -4,29 +4,45 @@ namespace Cspray\Blogisthenics;
 
 use ArrayAccess;
 use BadMethodCallException;
+use Closure;
+use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
 use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
 
     private array $data;
-
     private $yield;
+    private Closure $valueEscaper;
+    private KeyValueStore $escapedKeyValueStore;
 
     public function __construct(
         private readonly Escaper $escaper,
         private readonly MethodDelegator $methodDelegator,
+        private readonly KeyValueStore $kv,
         array $data,
         callable $yield = null
     ) {
         $this->data = $this->convertNestedArraysToContexts($data);
         $this->yield = $yield;
+        $escaper = $this->escaper;
+        $this->valueEscaper = static function($value) use($escaper) {
+            if ($value instanceof Context) {
+                return $value;
+            } elseif ($value instanceof SafeToNotEncode) {
+                return (string) $value;
+            } elseif (is_null($value)) {
+                return null;
+            } else {
+                return $escaper->escapeHtml($value);
+            }
+        };
     }
 
     private function convertNestedArraysToContexts(array $data) : array {
         $cleanData = [];
         foreach ($data as $key => $value) {
-            $cleanData[$key] = is_array($value) ? new Context($this->escaper, $this->methodDelegator, $value) : $value;
+            $cleanData[$key] = is_array($value) ? new Context($this->escaper, $this->methodDelegator, $this->kv, $value) : $value;
         }
         return $cleanData;
     }
@@ -40,7 +56,34 @@ final class Context implements ArrayAccess {
             throw new InvalidYieldException('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
         }
 
-        return ($this->yield)();
+        $value = ($this->yield)();
+        return ($this->valueEscaper)($value);
+    }
+
+    public function kv() : KeyValueStore {
+        if (!isset($this->escapedKeyValueStore)) {
+            $this->escapedKeyValueStore = new class($this->kv, $this->valueEscaper) implements KeyValueStore {
+
+                public function __construct(
+                    private readonly KeyValueStore $keyValueStore,
+                    private $valueEscaper
+                ) {}
+
+                public function set(string $key, mixed $value) : void {
+                    throw new InvalidMutationException('Attempted to mutate the KeyValueStore from a template Context. Please mutate KeyValueStore with a DataProvider implementation.');
+                }
+
+                public function get(string $key) : mixed {
+                    $value = $this->keyValueStore->get($key);
+                    return ($this->valueEscaper)($value);
+                }
+
+                public function has(string $key) : bool {
+                    return $this->keyValueStore->has($key);
+                }
+            };
+        }
+        return $this->escapedKeyValueStore;
     }
 
     public function __set(string $name, mixed $value) : void {
@@ -49,15 +92,7 @@ final class Context implements ArrayAccess {
 
     public function __get(string $name) : Context|string|null {
         $value = $this->data[$name] ?? null;
-        if ($value instanceof Context) {
-            return $value;
-        } elseif ($value instanceof SafeToNotEncode) {
-            return (string) $value;
-        } elseif (is_null($value)) {
-            return null;
-        } else {
-            return $this->escaper->escapeHtml($value);
-        }
+        return ($this->valueEscaper)($value);
     }
 
     public function __isset(string $name) : bool {
@@ -69,7 +104,8 @@ final class Context implements ArrayAccess {
     }
 
     public function __call(string $name, array $arguments) {
-        return $this->methodDelegator->executeMethod($this, $name, $arguments);
+        $value = $this->methodDelegator->executeMethod($this, $name, $arguments);
+        return ($this->valueEscaper)($value);
     }
 
     public function offsetExists(mixed $offset) : bool {

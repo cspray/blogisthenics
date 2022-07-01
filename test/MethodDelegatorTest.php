@@ -8,6 +8,7 @@ namespace Cspray\Blogisthenics\Test;
 
 use BadMethodCallException;
 use Cspray\Blogisthenics\Context;
+use Cspray\Blogisthenics\InMemoryKeyValueStore;
 use Cspray\Blogisthenics\MethodDelegator;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +16,11 @@ use PHPUnit\Framework\TestCase;
 class MethodDelegatorTest extends TestCase {
 
     private function context() : Context {
-        return new Context(new Escaper(), new MethodDelegator(), []);
+        return new Context(
+            new Escaper(),
+            new MethodDelegator(),
+            new InMemoryKeyValueStore(),
+            []);
     }
 
     public function testExecuteMethodNotFoundThrowsException() {
@@ -58,7 +63,7 @@ class MethodDelegatorTest extends TestCase {
             return $this->foo;
         });
 
-        $context = new Context(new Escaper(), $subject, ['foo' => 'baz']);
+        $context = new Context(new Escaper(), $subject, new InMemoryKeyValueStore(), ['foo' => 'baz']);
         $actual = $subject->executeMethod($context, 'bar');
 
         $this->assertSame('baz', $actual, 'Expected to have access to the Context as $this');
