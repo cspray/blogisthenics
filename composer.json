@@ -5,7 +5,9 @@
     "php": "^8.1",
     "laminas/laminas-escaper": "^2.10.0",
     "danielstjules/stringy": "^3.1",
-    "league/commonmark": "^2.3"
+    "league/commonmark": "^2.3",
+    "minicli/minicli": "^3.2",
+    "minicli/command-help": "^0.1.0"
   },
   "require-dev": {
     "adlawson/vfs": "^0.12.1",
@@ -13,7 +15,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Cspray\\Blogisthenics\\": "src"
+      "Cspray\\Blogisthenics\\": "src",
+      "Cspray\\Blogisthenics\\Cli\\": "cli_src"
     }
   },
   "autoload-dev": {

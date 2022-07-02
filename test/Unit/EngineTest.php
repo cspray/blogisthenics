@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\Blogisthenics\ContextFactory;
 use Cspray\Blogisthenics\DataProvider;
@@ -24,7 +24,6 @@ use Cspray\BlogisthenicsFixture\Fixtures;
 use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Util\Test;
 use Vfs\FileSystem as VfsFileSystem;
 
 class EngineTest extends TestCase {

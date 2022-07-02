@@ -4,7 +4,7 @@
  *
  */
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
 use Cspray\Blogisthenics\Context;

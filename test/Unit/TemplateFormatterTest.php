@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\Blogisthenics\Formatter;
 use Cspray\Blogisthenics\TemplateFormatter;

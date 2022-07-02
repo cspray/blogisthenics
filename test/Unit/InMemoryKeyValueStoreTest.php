@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics\Test;
+namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\Blogisthenics\InMemoryKeyValueStore;
 use PHPUnit\Framework\TestCase;
