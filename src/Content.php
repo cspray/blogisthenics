@@ -1,17 +1,20 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+
+namespace Cspray\Blogisthenics;
 
 use DateTimeImmutable;
 
-interface Content {
+final class Content {
 
-    public function getDate() : DateTimeImmutable;
-
-    public function getSourcePath() : string;
-
-    public function getFrontMatter() : FrontMatter;
-
-    public function getTemplate() : Template;
+    public function __construct(
+        public readonly string $name,
+        public readonly DateTimeImmutable $postDate,
+        public readonly FrontMatter $frontMatter,
+        public readonly Template $template,
+        public readonly string $outputPath,
+        public readonly bool $isLayout = false,
+        public readonly bool $isStaticAsset = false
+    ) {}
 
 }

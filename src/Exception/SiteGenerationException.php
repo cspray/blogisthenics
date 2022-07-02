@@ -1,5 +1,5 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Exception;
+namespace Cspray\Blogisthenics\Exception;
 
-class SiteGenerationException extends JasgException {}
+class SiteGenerationException extends BlogisthenicsException {}

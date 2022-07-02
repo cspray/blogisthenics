@@ -1,5 +1,5 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg\Exception;
+namespace Cspray\Blogisthenics\Exception;
 
-class ParsingException extends JasgException {}
+class ParsingException extends BlogisthenicsException {}

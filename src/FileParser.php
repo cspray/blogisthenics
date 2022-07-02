@@ -1,16 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
-use Cspray\Jasg\FileParser\Results as ParserResults;
-use Cspray\Jasg\Exception\ParsingException;
+use Cspray\Blogisthenics\Exception\ParsingException;
 
 final class FileParser {
 
-    public function parse(string $fileContents) : ParserResults {
-        list($hasFrontMatter, $frontMatterBuffer, $contentBuffer) = $this->parseIntoRawBuffers($fileContents);
+    public function parse(string $filePath, string $fileContents) : FileParserResults {
+        list($frontMatterBuffer, $contentBuffer) = $this->parseIntoRawBuffers($fileContents);
         $frontMatter = [];
-        if ($hasFrontMatter) {
+        if (!empty($frontMatterBuffer)) {
             $frontMatter = json_decode($frontMatterBuffer, true);
             if (is_null($frontMatter)) {
                 $errorMsg = json_last_error_msg();
@@ -18,13 +17,13 @@ final class FileParser {
             }
         }
 
-        return new ParserResults($frontMatter, trim($contentBuffer));
+        return new FileParserResults($filePath, $frontMatter, trim($contentBuffer));
     }
 
     private function parseIntoRawBuffers(string $fileContents) : array {
         $frontMatterBuffer = $contentBuffer = '';
         $counter = 0;
-        $parsingFrontMatter = $hasFrontMatter = $fileContents[0] === '{';
+        $parsingFrontMatter = $fileContents[0] === '{';
         foreach (str_split($fileContents) as $index => $char) {
             // we need to keep track of how many opening braces we see, but only if parsing front matter, to ensure that
             // we capture the appropriate number of closing braces. if we don't check if we're parsing front matter then
@@ -48,7 +47,7 @@ final class FileParser {
             }
         }
 
-        return [$hasFrontMatter, $frontMatterBuffer, $contentBuffer];
+        return [$frontMatterBuffer, $contentBuffer];
     }
 
 }

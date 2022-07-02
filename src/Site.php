@@ -1,57 +1,68 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
 final class Site {
 
-    private $layouts = [];
-    private $pages = [];
-    private $staticAssets = [];
-    private $siteConfiguration;
+    /**
+     * @var Content[]
+     */
+    private array $layouts = [];
 
-    public function __construct(SiteConfiguration $siteConfiguration) {
-        $this->siteConfiguration = $siteConfiguration;
-    }
+    /**
+     * @var Content[]
+     */
+    private array $pages = [];
+
+    /**
+     * @var Content[]
+     */
+    private array $staticAssets = [];
+
+    public function __construct(private readonly SiteConfiguration $siteConfiguration) {}
 
     public function getConfiguration() : SiteConfiguration {
         return $this->siteConfiguration;
     }
 
-    public function addContent(Content $content) {
-        switch (get_class($content)) {
-            case Layout::class:
-                $this->layouts[] = $content;
-                break;
-            case Page::class:
-                $this->pages[] = $content;
-                break;
-            case StaticAsset::class:
-                $this->staticAssets[] = $content;
-                break;
+    public function addContent(Content $content) : void {
+        if ($content->isLayout) {
+            $this->layouts[] = $content;
+        } else if ($content->isStaticAsset) {
+            $this->staticAssets[] = $content;
+        } else {
+            $this->pages[] = $content;
         }
     }
 
-    public function findLayout(string $name) : ?Layout {
+    public function findLayout(string $name) : ?Content {
         foreach ($this->layouts as $layout) {
-            if (preg_match('<' . $name . '.php$>', $layout->getSourcePath())) {
+            if (preg_match('<' . $name . '\.php$>', $layout->name)) {
                 return $layout;
             }
         }
         return null;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllLayouts() : array {
         return $this->layouts;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllPages() : array {
         $pages = $this->pages;
-        usort($pages, function(Content $a, Content $b) {
-            return ($a->getDate() > $b->getDate()) ? 1 : -1;
-        });
+        usort($pages, fn(Content $a, Content $b)  => $a->postDate <=> $b->postDate);
         return $pages;
     }
 
+    /**
+     * @return Content[]
+     */
     public function getAllStaticAssets() : array {
         return $this->staticAssets;
     }

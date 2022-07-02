@@ -1,12 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Jasg;
+namespace Cspray\Blogisthenics;
 
-use Cspray\Jasg\Engine\{SiteGenerator, SiteWriter};
 use Amp\Promise;
+use Cspray\Blogisthenics\Exception\SiteValidationException;
 use function Amp\call;
 use function Amp\File\filesystem;
-use Cspray\Jasg\Exception\SiteValidationException;
 
 /**
  * Responsible for generating a Site based off of the files you have in your source directory, the root directory of your
@@ -16,75 +15,105 @@ use Cspray\Jasg\Exception\SiteValidationException;
  * Typically userland code would not interact with this object and instead would be utilized by the internal application
  * script that kicks off the site building process.
  */
-final class Engine
-{
-
-    private $rootDirectory;
-    private $siteGenerator;
-    private $siteWriter;
+final class Engine {
 
     /**
-     * @param SiteGenerator $siteGenerator
-     * @param SiteWriter $siteWriter
+     * @var DataProvider[]
      */
-    public function __construct(string $rootDirectory, SiteGenerator $siteGenerator, SiteWriter $siteWriter)
-    {
-        $this->rootDirectory = $rootDirectory;
-        $this->siteGenerator = $siteGenerator;
-        $this->siteWriter = $siteWriter;
+    private array $dataProviders = [];
+
+    /**
+     * @var TemplateHelperProvider[]
+     */
+    private array $templateHelperProviders = [];
+
+    /**
+     * @var DynamicContentProvider[]
+     */
+    private array $dynamicContentProviders = [];
+
+    public function __construct(
+        private readonly string $rootDirectory,
+        private readonly SiteGenerator $siteGenerator,
+        private readonly SiteWriter $siteWriter,
+        private readonly KeyValueStore $keyValueStore,
+        private readonly MethodDelegator $methodDelegator
+    ) {}
+
+    public function addDataProvider(DataProvider $dataProvider) : void {
+        $this->dataProviders[] = $dataProvider;
     }
 
+    public function addTemplateHelperProvider(TemplateHelperProvider $helperProvider) : void {
+        $this->templateHelperProviders[] = $helperProvider;
+    }
+
+    public function addDynamicContentProvider(DynamicContentProvider $dynamicContentProvider) : void {
+        $this->dynamicContentProviders[] = $dynamicContentProvider;
+    }
 
     /**
      * Promise will be resolved with a Site object that has had all of the content in your blog turned into the appropriate
      * domain object, typically a Page, to later be rendered into appropriate content files and written to disk.
      *
-     * @return Promise
+     * @return Site
      */
-    public function buildSite() : Site
-    {
+    public function buildSite() : Site {
         $siteConfig = $this->getSiteConfiguration();
 
         $this->guardInvalidSiteConfigurationPreGeneration($siteConfig);
 
+        foreach ($this->dataProviders as $dataProvider) {
+            $dataProvider->setData($this->keyValueStore);
+        }
+
+        foreach ($this->templateHelperProviders as $templateHelperProvider) {
+            $templateHelperProvider->addTemplateHelpers($this->methodDelegator);
+        }
+
         $site = $this->siteGenerator->generateSite($siteConfig);
+
+        foreach ($this->dynamicContentProviders as $dynamicContentProvider) {
+            $dynamicContentProvider->addContent($site);
+        }
+
         $this->siteWriter->writeSite($site);
         return $site;
     }
 
-    private function getSiteConfiguration() : SiteConfiguration
-    {
-        $rawConfig = file_get_contents($this->rootDirectory . '/.jasg/config.json');
+    private function getSiteConfiguration() : SiteConfiguration {
+        $rawConfig = file_get_contents($this->rootDirectory . '/.blogisthenics/config.json');
         $config = json_decode($rawConfig, true);
-        return new SiteConfiguration($config);
+        return new SiteConfiguration(
+            $config['layout_directory'],
+            $config['output_directory'],
+            $config['default_layout']
+        );
     }
 
-    private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void
-    {
+    private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
         $this->validateLayoutDirectory($siteConfiguration);
         $this->validateSiteDirectory($siteConfiguration);
     }
 
-    private function validateLayoutDirectory(SiteConfiguration $siteConfiguration) : void
-    {
-        $configuredDir = $siteConfiguration->getLayoutDirectory();
+    private function validateLayoutDirectory(SiteConfiguration $siteConfiguration) : void {
+        $configuredDir = $siteConfiguration->layoutDirectory;
         if (empty($configuredDir)) {
-            $msg = 'There is no layouts directory specified in your .jasg/config.json configuration.';
+            $msg = 'There is no layouts directory specified in your .blogisthenics/config.json configuration.';
             throw new SiteValidationException($msg);
         }
 
         $layoutDir = $this->rootDirectory . '/' . $configuredDir;
         if (!is_dir($layoutDir)) {
-            $msg = "The layouts directory in your .jasg/config.json configuration, \"$configuredDir\", does not exist.";
+            $msg = "The layouts directory in your .blogisthenics/config.json configuration, \"$configuredDir\", does not exist.";
             throw new SiteValidationException($msg);
         }
     }
 
-    private function validateSiteDirectory(SiteConfiguration $siteConfiguration) : void
-    {
-        $configuredDir = $siteConfiguration->getOutputDirectory();
+    private function validateSiteDirectory(SiteConfiguration $siteConfiguration) : void {
+        $configuredDir = $siteConfiguration->outputDirectory;
         if (empty($configuredDir)) {
-            $msg = 'There is no output directory specified in your .jasg/config.json configuration.';
+            $msg = 'There is no output directory specified in your .blogisthenics/config.json configuration.';
             throw new SiteValidationException($msg);
         }
     }
