@@ -9,10 +9,11 @@ Are you looking for a static site generator with the following features:
 
 Then this project isn't for you because Blogisthenics doesn't offer any of those things! And never will! What do we give you instead?
 
-- A way to create a boring ol' multi-page application using Markdown and HTML, where clicking on a link makes the whole page refresh. So old school!
-- A powerful, no-frills templating engine that's been in use for over 20 years. PHP itself!
+- A way to create a boring ol' multi-page application using HTML, Markdown, and CSS; where clicking on a link makes the whole page refresh. So old school!
+- Powerful, no-frills templating engine that's been in use for over 20 years. PHP itself!
+- Customize your dynamic content with Front Matter... not written in YAML!
 - Absolutely no JavaScript or related tooling out-of-the-box. I prefer to have just 1 shitty language in my site generators, thank-you-very-much!
-- 
+- Cohesive, type-safe, testable mechanisms for programmatically controlling the content of your site!
 
 ## Usage Guide
 
@@ -20,7 +21,7 @@ Oh, shit. You're still here? In all honesty, you probably shouldn't use this sof
 
 ### Directory Structure
 
-Blogisthenics follows a principle that we provide reasonable defaults for your site configuration, but can override any of the defaults to customize your installation. We suggest that you have a directory structure that resembles the following:
+Blogisthenics follows a principle that there are reasonable defaults for your site configuration, but you can override any of the defaults to customize your installation. We suggest that you have a directory structure that resembles the following:
 
 ```
 /.blogisthenics
@@ -42,5 +43,33 @@ Blogisthenics follows a principle that we provide reasonable defaults for your s
 
 ### Content Overview
 
+Content for your site gets lumped into three categories:
 
+- Static Assets
+- Layouts
+- Pages
+
+#### Static Assets
+
+Static assets are any content in your site that should not be dynamically rendered, whatever is in the file gets copied over exactly, with the same path, when the site is built. Specifically the following functionalities are **not** supported by static assets.
+
+- Front Matter Parsing
+- Template processing, i.e. no variables
+- Multiple extension formatting support
+
+#### Layouts
+
+Layouts are `.md` and `.php` files that act as the outer chrome for pages. Layouts can be inserted into other layouts. The below example demonstrates a minimal layout, typically named something like `main.html.php` or `default.html.php`.
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><?= $this->title ?? 'Blogisthenics' ?></title>
+    </head>
+    <body>
+        <?= $this->yield() ?>
+    </body>
+</html>
+```
 

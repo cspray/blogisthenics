@@ -16,10 +16,13 @@ use function Stringy\create as s;
  */
 final class SiteGenerator {
 
+    private const PARSEABLE_EXTENSIONS = ['php', 'md'];
+
     public function __construct(
         private readonly string $rootDirectory,
         private readonly FileParser $parser
-    ) {}
+    ) {
+    }
 
     public function generateSite(SiteConfiguration $siteConfiguration) : Site {
         $site = new Site($siteConfiguration);
@@ -46,10 +49,9 @@ final class SiteGenerator {
     }
 
     private function isParseablePath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        $parseableExtensions = ['php', 'md'];
         return !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
             $fileInfo->isFile() &&
-            in_array($fileInfo->getExtension(), $parseableExtensions);
+            in_array($fileInfo->getExtension(), self::PARSEABLE_EXTENSIONS);
     }
 
     private function isStaticAssetPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
@@ -156,15 +158,17 @@ final class SiteGenerator {
     }
 
     private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
-        $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics');
+        $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics_');
         $contents = $parsedFile->contents;
 
         file_put_contents($tempName, $contents);
-        if ($fileInfo->getExtension() === 'php') {
+        if (in_array($fileInfo->getExtension(), self::PARSEABLE_EXTENSIONS)) {
             $fileParts = explode('.', $fileInfo->getBasename());
             array_shift($fileParts); // This is the file name itself
-            array_pop($fileParts); // This is the PHP extension
-            $format = $fileParts[count($fileParts) - 1];
+            $format = array_pop($fileParts); // This is the PHP extension
+            if ($format === 'php') {
+                $format = $fileParts[count($fileParts) - 1];
+            }
 
             return new DynamicFileTemplate($tempName, $format);
         } else {

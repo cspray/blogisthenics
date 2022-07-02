@@ -70,7 +70,7 @@ HTML;
                 '2018-06-30-another-blog-article.html.php' => $this->file($anotherBlogArticleContent),
                 '2018-07-01-nested-layout-article.md' => $this->content(
                     ['layout' => 'article.md'],
-                    'Some article that winds up in a nested layout'
+                    'Some article that winds up in a nested layout with a <?= $this->date ?>.'
                 )
             ])
         ]));
