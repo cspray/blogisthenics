@@ -64,6 +64,18 @@ class EngineTest extends TestCase {
         $this->assertSame('custom-layouts-dir', $siteConfig->layoutDirectory, 'Layout directory is not set from config');
         $this->assertSame('custom-site-dir', $siteConfig->outputDirectory, 'Output directory is not set from config');
         $this->assertSame('primary-layout.html', $siteConfig->defaultLayout, 'Default layout is not set from config');
+        $this->assertSame('site-source', $siteConfig->contentDirectory, 'Content directory is not set from config');
+    }
+
+    public function testSiteConfigurationComesFromDefaultIfMissingBlogisthenicsFolder() {
+        $this->testSiteLoader->loadTestSite(TestSites::noConfigSite());
+
+        $site = $this->subject->buildSite();
+        $siteConfig = $site->getConfiguration();
+        $this->assertSame('layouts', $siteConfig->layoutDirectory);
+        $this->assertSame('content', $siteConfig->contentDirectory);
+        $this->assertSame('_site', $siteConfig->outputDirectory);
+        $this->assertSame('main', $siteConfig->defaultLayout);
     }
 
     public function testSiteLayoutCount() {

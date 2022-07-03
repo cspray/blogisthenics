@@ -37,7 +37,7 @@ final class Site {
 
     public function findLayout(string $name) : ?Content {
         foreach ($this->layouts as $layout) {
-            if (preg_match('<' . $name . '\.php$>', $layout->name)) {
+            if (preg_match('<' . $name . '.+>', $layout->name)) {
                 return $layout;
             }
         }

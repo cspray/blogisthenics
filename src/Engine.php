@@ -80,14 +80,20 @@ final class Engine {
     }
 
     private function getSiteConfiguration() : SiteConfiguration {
-        $rawConfig = file_get_contents($this->rootDirectory . '/.blogisthenics/config.json');
-        $config = json_decode($rawConfig, true);
-        return new SiteConfiguration(
-            $config['layout_directory'],
-            $config['content_directory'],
-            $config['output_directory'],
-            $config['default_layout']
-        );
+        $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
+        if (is_file($filePath)) {
+            $rawConfig = file_get_contents($filePath);
+
+            $config = json_decode($rawConfig, true);
+            return new SiteConfiguration(
+                layoutDirectory: $config['layout_directory'],
+                contentDirectory: $config['content_directory'],
+                outputDirectory: $config['output_directory'],
+                defaultLayout: $config['default_layout']
+            );
+        }
+
+        return new SiteConfiguration();
     }
 
     private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
