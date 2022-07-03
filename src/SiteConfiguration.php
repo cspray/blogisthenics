@@ -9,7 +9,8 @@ final class SiteConfiguration {
         public readonly string $contentDirectory,
         public readonly ?string $dataDirectory,
         public readonly string $outputDirectory,
-        public readonly string $defaultLayout
+        public readonly string $defaultLayout,
+        public readonly bool $includeDraftContent
     ) {}
 
     /**
@@ -20,7 +21,8 @@ final class SiteConfiguration {
             'layout_directory' => 'layouts',
             'content_directory' => 'content',
             'output_directory' => '_site',
-            'default_layout' => 'main'
+            'default_layout' => 'main',
+            'include_draft_content' => false
         ];
     }
 

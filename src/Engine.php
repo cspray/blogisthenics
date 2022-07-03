@@ -113,7 +113,8 @@ final class Engine {
             contentDirectory: $config['content_directory'],
             dataDirectory: $config['data_directory'] ?? null,
             outputDirectory: $config['output_directory'],
-            defaultLayout: $config['default_layout']
+            defaultLayout: $config['default_layout'],
+            includeDraftContent: $config['include_draft_content'] ?? false
         );
     }
 

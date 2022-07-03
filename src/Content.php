@@ -3,6 +3,7 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\Blogisthenics\Test\Unit\ContentTest;
 use DateTimeImmutable;
 
 final class Content {
@@ -27,6 +28,26 @@ final class Content {
             $this->isLayout,
             $this->isStaticAsset
         );
+    }
+
+    public function withFrontMatter(FrontMatter $frontMatter) : Content {
+        return new Content(
+            $this->name,
+            $this->postDate,
+            $frontMatter,
+            $this->template,
+            $this->outputPath,
+            $this->isLayout,
+            $this->isStaticAsset
+        );
+    }
+
+    public function isPublished() : bool {
+        return $this->frontMatter->get('published') ?? true;
+    }
+
+    public function isDraft() : bool {
+        return !$this->isPublished();
     }
 
 }
