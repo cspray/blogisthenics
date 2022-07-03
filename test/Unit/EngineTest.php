@@ -21,6 +21,7 @@ use Cspray\Blogisthenics\TemplateHelperProvider;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedHandlerStub;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenHandlerStub;
 use Cspray\Blogisthenics\Test\Support\Stub\OverwritingContentOutputPathHandlerStub;
+use Cspray\Blogisthenics\Test\Support\Stub\OverwritingFrontMatterHandlerStub;
 use Cspray\Blogisthenics\Test\Support\TestSite\TestSite;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;
@@ -512,6 +513,24 @@ class EngineTest extends TestCase {
         sort($actual);
 
         $this->assertSame($expected, $actual);
+    }
+
+    public function testBuildSiteDefaultDoesNotPublishDraftContent() {
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->subject->addContentGeneratedHandler(new OverwritingFrontMatterHandlerStub());
+
+        $this->subject->buildSite();
+
+        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html';
+        $this->assertFileDoesNotExist($path);
+    }
+
+    public function testBuildSiteIncludingDraftsDoesPublishDraftContent() {
+        $this->testSiteLoader->loadTestSite(TestSites::standardIncludingDraftsSite());
+        $this->subject->buildSite();
+
+        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html';
+        $this->assertFileExists($path);
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

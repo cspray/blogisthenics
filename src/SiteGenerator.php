@@ -49,7 +49,9 @@ final class SiteGenerator {
                 }
             }
 
-            $site->addContent($content);
+            if ($content->isPublished() || $siteConfiguration->includeDraftContent) {
+                $site->addContent($content);
+            }
         }
 
         return $site;

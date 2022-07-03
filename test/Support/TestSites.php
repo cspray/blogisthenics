@@ -15,6 +15,7 @@ use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundContentDirectoryConfigura
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\PageSpecifiesNotFoundLayoutTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\StandardIncludingDraftsTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StaticDataTestSite;
 
@@ -152,6 +153,15 @@ final class TestSites {
         static $site;
         if (!isset($site)) {
             $site = new InvalidJsonStaticDataTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function standardIncludingDraftsSite() : StandardIncludingDraftsTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new StandardIncludingDraftsTestSite();
         }
 
         return $site;
