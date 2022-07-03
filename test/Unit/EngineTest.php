@@ -65,6 +65,7 @@ class EngineTest extends TestCase {
         $this->assertSame('custom-site-dir', $siteConfig->outputDirectory, 'Output directory is not set from config');
         $this->assertSame('primary-layout.html', $siteConfig->defaultLayout, 'Default layout is not set from config');
         $this->assertSame('site-source', $siteConfig->contentDirectory, 'Content directory is not set from config');
+        $this->assertNull($siteConfig->dataDirectory);
     }
 
     public function testSiteConfigurationComesFromDefaultIfMissingBlogisthenicsFolder() {
@@ -76,6 +77,16 @@ class EngineTest extends TestCase {
         $this->assertSame('content', $siteConfig->contentDirectory);
         $this->assertSame('_site', $siteConfig->outputDirectory);
         $this->assertSame('main', $siteConfig->defaultLayout);
+        $this->assertNull($siteConfig->dataDirectory);
+    }
+
+    public function testSiteConfigurationHasDataDirectory() {
+        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
+
+        $site = $this->subject->buildSite();
+        $siteConfig = $site->getConfiguration();
+
+        $this->assertSame('data', $siteConfig->dataDirectory);
     }
 
     public function testSiteLayoutCount() {
@@ -250,16 +261,21 @@ class EngineTest extends TestCase {
     public function siteValidationErrors() : array {
         return [
             [
-                'There is no "layout_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "layout_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyLayoutDirSite()
             ],
             [
-                'There is no "content_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "content_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyContentDirSite()
             ],
             [
-                'There is no "output_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "output_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyOutputDirSite(),
+            ],
+            [
+                'The "data_directory" specified in your .blogisthenics/config.json configuration contains a blank value. ' .
+                'If your site does not require static data do not include this configuration value.',
+                TestSites::emptyDataDirectorySite()
             ],
             [
                 'The "layout_directory" in your .blogisthenics/config.json configuration, "_layouts", does not exist.',
@@ -268,6 +284,11 @@ class EngineTest extends TestCase {
             [
                 'The "content_directory" in your .blogisthenics/config.json configuration, "content", does not exist.',
                 TestSites::notFoundContentDirSite()
+            ],
+            [
+                'The "data_directory" in your .blogisthenics/config.json configuration, "data", does not exist. ' .
+                'If your site does not require static data do not include this configuration value.',
+                TestSites::notFoundDataDirectorySite()
             ]
         ];
     }
@@ -340,6 +361,46 @@ class EngineTest extends TestCase {
         $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
 
         $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testKeyValueStoreHasDataLoaded() {
+        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
+        $this->subject->buildSite();
+
+        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $actualContents = file_get_contents($outputPath);
+        $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
+
+        $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testKeyValueStoreHasNestedDataLoaded() {
+        $this->testSiteLoader->loadTestSite(TestSites::nestedStaticDataSite());
+        $this->subject->buildSite();
+
+        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $actualContents = file_get_contents($outputPath);
+        $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
+
+        $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testStaticDataNotJsonThrowsError() {
+        $this->testSiteLoader->loadTestSite(TestSites::nonJsonStaticDataSite());
+
+        $this->expectException(SiteGenerationException::class);
+        $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.yml", is not valid JSON.');
+
+        $this->subject->buildSite();
+    }
+
+    public function testStaticDataNotValidJsonThrowsError() {
+        $this->testSiteLoader->loadTestSite(TestSites::invalidJsonStaticDataSite());
+
+        $this->expectException(SiteGenerationException::class);
+        $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.json", is not valid JSON.');
+
+        $this->subject->buildSite();
     }
 
     public function testBuildSiteCallsAddedDynamicContentProvider() {

@@ -5,10 +5,23 @@ namespace Cspray\Blogisthenics;
 final class SiteConfiguration {
 
     public function __construct(
-        public readonly string $layoutDirectory = 'layouts',
-        public readonly string $contentDirectory = 'content',
-        public readonly string $outputDirectory = '_site',
-        public readonly string $defaultLayout = 'main'
+        public readonly string $layoutDirectory,
+        public readonly string $contentDirectory,
+        public readonly ?string $dataDirectory,
+        public readonly string $outputDirectory,
+        public readonly string $defaultLayout
     ) {}
+
+    /**
+     * @return array
+     */
+    public static function getDefaults() : array {
+        return [
+            'layout_directory' => 'layouts',
+            'content_directory' => 'content',
+            'output_directory' => '_site',
+            'default_layout' => 'main'
+        ];
+    }
 
 }

@@ -9,7 +9,7 @@ Are you looking for a static site generator with the following features:
 
 Then this project isn't for you because Blogisthenics doesn't offer any of those things! And never will! What do we give you instead?
 
-- A way to create a boring ol' multi-page application using HTML, Markdown, and CSS; where clicking on a link makes the whole page refresh. So old school!
+- A way to create a boring ol' multi-page application using HTML, Markdown, and a minimal amount of CSS; where clicking on a link makes the whole page refresh. So old school!
 - Powerful, no-frills templating engine that's been in use for over 20 years. PHP itself!
 - Customize your dynamic content with Front Matter... not written in YAML!
 - Absolutely no JavaScript or related tooling out-of-the-box. I prefer to have just 1 shitty language in my site generators, thank-you-very-much!
@@ -57,6 +57,10 @@ Static assets are any content in your site that should not be dynamically render
 - Template processing, i.e. no variables
 - Multiple extension formatting support
 
+#### Pages
+
+Pages are `.html`, `.md`, and `.php` files that act as specific content for a path that will be added to your site. Pages are expected to be only partial HTML documents and must define a layout. If a layout is not explicitly defined in the Front Matter of a page we use the default layout from the site configuration.
+
 #### Layouts
 
 Layouts are `.md` and `.php` files that act as the outer chrome for pages. Layouts can be inserted into other layouts. The below example demonstrates a minimal layout, typically named something like `main.html.php` or `default.html.php`.
@@ -73,10 +77,22 @@ Layouts are `.md` and `.php` files that act as the outer chrome for pages. Layou
 </html>
 ```
 
-Note the call to `$this->yield()`, when in a layout this is required to output the content being injected. If you attempt to call `$this->yield()` from a non-layout piece of Content an exception will be thrown.
+Note the call to `$this->yield()`, when in a layout this is required to output the content being injected. If you attempt to call `$this->yield()` from a non-layout piece of Content an exception will be thrown. Check out the "Templating" section below for more details on using Pages and Layouts.
 
-#### Pages
+### Templating
 
-Pages are `.html`, `.md`, and `.php` files that act as specific content for a path that will be added to your site. Pages are expected to be only partial HTML documents and must define a layout. If a layout is not explicitly defined in the Front Matter of a page we use the default layout from the SiteConfiguration.
+#### Template Helpers
 
-### Programmatic API
+#### Auto-Escaping
+
+#### Template Formatting
+
+### Dynamic Content
+
+### JSON Data
+
+#### Loading Static Files
+
+#### Loading Dynamic Data
+
+### 
