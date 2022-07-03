@@ -250,16 +250,21 @@ class EngineTest extends TestCase {
     public function siteValidationErrors() : array {
         return [
             [
-                'There is no "layout_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "layout_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyLayoutDirSite()
             ],
             [
-                'There is no "content_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "content_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyContentDirSite()
             ],
             [
-                'There is no "output_directory" specified in your .blogisthenics/config.json configuration.',
+                'The "output_directory" specified in your .blogisthenics/config.json configuration contains a blank value.',
                 TestSites::emptyOutputDirSite(),
+            ],
+            [
+                'The "data_directory" specified in your .blogisthenics/config.json configuration contains a blank value. ' .
+                'If your site does not require static data do not include this configuration value.',
+                TestSites::emptyDataDirectorySite()
             ],
             [
                 'The "layout_directory" in your .blogisthenics/config.json configuration, "_layouts", does not exist.',
@@ -268,6 +273,11 @@ class EngineTest extends TestCase {
             [
                 'The "content_directory" in your .blogisthenics/config.json configuration, "content", does not exist.',
                 TestSites::notFoundContentDirSite()
+            ],
+            [
+                'The "data_directory" in your .blogisthenics/config.json configuration, "data", does not exist. ' .
+                'If your site does not require static data do not include this configuration value.',
+                TestSites::notFoundDataDirectorySite()
             ]
         ];
     }

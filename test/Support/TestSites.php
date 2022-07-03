@@ -3,11 +3,13 @@
 namespace Cspray\Blogisthenics\Test\Support;
 
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyContentDirectoryConfigurationTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\EmptyDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyOutputDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\KeyValueTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NoConfigTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundContentDirectoryConfigurationTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardTestSite;
@@ -92,6 +94,24 @@ final class TestSites {
         static $site;
         if (!isset($site)) {
             $site = new NoConfigTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function emptyDataDirectorySite() : EmptyDataDirectoryConfigurationTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new EmptyDataDirectoryConfigurationTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function notFoundDataDirectorySite() : NotFoundDataDirectoryConfigurationTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new NotFoundDataDirectoryConfigurationTestSite();
         }
 
         return $site;

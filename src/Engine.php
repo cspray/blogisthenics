@@ -59,7 +59,6 @@ final class Engine {
     public function buildSite() : Site {
         $siteConfig = $this->getSiteConfiguration();
 
-        $this->guardInvalidSiteConfigurationPreGeneration($siteConfig);
 
         foreach ($this->dataProviders as $dataProvider) {
             $dataProvider->setData($this->keyValueStore);
@@ -82,31 +81,43 @@ final class Engine {
     private function getSiteConfiguration() : SiteConfiguration {
         $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
         if (is_file($filePath)) {
-            $rawConfig = file_get_contents($filePath);
-
-            $config = json_decode($rawConfig, true);
-            return new SiteConfiguration(
-                layoutDirectory: $config['layout_directory'],
-                contentDirectory: $config['content_directory'],
-                outputDirectory: $config['output_directory'],
-                defaultLayout: $config['default_layout']
-            );
+            $config = json_decode(file_get_contents($filePath), true);
+        } else {
+            $config = SiteConfiguration::getDefaults();
         }
 
-        return new SiteConfiguration();
+        $this->guardInvalidSiteConfigurationPreGeneration($config);
+
+        return new SiteConfiguration(
+            layoutDirectory: $config['layout_directory'],
+            contentDirectory: $config['content_directory'],
+            dataDirectory: null,
+            outputDirectory: $config['output_directory'],
+            defaultLayout: $config['default_layout']
+        );
     }
 
-    private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
-        $this->validateDirectory($siteConfiguration, 'layout_directory', true);
-        $this->validateDirectory($siteConfiguration, 'content_directory', true);
-        $this->validateDirectory($siteConfiguration, 'output_directory', false);
+    private function guardInvalidSiteConfigurationPreGeneration(array $rawConfiguration) : void {
+        $this->validateDirectory($rawConfiguration, 'layout_directory', true);
+        $this->validateDirectory($rawConfiguration, 'content_directory', true);
+        $this->validateDirectory($rawConfiguration, 'output_directory', false);
+        if (array_key_exists('data_directory', $rawConfiguration)) {
+            $this->validateDirectory(
+                $rawConfiguration,
+                'data_directory',
+                true,
+                ' If your site does not require static data do not include this configuration value.'
+            );
+        }
     }
 
-    private function validateDirectory(SiteConfiguration $siteConfiguration, string $configKey, bool $mustExist) : void {
-        $configProp = S::create($configKey)->camelize();
-        $configuredDir = $siteConfiguration->$configProp;
+    private function validateDirectory(array $rawConfiguration, string $configKey, bool $mustExist, string $messageSuffix = null) : void {
+        $configuredDir = $rawConfiguration[$configKey] ?? null;
         if (empty($configuredDir)) {
-            $msg = sprintf('There is no "%s" specified in your .blogisthenics/config.json configuration.', $configKey);
+            $msg = sprintf('The "%s" specified in your .blogisthenics/config.json configuration contains a blank value.', $configKey);
+            if (isset($messageSuffix)) {
+                $msg .= $messageSuffix;
+            }
             throw new SiteValidationException($msg);
         }
 
@@ -114,6 +125,9 @@ final class Engine {
             $layoutDir = $this->rootDirectory . '/' . $configuredDir;
             if (!is_dir($layoutDir)) {
                 $msg = $this->getMissingDirectoryMessage($configKey, $configuredDir);
+                if (isset($messageSuffix)) {
+                    $msg .= $messageSuffix;
+                }
                 throw new SiteValidationException($msg);
             }
         }
