@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics;
 
 use Cspray\Blogisthenics\Exception\SiteValidationException;
+use Stringy\Stringy as S;
 
 /**
  * Responsible for generating a Site based off of the files you have in your source directory, the root directory of your
@@ -90,30 +91,34 @@ final class Engine {
     }
 
     private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
-        $this->validateLayoutDirectory($siteConfiguration);
-        $this->validateSiteDirectory($siteConfiguration);
+        $this->validateDirectory($siteConfiguration, 'layout_directory', true);
+        $this->validateDirectory($siteConfiguration, 'content_directory', true);
+        $this->validateDirectory($siteConfiguration, 'output_directory', false);
     }
 
-    private function validateLayoutDirectory(SiteConfiguration $siteConfiguration) : void {
-        $configuredDir = $siteConfiguration->layoutDirectory;
+    private function validateDirectory(SiteConfiguration $siteConfiguration, string $configKey, bool $mustExist) : void {
+        $configProp = S::create($configKey)->camelize();
+        $configuredDir = $siteConfiguration->$configProp;
         if (empty($configuredDir)) {
-            $msg = 'There is no layouts directory specified in your .blogisthenics/config.json configuration.';
+            $msg = sprintf('There is no "%s" specified in your .blogisthenics/config.json configuration.', $configKey);
             throw new SiteValidationException($msg);
         }
 
-        $layoutDir = $this->rootDirectory . '/' . $configuredDir;
-        if (!is_dir($layoutDir)) {
-            $msg = "The layouts directory in your .blogisthenics/config.json configuration, \"$configuredDir\", does not exist.";
-            throw new SiteValidationException($msg);
+        if ($mustExist) {
+            $layoutDir = $this->rootDirectory . '/' . $configuredDir;
+            if (!is_dir($layoutDir)) {
+                $msg = $this->getMissingDirectoryMessage($configKey, $configuredDir);
+                throw new SiteValidationException($msg);
+            }
         }
     }
 
-    private function validateSiteDirectory(SiteConfiguration $siteConfiguration) : void {
-        $configuredDir = $siteConfiguration->outputDirectory;
-        if (empty($configuredDir)) {
-            $msg = 'There is no output directory specified in your .blogisthenics/config.json configuration.';
-            throw new SiteValidationException($msg);
-        }
+    private function getMissingDirectoryMessage(string $config, string $dir) : string {
+        return sprintf(
+            'The "%s" in your .blogisthenics/config.json configuration, "%s", does not exist.'  ,
+            $config,
+            $dir
+        );
     }
 
 }

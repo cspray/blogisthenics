@@ -5,7 +5,7 @@ namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
 use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
-final class NotFoundLayoutDirectoryConfigurationTestSite extends AbstractTestSite {
+final class NotFoundContentDirectoryConfigurationTestSite extends AbstractTestSite {
 
     protected function doPopulateVirtualFilesystem(VirtualDirectory $dir) : void {
         $dir->addChild(
@@ -19,7 +19,7 @@ final class NotFoundLayoutDirectoryConfigurationTestSite extends AbstractTestSit
             ])
         );
 
-        $dir->addChild($this->dir('content', []));
+        $dir->addChild($this->dir('_layouts', []));
     }
 
 }

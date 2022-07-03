@@ -238,17 +238,25 @@ class EngineTest extends TestCase {
     public function siteValidationErrors() : array {
         return [
             [
-                'The layouts directory in your .blogisthenics/config.json configuration, "_layouts", does not exist.',
+                'There is no "layout_directory" specified in your .blogisthenics/config.json configuration.',
+                TestSites::emptyLayoutDirSite()
+            ],
+            [
+                'There is no "content_directory" specified in your .blogisthenics/config.json configuration.',
+                TestSites::emptyContentDirSite()
+            ],
+            [
+                'There is no "output_directory" specified in your .blogisthenics/config.json configuration.',
+                TestSites::emptyOutputDirSite(),
+            ],
+            [
+                'The "layout_directory" in your .blogisthenics/config.json configuration, "_layouts", does not exist.',
                 TestSites::notFoundLayoutDirSite()
             ],
             [
-                'There is no output directory specified in your .blogisthenics/config.json configuration.',
-                TestSites::emptyOutputDirSite()
-            ],
-            [
-                'There is no layouts directory specified in your .blogisthenics/config.json configuration.',
-                TestSites::emptyLayoutDirSite()
-            ],
+                'The "content_directory" in your .blogisthenics/config.json configuration, "content", does not exist.',
+                TestSites::notFoundContentDirSite()
+            ]
         ];
     }
 
@@ -347,7 +355,7 @@ class EngineTest extends TestCase {
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {
         $this->expectException($exception);
-        $this->expectDeprecationMessage($message);
+        $this->expectExceptionMessage($message);
         $callable();
     }
 

@@ -18,6 +18,10 @@ final class EmptyLayoutDirectoryConfigurationTestSite extends AbstractTestSite {
                 ]))
             ])
         );
+
+        $dir->addChild(
+            $this->dir('content', [])
+        );
     }
 
 }

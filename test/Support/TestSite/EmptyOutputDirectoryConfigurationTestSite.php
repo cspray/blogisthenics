@@ -20,6 +20,9 @@ final class EmptyOutputDirectoryConfigurationTestSite extends AbstractTestSite {
         $dir->addChild(
             $this->dir('_layouts', [])
         );
+        $dir->addChild(
+            $this->dir('content', [])
+        );
     }
 
 }
