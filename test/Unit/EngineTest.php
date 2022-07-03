@@ -23,14 +23,15 @@ use Cspray\Blogisthenics\Test\Support\TestSites;
 use Cspray\BlogisthenicsFixture\Fixtures;
 use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
+use org\bovigo\vfs\vfsStream as VirtualFilesystem;
+use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 use PHPUnit\Framework\TestCase;
-use Vfs\FileSystem as VfsFileSystem;
 
 class EngineTest extends TestCase {
 
     private Engine $subject;
 
-    private VfsFileSystem $vfs;
+    private VirtualDirectory $vfs;
 
     private MethodDelegator $methodDelegator;
 
@@ -40,7 +41,8 @@ class EngineTest extends TestCase {
 
     public function setUp() : void {
         parent::setUp();
-        $rootDir = 'vfs://install_dir';
+        $this->vfs = VirtualFilesystem::setup('install_dir');
+        $rootDir = $this->vfs->url();
         $this->methodDelegator = new MethodDelegator();
         $this->keyValueStore = new InMemoryKeyValueStore();
         $contextFactory = new ContextFactory(new Escaper(), $this->methodDelegator, $this->keyValueStore);
@@ -51,14 +53,7 @@ class EngineTest extends TestCase {
             $this->keyValueStore,
             $this->methodDelegator
         );
-        $this->vfs = VfsFileSystem::factory('vfs://');
-        $this->vfs->mount();
         $this->testSiteLoader = new TestSiteLoader($this->vfs, $this->subject);
-    }
-
-    public function tearDown() : void {
-        parent::tearDown();
-        $this->vfs->unmount();
     }
 
     public function testSiteConfigurationComesFromDotBlogisthenicsFolder() {

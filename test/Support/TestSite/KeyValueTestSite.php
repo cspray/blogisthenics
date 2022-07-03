@@ -3,13 +3,12 @@
 namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
 use Cspray\Blogisthenics\DataProvider;
-use Cspray\Blogisthenics\InMemoryKeyValueStore;
 use Cspray\Blogisthenics\KeyValueStore;
-use Vfs\FileSystem as VfsFileSystem;
+use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
 final class KeyValueTestSite extends AbstractTestSite {
 
-    protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) : void {
+    protected function doPopulateVirtualFileSystem(VirtualDirectory $dir) : void {
         $keyValueArticle = <<<'PHP'
 <div>
     This is some content
@@ -21,22 +20,26 @@ final class KeyValueTestSite extends AbstractTestSite {
 
 PHP;
 
-        $vfs->get('/')->add('install_dir', $this->dir([
-            '.blogisthenics' => $this->dir([
-                'config.json' => $this->file(json_encode([
+        $dir->addChild(
+            $this->dir('.blogisthenics', [
+                $this->file('config.json', json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
                     'default_layout' => 'default.html',
                     'content_directory' => 'content'
                 ]))
-            ]),
-            '_layouts' => $this->dir([
-                'default.html.php' => $this->file('<?= $this->yield() ?>')
-            ]),
-            'content' => $this->dir([
-                'key-value-article.html.php' => $this->file($keyValueArticle)
             ])
-        ]));
+        );
+        $dir->addChild(
+            $this->dir('_layouts', [
+                $this->file('default.html.php', '<?= $this->yield() ?>')
+            ])
+        );
+        $dir->addChild(
+            $this->dir('content', [
+                $this->file('key-value-article.html.php', $keyValueArticle)
+            ])
+        );
     }
 
     public function getDataProviders() : array {

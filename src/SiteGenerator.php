@@ -5,12 +5,11 @@ namespace Cspray\Blogisthenics;
 use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use FilesystemIterator;
-use Iterator;
-use MultipleIterator;
+use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
-use function Stringy\create as s;
+use Stringy\Stringy as S;
 
 /**
  * @internal This class should only be utilized by Engine implementations; use outside of this context is unsupported.
@@ -42,7 +41,7 @@ final class SiteGenerator {
         return $site;
     }
 
-    private function getSourceIterator(SiteConfiguration $siteConfiguration) : Iterator {
+    private function getSourceIterator(SiteConfiguration $siteConfiguration) : Generator {
         $contentDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->contentDirectory);
         $layoutDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->layoutDirectory);
         $layoutIterator = new RecursiveIteratorIterator(
@@ -148,7 +147,7 @@ final class SiteGenerator {
             $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
             if (is_null($frontMatter->get('title'))) {
                 $potentialTitle = preg_replace('/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\-/', '', $fileNameWithoutFormat);
-                $dataToAdd['title'] = (string) s($potentialTitle)->replace('-', ' ')->titleize();
+                $dataToAdd['title'] = (string) S::create($potentialTitle)->replace('-', ' ')->titleize();
             }
 
         }
