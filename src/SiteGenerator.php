@@ -18,14 +18,22 @@ final class SiteGenerator {
 
     private const PARSEABLE_EXTENSIONS = ['php', 'md'];
 
+    /**
+     * @var ContentGeneratedHandler[]
+     */
+    private array $handlers = [];
+
     public function __construct(
         private readonly string $rootDirectory,
         private readonly FileParser $parser
-    ) {
+    ) {}
+
+    public function addHandler(ContentGeneratedHandler $contentGeneratedHandler) : void {
+        $this->handlers[] = $contentGeneratedHandler;
     }
 
     public function generateSite(SiteConfiguration $siteConfiguration) : Site {
-        $site = new Site($siteConfiguration);
+        $site = new Site($this->rootDirectory, $siteConfiguration);
 
         /** @var SplFileInfo $fileInfo */
         foreach ($this->getSourceIterator($siteConfiguration) as $fileInfo) {
@@ -33,6 +41,12 @@ final class SiteGenerator {
                 $content = $this->createDynamicContent($siteConfiguration, $fileInfo);
             } else {
                 $content = $this->createStaticContent($siteConfiguration, $fileInfo);
+            }
+
+            if (isset($content->outputPath)) {
+                foreach ($this->handlers as $handler) {
+                    $content = $handler->handle($content);
+                }
             }
 
             $site->addContent($content);
@@ -185,7 +199,7 @@ final class SiteGenerator {
         DateTimeImmutable $pageDate,
         FrontMatter $frontMatter,
         Template $template,
-        string $outputPath
+        ?string $outputPath
     ) : Content {
         $isStaticAsset = $this->isStaticAssetPath($siteConfig, $fileInfo);
         $isLayout = $this->isLayoutPath($siteConfig, $fileInfo);
@@ -201,7 +215,10 @@ final class SiteGenerator {
         );
     }
 
-    private function getOutputPath(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : string {
+    private function getOutputPath(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : ?string {
+        if ($this->isLayoutPath($siteConfig, $fileInfo)) {
+            return null;
+        }
         $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
         $directory = sprintf('%s/%s', $this->rootDirectory, $siteConfig->contentDirectory);
         $contentOutputDir = dirname(preg_replace('<^' . $directory . '>', '', $fileInfo->getPathname()));
