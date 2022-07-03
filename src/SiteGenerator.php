@@ -5,6 +5,7 @@ namespace Cspray\Blogisthenics;
 use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use FilesystemIterator;
+use Generator;
 use Iterator;
 use MultipleIterator;
 use RecursiveDirectoryIterator;
@@ -42,7 +43,7 @@ final class SiteGenerator {
         return $site;
     }
 
-    private function getSourceIterator(SiteConfiguration $siteConfiguration) : Iterator {
+    private function getSourceIterator(SiteConfiguration $siteConfiguration) : Generator {
         $contentDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->contentDirectory);
         $layoutDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->layoutDirectory);
         $layoutIterator = new RecursiveIteratorIterator(

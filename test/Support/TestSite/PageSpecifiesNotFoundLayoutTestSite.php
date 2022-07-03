@@ -2,27 +2,34 @@
 
 namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
-use Vfs\FileSystem as VfsFileSystem;
+use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
 final class PageSpecifiesNotFoundLayoutTestSite extends AbstractTestSite {
 
-    protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) : void {
-        $vfs->get('/')->add('install_dir', $this->dir([
-            '.blogisthenics' => $this->dir([
-                'config.json' => $this->file(json_encode([
+    protected function doPopulateVirtualFileSystem(VirtualDirectory $dir) : void {
+        $dir->addChild(
+            $this->dir('.blogisthenics', [
+                $this->file('config.json', json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
                     'default_layout' => 'default.html',
                     'content_directory' => 'content'
                 ]))
-            ]),
-            '_layouts' => $this->dir([]),
-            'content' => $this->dir([
-                '2018-07-15-no-layout-article.html.php' => $this->content(
+            ])
+        );
+
+        $dir->addChild(
+            $this->dir('_layouts', []),
+        );
+
+        $dir->addChild(
+            $this->dir('content', [
+                $this->content(
+                    '2018-07-15-no-layout-article.html.php',
                     ['layout' => 'not_found.html'],
                     'Does not matter'
                 )
             ])
-        ]));
+        );
     }
 }

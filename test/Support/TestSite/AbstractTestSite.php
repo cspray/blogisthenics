@@ -2,15 +2,14 @@
 
 namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
-use Cspray\Blogisthenics\Test\Support\VirtualFile;
-use Vfs\FileSystem as VfsFileSystem;
-use Vfs\Node\Directory as VfsDirectory;
-use Vfs\Node\File as VfsFile;
+use Cspray\Blogisthenics\Test\Support\VirtualContent;
+use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
+use org\bovigo\vfs\vfsStreamFile as VirtualFile;
 
 abstract class AbstractTestSite implements TestSite {
 
-    final public function populateVirtualFileSystem(VfsFileSystem $fileSystem) : void {
-        $this->doPopulateVirtualFileSystem($fileSystem);
+    final public function populateVirtualFileSystem(VirtualDirectory $dir) : void {
+        $this->doPopulateVirtualFileSystem($dir);
     }
 
     public function getDataProviders() : array {
@@ -21,24 +20,34 @@ abstract class AbstractTestSite implements TestSite {
         return [];
     }
 
-    abstract protected function doPopulateVirtualFileSystem(VfsFileSystem $vfs) : void;
+    abstract protected function doPopulateVirtualFileSystem(VirtualDirectory $dir) : void;
 
-    protected function content(array $frontMatter, string $contents, \DateTime $mtime = null) : VfsFile {
-        $file = (new VirtualFile())->withFrontMatter($frontMatter)->withContent($contents)->build();
+    protected function content(string $fileName, array $frontMatter, string $contents, \DateTime $mtime = null) : VirtualFile {
+        $file = (new VirtualContent())
+            ->withFileName($fileName)
+            ->withFrontMatter($frontMatter)
+            ->withContent($contents)
+            ->build();
         if (isset($mtime)) {
-            $file->setDateModified($mtime);
+            $file->lastModified($mtime->getTimestamp());
         }
         return $file;
     }
 
-    protected function dir(array $nodes) {
-        return new VfsDirectory($nodes);
+    protected function dir(string $dirName, array $nodes) : VirtualDirectory {
+        $dir = new VirtualDirectory($dirName);
+        foreach ($nodes as $virtualFileOrDirectory) {
+            $dir->addChild($virtualFileOrDirectory);
+        }
+
+        return $dir;
     }
 
-    protected function file(string $contents = '', \DateTime $mtime = null) : VfsFile {
-        $file = new VfsFile($contents);
+    protected function file(string $fileName, string $contents = '', \DateTime $mtime = null) : VirtualFile {
+        $file = new VirtualFile($fileName);
+        $file->withContent($contents);
         if (isset($mtime)) {
-            $file->setDateModified($mtime);
+            $file->lastModified($mtime->getTimestamp());
         }
 
         return $file;

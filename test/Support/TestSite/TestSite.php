@@ -2,11 +2,11 @@
 
 namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
-use Vfs\FileSystem as VfsFileSystem;
+use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
 interface TestSite {
 
-    public function populateVirtualFileSystem(VfsFileSystem $fileSystem) : void;
+    public function populateVirtualFileSystem(VirtualDirectory $dir) : void;
 
     public function getDataProviders() : array;
 

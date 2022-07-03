@@ -10,7 +10,7 @@
     "minicli/command-help": "^0.1.0"
   },
   "require-dev": {
-    "adlawson/vfs": "^0.12.1",
+    "mikey179/vfsstream": "^1.6",
     "phpunit/phpunit": "^9.5"
   },
   "autoload": {
