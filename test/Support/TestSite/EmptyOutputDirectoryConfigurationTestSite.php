@@ -12,7 +12,8 @@ final class EmptyOutputDirectoryConfigurationTestSite extends AbstractTestSite {
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '',
-                    'default_layout' => 'default.html'
+                    'default_layout' => 'default.html',
+                    'content_directory' => 'content'
                 ]))
             ]),
             '_layouts' => $this->dir([])

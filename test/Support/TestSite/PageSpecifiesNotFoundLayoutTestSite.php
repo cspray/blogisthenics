@@ -12,14 +12,17 @@ final class PageSpecifiesNotFoundLayoutTestSite extends AbstractTestSite {
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
-                    'default_layout' => 'default.html'
+                    'default_layout' => 'default.html',
+                    'content_directory' => 'content'
                 ]))
             ]),
             '_layouts' => $this->dir([]),
-            '2018-07-15-no-layout-article.html.php' => $this->content(
-                ['layout' => 'not_found.html'],
-                'Does not matter'
-            )
+            'content' => $this->dir([
+                '2018-07-15-no-layout-article.html.php' => $this->content(
+                    ['layout' => 'not_found.html'],
+                    'Does not matter'
+                )
+            ])
         ]));
     }
 }

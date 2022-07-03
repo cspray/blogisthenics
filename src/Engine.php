@@ -2,10 +2,7 @@
 
 namespace Cspray\Blogisthenics;
 
-use Amp\Promise;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
-use function Amp\call;
-use function Amp\File\filesystem;
 
 /**
  * Responsible for generating a Site based off of the files you have in your source directory, the root directory of your
@@ -86,6 +83,7 @@ final class Engine {
         $config = json_decode($rawConfig, true);
         return new SiteConfiguration(
             $config['layout_directory'],
+            $config['content_directory'],
             $config['output_directory'],
             $config['default_layout']
         );
