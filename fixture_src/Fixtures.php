@@ -22,4 +22,13 @@ final class Fixtures {
         return $fixture;
     }
 
+    public static function keyValueChangedPathSite() : KeyValueChangedPathSiteFixture {
+        static $fixture;
+        if (!isset($fixture)) {
+            $fixture = new KeyValueChangedPathSiteFixture();
+        }
+
+        return $fixture;
+    }
+
 }

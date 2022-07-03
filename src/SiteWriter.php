@@ -9,10 +9,19 @@ use Cspray\Blogisthenics\Exception\SiteGenerationException;
  */
 final class SiteWriter {
 
+    /**
+     * @var ContentWrittenHandler[]
+     */
+    private array $handlers = [];
+
     public function __construct(
         private readonly TemplateFormatter $templateFormatter,
         private readonly ContextFactory $contextFactory
     ) {}
+
+    public function addHandler(ContentWrittenHandler $handler) : void {
+        $this->handlers[] = $handler;
+    }
 
     public function writeSite(Site $site) : void {
         $contentsToWrite = [...$site->getAllPages(), ...$site->getAllStaticAssets()];
@@ -24,6 +33,10 @@ final class SiteWriter {
 
             $contents = $this->buildTemplateContents($site, $content);
             file_put_contents($outputFile, $contents);
+
+            foreach ($this->handlers as $handler) {
+                $handler->handle($content);
+            }
         }
     }
 

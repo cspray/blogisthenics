@@ -2,6 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
+use Cspray\Blogisthenics\Content;
 use Cspray\Blogisthenics\ContextFactory;
 use Cspray\Blogisthenics\DataProvider;
 use Cspray\Blogisthenics\DynamicContentProvider;
@@ -17,6 +18,9 @@ use Cspray\Blogisthenics\SiteGenerator;
 use Cspray\Blogisthenics\SiteWriter;
 use Cspray\Blogisthenics\TemplateFormatter;
 use Cspray\Blogisthenics\TemplateHelperProvider;
+use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedHandlerStub;
+use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenHandlerStub;
+use Cspray\Blogisthenics\Test\Support\Stub\OverwritingContentOutputPathHandlerStub;
 use Cspray\Blogisthenics\Test\Support\TestSite\TestSite;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;
@@ -424,6 +428,90 @@ class EngineTest extends TestCase {
 
         $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
+    }
+
+    public function testBuildSiteCallsContentGeneratedHandlerAppropriateNumberOfTimes() {
+        $stub = new ContentGeneratedHandlerStub();
+
+        $this->subject->addContentGeneratedHandler($stub);
+
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->subject->buildSite();
+
+        $actual = [];
+        foreach ($stub->getHandledContent() as $content) {
+            $actual[] = $content->outputPath;
+        }
+        $expected = [
+            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article.html',
+            'vfs://install_dir/custom-site-dir/css/styles.css',
+            'vfs://install_dir/custom-site-dir/js/code.js'
+        ];
+
+        sort($expected);
+        sort($actual);
+
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testAllLayoutContentOutputPathNull() {
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $site = $this->subject->buildSite();
+
+        $this->assertCount(2, $site->getAllLayouts());
+        $this->assertNull($site->getAllLayouts()[0]->outputPath);
+        $this->assertNull($site->getAllLayouts()[1]->outputPath);
+    }
+
+    public function testSiteOutputPath() {
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $site = $this->subject->buildSite();
+
+        $this->assertSame('vfs://install_dir/custom-site-dir', $site->getOutputPath());
+    }
+
+    public function testSiteContentOverridenByHandler() {
+        $this->testSiteLoader->loadTestSite(TestSites::keyValueSite());
+
+        $this->subject->addContentGeneratedHandler(new OverwritingContentOutputPathHandlerStub());
+
+        $this->subject->buildSite();
+
+        $this->assertFileExists('vfs://install_dir/_site/content-generated-path.html');
+
+        $expected = Fixtures::keyValueChangedPathSite()->getContents('content-generated-path.html');
+        $actual = file_get_contents('vfs://install_dir/_site/content-generated-path.html');
+
+        $this->assertSame($expected, $actual);
+    }
+
+
+    public function testBuildSiteCallsContentWrittenHandlerAppropriateNumberOfTimes() {
+        $stub = new ContentWrittenHandlerStub();
+
+        $this->subject->addContentWrittenHandler($stub);
+
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->subject->buildSite();
+
+        $actual = [];
+        foreach ($stub->getHandledContent() as $content) {
+            $actual[] = $content->outputPath;
+        }
+        $expected = [
+            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article.html',
+            'vfs://install_dir/custom-site-dir/css/styles.css',
+            'vfs://install_dir/custom-site-dir/js/code.js'
+        ];
+
+        sort($expected);
+        sort($actual);
+
+        $this->assertSame($expected, $actual);
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

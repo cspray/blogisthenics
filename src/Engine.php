@@ -31,6 +31,16 @@ final class Engine {
      */
     private array $dynamicContentProviders = [];
 
+    /**
+     * @var ContentGeneratedHandler[]
+     */
+    private array $contentGeneratedHandlers = [];
+
+    /**
+     * @var ContentWrittenHandler[]
+     */
+    private array $contentWrittenHandlers = [];
+
     public function __construct(
         private readonly string $rootDirectory,
         private readonly SiteGenerator $siteGenerator,
@@ -49,6 +59,14 @@ final class Engine {
 
     public function addDynamicContentProvider(DynamicContentProvider $dynamicContentProvider) : void {
         $this->dynamicContentProviders[] = $dynamicContentProvider;
+    }
+
+    public function addContentGeneratedHandler(ContentGeneratedHandler $handler) : void {
+        $this->siteGenerator->addHandler($handler);
+    }
+
+    public function addContentWrittenHandler(ContentWrittenHandler $handler) : void {
+        $this->siteWriter->addHandler($handler);
     }
 
     /**
