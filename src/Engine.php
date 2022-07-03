@@ -2,6 +2,7 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
 use Stringy\Stringy as S;
 
@@ -59,6 +60,7 @@ final class Engine {
     public function buildSite() : Site {
         $siteConfig = $this->getSiteConfiguration();
 
+        $this->loadStaticData($siteConfig);
 
         foreach ($this->dataProviders as $dataProvider) {
             $dataProvider->setData($this->keyValueStore);
@@ -91,7 +93,7 @@ final class Engine {
         return new SiteConfiguration(
             layoutDirectory: $config['layout_directory'],
             contentDirectory: $config['content_directory'],
-            dataDirectory: null,
+            dataDirectory: $config['data_directory'] ?? null,
             outputDirectory: $config['output_directory'],
             defaultLayout: $config['default_layout']
         );
@@ -139,6 +141,32 @@ final class Engine {
             $config,
             $dir
         );
+    }
+
+    private function loadStaticData(SiteConfiguration $siteConfiguration) : void {
+        if (isset($siteConfiguration->dataDirectory)) {
+            $dataPath = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->dataDirectory);
+            $dirIterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dataPath, \FilesystemIterator::SKIP_DOTS)
+            );
+            /** @var \SplFileInfo $file */
+            foreach ($dirIterator as $file) {
+                $json = json_decode(file_get_contents($file->getPathname()), true);
+                if (is_null($json)) {
+                    throw new SiteGenerationException(sprintf(
+                        'A static data file, "%s", is not valid JSON.',
+                        $file->getPathname()
+                    ));
+                }
+                $namespace = S::create($file->getPathname())
+                    ->replace($dataPath, '')
+                    ->replace('.' . $file->getExtension(), '')
+                    ->trimLeft('/');
+                foreach ($json as $key => $value) {
+                    $this->keyValueStore->set(sprintf('%s/%s', $namespace, $key), $value);
+                }
+            }
+        }
     }
 
 }

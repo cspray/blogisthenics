@@ -65,6 +65,7 @@ class EngineTest extends TestCase {
         $this->assertSame('custom-site-dir', $siteConfig->outputDirectory, 'Output directory is not set from config');
         $this->assertSame('primary-layout.html', $siteConfig->defaultLayout, 'Default layout is not set from config');
         $this->assertSame('site-source', $siteConfig->contentDirectory, 'Content directory is not set from config');
+        $this->assertNull($siteConfig->dataDirectory);
     }
 
     public function testSiteConfigurationComesFromDefaultIfMissingBlogisthenicsFolder() {
@@ -76,6 +77,16 @@ class EngineTest extends TestCase {
         $this->assertSame('content', $siteConfig->contentDirectory);
         $this->assertSame('_site', $siteConfig->outputDirectory);
         $this->assertSame('main', $siteConfig->defaultLayout);
+        $this->assertNull($siteConfig->dataDirectory);
+    }
+
+    public function testSiteConfigurationHasDataDirectory() {
+        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
+
+        $site = $this->subject->buildSite();
+        $siteConfig = $site->getConfiguration();
+
+        $this->assertSame('data', $siteConfig->dataDirectory);
     }
 
     public function testSiteLayoutCount() {
@@ -350,6 +361,46 @@ class EngineTest extends TestCase {
         $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
 
         $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testKeyValueStoreHasDataLoaded() {
+        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
+        $this->subject->buildSite();
+
+        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $actualContents = file_get_contents($outputPath);
+        $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
+
+        $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testKeyValueStoreHasNestedDataLoaded() {
+        $this->testSiteLoader->loadTestSite(TestSites::nestedStaticDataSite());
+        $this->subject->buildSite();
+
+        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $actualContents = file_get_contents($outputPath);
+        $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
+
+        $this->assertSame($expectedContents, $actualContents);
+    }
+
+    public function testStaticDataNotJsonThrowsError() {
+        $this->testSiteLoader->loadTestSite(TestSites::nonJsonStaticDataSite());
+
+        $this->expectException(SiteGenerationException::class);
+        $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.yml", is not valid JSON.');
+
+        $this->subject->buildSite();
+    }
+
+    public function testStaticDataNotValidJsonThrowsError() {
+        $this->testSiteLoader->loadTestSite(TestSites::invalidJsonStaticDataSite());
+
+        $this->expectException(SiteGenerationException::class);
+        $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.json", is not valid JSON.');
+
+        $this->subject->buildSite();
     }
 
     public function testBuildSiteCallsAddedDynamicContentProvider() {

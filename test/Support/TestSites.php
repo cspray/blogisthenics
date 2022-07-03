@@ -6,13 +6,17 @@ use Cspray\Blogisthenics\Test\Support\TestSite\EmptyContentDirectoryConfiguratio
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyOutputDirectoryConfigurationTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\InvalidJsonStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\KeyValueTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\NestedStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NoConfigTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\NonJsonStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundContentDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\PageSpecifiesNotFoundLayoutTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\StaticDataTestSite;
 
 final class TestSites {
 
@@ -112,6 +116,42 @@ final class TestSites {
         static $site;
         if (!isset($site)) {
             $site = new NotFoundDataDirectoryConfigurationTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function staticDataSite() : StaticDataTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new StaticDataTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function nonJsonStaticDataSite() : NonJsonStaticDataTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new NonJsonStaticDataTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function nestedStaticDataSite() : NestedStaticDataTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new NestedStaticDataTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function invalidJsonStaticDataSite() : InvalidJsonStaticDataTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new InvalidJsonStaticDataTestSite();
         }
 
         return $site;
