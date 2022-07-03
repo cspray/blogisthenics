@@ -73,3 +73,10 @@ Layouts are `.md` and `.php` files that act as the outer chrome for pages. Layou
 </html>
 ```
 
+Note the call to `$this->yield()`, when in a layout this is required to output the content being injected. If you attempt to call `$this->yield()` from a non-layout piece of Content an exception will be thrown.
+
+#### Pages
+
+Pages are `.html`, `.md`, and `.php` files that act as specific content for a path that will be added to your site. Pages are expected to be only partial HTML documents and must define a layout. If a layout is not explicitly defined in the Front Matter of a page we use the default layout from the SiteConfiguration.
+
+### Programmatic API
