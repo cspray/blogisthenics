@@ -169,11 +169,11 @@ class EngineTest extends TestCase {
         return [
             ['getAllLayouts', 0, 'vfs://install_dir/custom-layouts-dir/article.md.php'],
             ['getAllLayouts', 1, 'vfs://install_dir/custom-layouts-dir/primary-layout.html.php'],
-            ['getAllPages', 0, 'vfs://install_dir/posts/2018-06-23-the-blog-article-title.md.php'],
-            ['getAllPages', 1, 'vfs://install_dir/posts/2018-06-30-another-blog-article.html.php'],
-            ['getAllPages', 2, 'vfs://install_dir/posts/2018-07-01-nested-layout-article.md'],
-            ['getAllStaticAssets', 0, 'vfs://install_dir/css/styles.css'],
-            ['getAllStaticAssets', 1, 'vfs://install_dir/js/code.js']
+            ['getAllPages', 0, 'vfs://install_dir/site-source/posts/2018-06-23-the-blog-article-title.md.php'],
+            ['getAllPages', 1, 'vfs://install_dir/site-source/posts/2018-06-30-another-blog-article.html.php'],
+            ['getAllPages', 2, 'vfs://install_dir/site-source/posts/2018-07-01-nested-layout-article.md'],
+            ['getAllStaticAssets', 0, 'vfs://install_dir/site-source/css/styles.css'],
+            ['getAllStaticAssets', 1, 'vfs://install_dir/site-source/js/code.js']
         ];
     }
 
@@ -274,7 +274,7 @@ class EngineTest extends TestCase {
     public function testSitePageWithLayoutNotFoundThrowsError() {
         $this->assertExceptionThrown(
             SiteGenerationException::class,
-            'The page "vfs://install_dir/2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
+            'The page "vfs://install_dir/content/2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
             function () {
                 $this->testSiteLoader->loadTestSite(TestSites::pageSpecifiesNotFoundLayoutSite());
                 $this->subject->buildSite();

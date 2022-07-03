@@ -26,13 +26,16 @@ PHP;
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
-                    'default_layout' => 'default.html'
+                    'default_layout' => 'default.html',
+                    'content_directory' => 'content'
                 ]))
             ]),
             '_layouts' => $this->dir([
                 'default.html.php' => $this->file('<?= $this->yield() ?>')
             ]),
-            'key-value-article.html.php' => $this->file($keyValueArticle)
+            'content' => $this->dir([
+                'key-value-article.html.php' => $this->file($keyValueArticle)
+            ])
         ]));
     }
 

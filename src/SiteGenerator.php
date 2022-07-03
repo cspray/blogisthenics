@@ -6,6 +6,7 @@ use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use FilesystemIterator;
 use Iterator;
+use MultipleIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -28,13 +29,11 @@ final class SiteGenerator {
         $site = new Site($siteConfiguration);
 
         /** @var SplFileInfo $fileInfo */
-        foreach ($this->getSourceIterator() as $fileInfo) {
-            if ($this->isParseablePath($siteConfiguration, $fileInfo)) {
+        foreach ($this->getSourceIterator($siteConfiguration) as $fileInfo) {
+            if ($this->isParseablePath($fileInfo)) {
                 $content = $this->createDynamicContent($siteConfiguration, $fileInfo);
-            } else if(!$this->isConfigOrOutputPath($siteConfiguration, $fileInfo)) {
-                $content = $this->createStaticContent($siteConfiguration, $fileInfo);
             } else {
-                continue;
+                $content = $this->createStaticContent($siteConfiguration, $fileInfo);
             }
 
             $site->addContent($content);
@@ -43,34 +42,39 @@ final class SiteGenerator {
         return $site;
     }
 
-    private function getSourceIterator() : Iterator {
-        $directoryIterator = new RecursiveDirectoryIterator($this->rootDirectory, FilesystemIterator::SKIP_DOTS);
-        return new RecursiveIteratorIterator($directoryIterator);
+    private function getSourceIterator(SiteConfiguration $siteConfiguration) : Iterator {
+        $contentDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->contentDirectory);
+        $layoutDirectory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->layoutDirectory);
+        $layoutIterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($layoutDirectory, FilesystemIterator::SKIP_DOTS)
+        );
+        $contentIterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($contentDirectory, FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($layoutIterator as $layout) {
+            yield $layout;
+        }
+
+        foreach ($contentIterator as $content) {
+            yield $content;
+        }
     }
 
-    private function isParseablePath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        return !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
-            $fileInfo->isFile() &&
+    private function isParseablePath(SplFileInfo $fileInfo) : bool {
+        return $fileInfo->isFile() &&
             in_array($fileInfo->getExtension(), self::PARSEABLE_EXTENSIONS);
     }
 
     private function isStaticAssetPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        return !$this->isParseablePath($siteConfiguration, $fileInfo) &&
-            !$this->isConfigOrOutputPath($siteConfiguration, $fileInfo) &&
+        return $fileInfo->isFile() &&
+            !$this->isParseablePath($fileInfo) &&
             !$this->isLayoutPath($siteConfiguration, $fileInfo);
     }
 
-    private function isConfigOrOutputPath(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : bool {
-        $pattern = sprintf(
-            '<^%s/(\.blogisthenics|%s)>',
-            $this->rootDirectory,
-            $siteConfiguration->outputDirectory
-        );
-        return (bool) preg_match($pattern, $fileInfo->getPathname());
-    }
-
     private function createStaticContent(SiteConfiguration $siteConfiguration, SplFileInfo $fileInfo) : Content {
-        $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
+        $directory = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->contentDirectory);
+        $contentOutputDir = dirname(preg_replace('<^' . $directory . '>', '', $fileInfo->getPathname()));
         return $this->createContent(
             $siteConfiguration,
             $fileInfo,
@@ -200,7 +204,8 @@ final class SiteGenerator {
 
     private function getOutputPath(SiteConfiguration $siteConfig, SplFileInfo $fileInfo) : string {
         $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
-        $contentOutputDir = dirname(preg_replace('<^' . $this->rootDirectory . '>', '', $fileInfo->getPathname()));
+        $directory = sprintf('%s/%s', $this->rootDirectory, $siteConfig->contentDirectory);
+        $contentOutputDir = dirname(preg_replace('<^' . $directory . '>', '', $fileInfo->getPathname()));
         return sprintf(
             '%s/%s%s/%s.html',
             $this->rootDirectory,

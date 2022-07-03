@@ -13,7 +13,8 @@ final class NotFoundLayoutDirectoryConfigurationTestSite extends AbstractTestSit
                 'config.json' => $this->file(json_encode([
                     'layout_directory' => '_layouts',
                     'output_directory' => '_site',
-                    'default_layout' => 'default.html'
+                    'default_layout' => 'default.html',
+                    'content_directory' => 'content'
                 ]))
             ])
         ]));
