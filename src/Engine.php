@@ -2,6 +2,8 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Inject;
+use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
 use Stringy\Stringy as S;
@@ -14,6 +16,7 @@ use Stringy\Stringy as S;
  * Typically userland code would not interact with this object and instead would be utilized by the internal application
  * script that kicks off the site building process.
  */
+#[Service]
 final class Engine {
 
     /**
@@ -31,18 +34,9 @@ final class Engine {
      */
     private array $dynamicContentProviders = [];
 
-    /**
-     * @var ContentGeneratedHandler[]
-     */
-    private array $contentGeneratedHandlers = [];
-
-    /**
-     * @var ContentWrittenHandler[]
-     */
-    private array $contentWrittenHandlers = [];
-
     public function __construct(
-        private readonly string $rootDirectory,
+        #[Inject('rootDir', from: BlogisthenicsParameterStore::STORE_NAME)]
+        public readonly string $rootDirectory,
         private readonly SiteGenerator $siteGenerator,
         private readonly SiteWriter $siteWriter,
         private readonly KeyValueStore $keyValueStore,
@@ -81,7 +75,7 @@ final class Engine {
         $this->loadStaticData($siteConfig);
 
         foreach ($this->dataProviders as $dataProvider) {
-            $dataProvider->setData($this->keyValueStore);
+            $dataProvider->addData($this->keyValueStore);
         }
 
         foreach ($this->templateHelperProviders as $templateHelperProvider) {

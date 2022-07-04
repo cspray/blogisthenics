@@ -2,11 +2,13 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 
 /**
  * @internal This class should only be utilized by Engine implementations; use outside of this context is unsupported.
  */
+#[Service]
 final class SiteWriter {
 
     /**

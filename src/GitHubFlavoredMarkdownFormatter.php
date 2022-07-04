@@ -2,8 +2,10 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
+#[Service]
 final class GitHubFlavoredMarkdownFormatter implements Formatter {
 
     private readonly GithubFlavoredMarkdownConverter $converter;

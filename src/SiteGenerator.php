@@ -2,6 +2,8 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Inject;
+use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\FileParserResults as ParserResults;
 use DateTimeImmutable;
 use FilesystemIterator;
@@ -14,6 +16,7 @@ use Stringy\Stringy as S;
 /**
  * @internal This class should only be utilized by Engine implementations; use outside of this context is unsupported.
  */
+#[Service]
 final class SiteGenerator {
 
     private const PARSEABLE_EXTENSIONS = ['php', 'md'];
@@ -24,6 +27,7 @@ final class SiteGenerator {
     private array $handlers = [];
 
     public function __construct(
+        #[Inject('rootDir', from: BlogisthenicsParameterStore::STORE_NAME)]
         private readonly string $rootDirectory,
         private readonly FileParser $parser
     ) {}

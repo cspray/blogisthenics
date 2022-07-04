@@ -2,8 +2,11 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
+
+#[Service]
 interface DataProvider {
 
-    public function setData(KeyValueStore $keyValue) : void;
+    public function addData(KeyValueStore $keyValue) : void;
 
 }

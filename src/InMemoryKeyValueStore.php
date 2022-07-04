@@ -2,9 +2,17 @@
 
 namespace Cspray\Blogisthenics;
 
+use Adbar\Dot;
+use Cspray\AnnotatedContainer\Attribute\Service;
+
+#[Service]
 final class InMemoryKeyValueStore implements KeyValueStore {
 
-    private array $store = [];
+    private Dot $store;
+
+    public function __construct() {
+        $this->store = new Dot([]);
+    }
 
     public function set(string $key, mixed $value) : void {
         $this->store[$key] = $value;

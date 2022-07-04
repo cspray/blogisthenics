@@ -95,4 +95,20 @@ class FrontMatterTest extends TestCase {
         $this->assertSame('foobar', $subject->get('quz'), 'Expected to not lost data from original front matter');
     }
 
+    public function testDotSeparatedAccess() {
+        $frontMatter = new FrontMatter([
+            'a' => [
+                'b' => [
+                    'c' => [
+                        'foo' => [
+                            'bar' => 'baz'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertSame('baz', $frontMatter->get('a.b.c.foo.bar'));
+    }
+
 }

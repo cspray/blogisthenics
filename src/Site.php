@@ -2,6 +2,9 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
+
+#[Service]
 final class Site {
 
     /**
