@@ -545,6 +545,18 @@ class EngineTest extends TestCase {
         );
     }
 
+    public function testMarkdownLayoutFormattedProperly() {
+        $this->testSiteLoader->loadTestSite(TestSites::markdownLayoutSite());
+        $site = $this->subject->buildSite();
+
+        $content = $site->getAllPages()[0];
+
+        $this->assertSame(
+            trim(Fixtures::markdownLayoutSite()->getContents('just-markdown-layout.html')),
+            trim($content->getRenderedContents())
+        );
+    }
+
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {
         $this->expectException($exception);
         $this->expectExceptionMessage($message);
