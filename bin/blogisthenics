@@ -6,38 +6,32 @@ if (php_sapi_name() !== 'cli') {
 }
 
 $rootDir = dirname(__DIR__);
+$extraScanDirs = [];
+if (!file_exists($rootDir . '/vendor/autoload.php')) {
+    $rootDir = dirname(__DIR__, 4);
+    if (is_dir($rootDir . '/src')) {
+        $extraScanDirs[] = $rootDir . '/src';
+    }
+}
 require $rootDir . '/vendor/autoload.php';
 
+use Cspray\Blogisthenics\Bootstrap;
 use Cspray\Blogisthenics\Cli\CliApp;
-use Cspray\Blogisthenics\ContextFactory;
-use Cspray\Blogisthenics\Engine as BlogisthenicsEngine;
-use Cspray\Blogisthenics\FileParser;
-use Cspray\Blogisthenics\GitHubFlavoredMarkdownFormatter;
-use Cspray\Blogisthenics\InMemoryKeyValueStore;
-use Cspray\Blogisthenics\MethodDelegator;
-use Cspray\Blogisthenics\SiteGenerator;
-use Cspray\Blogisthenics\SiteWriter;
-use Cspray\Blogisthenics\TemplateFormatter;
-use Laminas\Escaper\Escaper;
+use Cspray\Blogisthenics\Engine;
 use Minicli\App;
 use Minicli\ServiceInterface;
 
-$keyValueStore = new InMemoryKeyValueStore();
-
-$templateFormatter = new TemplateFormatter(new GitHubFlavoredMarkdownFormatter());
-$contextFactory = new ContextFactory(new Escaper(), new MethodDelegator(), $keyValueStore);
-
-$engine = new BlogisthenicsEngine(
-    $rootDir,
-    new SiteGenerator($rootDir, new FileParser()),
-    new SiteWriter($templateFormatter, $contextFactory),
-    $keyValueStore,
-    new MethodDelegator()
+$container = Bootstrap::bootstrap(
+    $extraScanDirs,
+    ['default'],
+    $rootDir
 );
+
+$engine = $container->get(Engine::class);
 
 $blogisthenicsService = new class($engine) implements ServiceInterface {
 
-    public function __construct(private readonly BlogisthenicsEngine $engine) {}
+    public function __construct(private readonly Engine $engine) {}
 
     public function load(App $app) : void {
     }

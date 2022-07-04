@@ -51,10 +51,13 @@ class EngineTest extends TestCase {
         $this->methodDelegator = new MethodDelegator();
         $this->keyValueStore = new InMemoryKeyValueStore();
         $contextFactory = new ContextFactory(new Escaper(), $this->methodDelegator, $this->keyValueStore);
+        $markdownFormatter = new GitHubFlavoredMarkdownFormatter();
+        $templateFormatter = new TemplateFormatter();
+        $templateFormatter->addFormatter($markdownFormatter);
         $this->subject = new Engine(
             $rootDir,
             new SiteGenerator($rootDir, new FileParser()),
-            new SiteWriter(new TemplateFormatter(new GitHubFlavoredMarkdownFormatter()), $contextFactory),
+            new SiteWriter($templateFormatter, $contextFactory),
             $this->keyValueStore,
             $this->methodDelegator
         );
@@ -328,9 +331,9 @@ class EngineTest extends TestCase {
         $dataTwo = $this->getMockBuilder(DataProvider::class)->getMock();
         $dataThree = $this->getMockBuilder(DataProvider::class)->getMock();
 
-        $dataOne->expects($this->once())->method('setData')->with($this->keyValueStore);
-        $dataTwo->expects($this->once())->method('setData')->with($this->keyValueStore);
-        $dataThree->expects($this->once())->method('setData')->with($this->keyValueStore);
+        $dataOne->expects($this->once())->method('addData')->with($this->keyValueStore);
+        $dataTwo->expects($this->once())->method('addData')->with($this->keyValueStore);
+        $dataThree->expects($this->once())->method('addData')->with($this->keyValueStore);
 
         $this->subject->addDataProvider($dataOne);
         $this->subject->addDataProvider($dataTwo);

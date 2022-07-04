@@ -2,8 +2,10 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\ParsingException;
 
+#[Service]
 final class FileParser {
 
     public function parse(string $filePath, string $fileContents) : FileParserResults {

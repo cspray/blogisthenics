@@ -33,4 +33,17 @@ class InMemoryKeyValueStoreTest extends TestCase {
         $this->assertSame('bazqux', $keyValueStore->get('foobar'));
     }
 
+    public function testDotSeparatedKeyDigsIntoNestedArray() {
+        $keyValueStore = new InMemoryKeyValueStore();
+        $keyValueStore->set('foo/bar', [
+            'baz' => [
+                'qux' => [
+                    'quz' => 'get this'
+                ]
+            ]
+        ]);
+
+        $this->assertSame('get this', $keyValueStore->get('foo/bar.baz.qux.quz'));
+    }
+
 }

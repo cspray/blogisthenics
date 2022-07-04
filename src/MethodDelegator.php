@@ -4,7 +4,9 @@ namespace Cspray\Blogisthenics;
 
 use BadMethodCallException;
 use Closure;
+use Cspray\AnnotatedContainer\Attribute\Service;
 
+#[Service]
 final class MethodDelegator {
 
     private array $methods = [];

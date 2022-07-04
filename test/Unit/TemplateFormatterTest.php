@@ -16,23 +16,6 @@ class TemplateFormatterTest extends TestCase {
         $this->assertSame('my content unchanged', $actual);
     }
 
-    public function testFormatWithFormattersReturnsTheFormattedContents() {
-        $formatter = $this->getMockBuilder(Formatter::class)->getMock();
-        $formatter->expects($this->once())
-            ->method('getFormatType')
-            ->willReturn('foo');
-        $formatter->expects($this->once())
-            ->method('format')
-            ->with('content')
-            ->willReturn('my formatted content');
-
-        $subject = new TemplateFormatter($formatter);
-
-        $actual = $subject->format('foo', 'content');
-
-        $this->assertSame($actual, 'my formatted content');
-    }
-
     public function testFormatWithFormatterAddedAfterConstruct() {
         $formatter = $this->getMockBuilder(Formatter::class)->getMock();
         $formatter->expects($this->once())
@@ -64,7 +47,9 @@ class TemplateFormatterTest extends TestCase {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('A Formatter is already associated with the format type \'foo\'.');
 
-        new TemplateFormatter($formatter, $dupe);
+        $templateFormatter = new TemplateFormatter();
+        $templateFormatter->addFormatter($formatter);
+        $templateFormatter->addFormatter($dupe);
     }
 
 }

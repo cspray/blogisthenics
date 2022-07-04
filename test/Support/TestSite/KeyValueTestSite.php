@@ -44,7 +44,7 @@ PHP;
 
     public function getDataProviders() : array {
         $dataProvider = new class implements DataProvider {
-            public function setData(KeyValueStore $keyValue) : void {
+            public function addData(KeyValueStore $keyValue) : void {
                 $keyValue->set('foo', 'key-valued bar&baz');
             }
         };

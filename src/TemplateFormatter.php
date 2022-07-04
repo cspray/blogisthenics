@@ -2,18 +2,15 @@
 
 namespace Cspray\Blogisthenics;
 
-class TemplateFormatter {
+use Cspray\AnnotatedContainer\Attribute\Service;
+
+#[Service]
+final class TemplateFormatter {
 
     /**
      * @var Formatter[]
      */
     private array $formatters;
-
-    public function __construct(Formatter... $formatters) {
-        foreach ($formatters as $formatter) {
-            $this->addFormatter($formatter);
-        }
-    }
 
     public function addFormatter(Formatter $formatter) : void {
         $formatType = $formatter->getFormatType();
