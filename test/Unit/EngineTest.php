@@ -533,6 +533,18 @@ class EngineTest extends TestCase {
         $this->assertFileExists($path);
     }
 
+    public function testBuiltContentIncludesRenderedContents() {
+        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $site = $this->subject->buildSite();
+
+        $content = $site->getAllPages()[0];
+
+        $this->assertSame(
+            file_get_contents($content->outputPath),
+            $content->getRenderedContents()
+        );
+    }
+
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {
         $this->expectException($exception);
         $this->expectExceptionMessage($message);

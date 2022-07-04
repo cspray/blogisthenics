@@ -3,7 +3,7 @@
 
 namespace Cspray\Blogisthenics;
 
-use Cspray\Blogisthenics\Test\Unit\ContentTest;
+use Cspray\Blogisthenics\Exception\InvalidStateException;
 use DateTimeImmutable;
 
 final class Content {
@@ -48,6 +48,17 @@ final class Content {
 
     public function isDraft() : bool {
         return !$this->isPublished();
+    }
+
+    public function getRenderedContents() : string {
+        if (is_null($this->outputPath) || !file_exists($this->outputPath)) {
+            throw new InvalidStateException(sprintf(
+                'Called %s before the corresponding Template has been rendered.',
+                __METHOD__
+            ));
+        }
+
+        return file_get_contents($this->outputPath);
     }
 
 }
