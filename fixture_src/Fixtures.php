@@ -31,4 +31,13 @@ final class Fixtures {
         return $fixture;
     }
 
+    public static function markdownLayoutSite() : MarkdownLayoutSiteFixture {
+        static $fixture;
+        if (!isset($fixture)) {
+            $fixture = new MarkdownLayoutSiteFixture();
+        }
+
+        return $fixture;
+    }
+
 }

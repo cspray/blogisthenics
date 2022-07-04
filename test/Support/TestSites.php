@@ -8,6 +8,7 @@ use Cspray\Blogisthenics\Test\Support\TestSite\EmptyLayoutDirectoryConfiguration
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyOutputDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\InvalidJsonStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\KeyValueTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\MarkdownLayoutTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NestedStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NoConfigTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NonJsonStaticDataTestSite;
@@ -18,6 +19,7 @@ use Cspray\Blogisthenics\Test\Support\TestSite\PageSpecifiesNotFoundLayoutTestSi
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardIncludingDraftsTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StaticDataTestSite;
+use Cspray\BlogisthenicsFixture\MarkdownLayoutSiteFixture;
 
 final class TestSites {
 
@@ -162,6 +164,15 @@ final class TestSites {
         static $site;
         if (!isset($site)) {
             $site = new StandardIncludingDraftsTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function markdownLayoutSite() : MarkdownLayoutTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new MarkdownLayoutTestSite();
         }
 
         return $site;

@@ -56,7 +56,8 @@ final class SiteWriter {
 
         $templateData = $this->mergeAndConvertToArray($page->frontMatter, $finalLayout->frontMatter);
         $context = $this->contextFactory->create($templateData, fn() => new SafeToNotEncode($contents));
-        return $finalLayout->template->render($context);
+        $markup = $finalLayout->template->render($context);
+        return $this->templateFormatter->format($finalLayout->template->getFormatType(), $markup);
     }
 
     private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {
