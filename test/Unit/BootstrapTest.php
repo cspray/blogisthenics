@@ -22,6 +22,9 @@ class BootstrapTest extends TestCase {
     }
 
     public function testBootstrapWithNoExtraScanDirectories() : void {
+        $testSiteLoader = new TestSiteLoader($this->vfs);
+        $testSiteLoader->loadTestSiteDirectories(TestSites::standardSite());
+
         $container = Bootstrap::bootstrap(
             [],
             ['default'],
@@ -30,11 +33,6 @@ class BootstrapTest extends TestCase {
 
         /** @var Engine $engine */
         $engine = $container->get(Engine::class);
-
-        $this->assertSame('vfs://install_dir', $engine->rootDirectory);
-
-        $testSiteLoader = new TestSiteLoader($this->vfs, $engine);
-        $testSiteLoader->loadTestSite(TestSites::standardSite());
 
         $site = $engine->buildSite();
 

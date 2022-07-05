@@ -10,7 +10,9 @@
     "voku/stringy": "^6.5",
     "adbario/php-dot-notation": "^3.1",
     "cspray/annotated-container": "^1.0",
-    "rdlowrey/auryn": "^1.4"
+    "rdlowrey/auryn": "^1.4",
+    "league/flysystem": "^3.1",
+    "league/flysystem-memory": "^3.0"
   },
   "require-dev": {
     "mikey179/vfsstream": "^1.6",

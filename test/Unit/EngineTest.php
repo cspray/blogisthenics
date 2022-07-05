@@ -2,22 +2,18 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\Content;
-use Cspray\Blogisthenics\ContextFactory;
+use Cspray\Blogisthenics\Bootstrap;
 use Cspray\Blogisthenics\DataProvider;
 use Cspray\Blogisthenics\DynamicContentProvider;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
-use Cspray\Blogisthenics\FileParser;
-use Cspray\Blogisthenics\GitHubFlavoredMarkdownFormatter;
 use Cspray\Blogisthenics\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\KeyValueStore;
 use Cspray\Blogisthenics\MethodDelegator;
 use Cspray\Blogisthenics\Site;
-use Cspray\Blogisthenics\SiteGenerator;
-use Cspray\Blogisthenics\SiteWriter;
-use Cspray\Blogisthenics\TemplateFormatter;
 use Cspray\Blogisthenics\TemplateHelperProvider;
+use Cspray\Blogisthenics\Test\Support\HasVirtualFilesystemHelpers;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedHandlerStub;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenHandlerStub;
 use Cspray\Blogisthenics\Test\Support\Stub\OverwritingContentOutputPathHandlerStub;
@@ -27,12 +23,13 @@ use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;
 use Cspray\BlogisthenicsFixture\Fixtures;
 use DateTimeImmutable;
-use Laminas\Escaper\Escaper;
 use org\bovigo\vfs\vfsStream as VirtualFilesystem;
 use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 use PHPUnit\Framework\TestCase;
 
 class EngineTest extends TestCase {
+
+    use HasVirtualFilesystemHelpers;
 
     private Engine $subject;
 
@@ -44,61 +41,33 @@ class EngineTest extends TestCase {
 
     private TestSiteLoader $testSiteLoader;
 
-    public function setUp() : void {
-        parent::setUp();
+    private function setUpAndLoadTestSite(TestSite $testSite) : void {
         $this->vfs = VirtualFilesystem::setup('install_dir');
-        $rootDir = $this->vfs->url();
-        $this->methodDelegator = new MethodDelegator();
-        $this->keyValueStore = new InMemoryKeyValueStore();
-        $contextFactory = new ContextFactory(new Escaper(), $this->methodDelegator, $this->keyValueStore);
-        $markdownFormatter = new GitHubFlavoredMarkdownFormatter();
-        $templateFormatter = new TemplateFormatter();
-        $templateFormatter->addFormatter($markdownFormatter);
-        $this->subject = new Engine(
-            $rootDir,
-            new SiteGenerator($rootDir, new FileParser()),
-            new SiteWriter($templateFormatter, $contextFactory),
-            $this->keyValueStore,
-            $this->methodDelegator
+        $testSiteLoader = new TestSiteLoader($this->vfs);
+        $testSiteLoader->loadTestSiteDirectories($testSite);
+
+        $container = Bootstrap::bootstrap(
+            [],
+            ['default', 'test'],
+            $this->vfs->url()
         );
-        $this->testSiteLoader = new TestSiteLoader($this->vfs, $this->subject);
-    }
 
-    public function testSiteConfigurationComesFromDotBlogisthenicsFolder() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
-
-        $site = $this->subject->buildSite();
-        $siteConfig = $site->getConfiguration();
-        $this->assertSame('custom-layouts-dir', $siteConfig->layoutDirectory, 'Layout directory is not set from config');
-        $this->assertSame('custom-site-dir', $siteConfig->outputDirectory, 'Output directory is not set from config');
-        $this->assertSame('primary-layout.html', $siteConfig->defaultLayout, 'Default layout is not set from config');
-        $this->assertSame('site-source', $siteConfig->contentDirectory, 'Content directory is not set from config');
-        $this->assertNull($siteConfig->dataDirectory);
+        $this->methodDelegator = $container->get(MethodDelegator::class);
+        $this->keyValueStore = $container->get(KeyValueStore::class);
+        $this->subject = $container->get(Engine::class);
+        $testSiteLoader->loadTestSiteObservers($this->subject, $testSite);
     }
 
     public function testSiteConfigurationComesFromDefaultIfMissingBlogisthenicsFolder() {
-        $this->testSiteLoader->loadTestSite(TestSites::noConfigSite());
+        $this->setUpAndLoadTestSite(TestSites::noConfigSite());
 
         $site = $this->subject->buildSite();
-        $siteConfig = $site->getConfiguration();
-        $this->assertSame('layouts', $siteConfig->layoutDirectory);
-        $this->assertSame('content', $siteConfig->contentDirectory);
-        $this->assertSame('_site', $siteConfig->outputDirectory);
-        $this->assertSame('main', $siteConfig->defaultLayout);
-        $this->assertNull($siteConfig->dataDirectory);
-    }
 
-    public function testSiteConfigurationHasDataDirectory() {
-        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
-
-        $site = $this->subject->buildSite();
-        $siteConfig = $site->getConfiguration();
-
-        $this->assertSame('data', $siteConfig->dataDirectory);
+        $this->assertCount(3, $site->getAllPages());
     }
 
     public function testSiteLayoutCount() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $layouts = $site->getAllLayouts();
@@ -106,14 +75,14 @@ class EngineTest extends TestCase {
     }
 
     public function testSitePageCount() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $this->assertCount(3, $site->getAllPages(), 'Expected to have both posts as a non-layout page');
     }
 
     public function testSiteStaticAssetCount() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $this->assertCount(2, $site->getAllStaticAssets(), 'Expected to have 2 static asset');
@@ -138,7 +107,7 @@ class EngineTest extends TestCase {
      * @dataProvider sitePagesDates
      */
     public function testSitePagesHaveCorrectDate(string $method, int $index, DateTimeImmutable $expectedDate) {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $date = $site->$method()[$index]->postDate;
@@ -180,7 +149,7 @@ class EngineTest extends TestCase {
      * @dataProvider sitePagesFrontMatters
      */
     public function testSitePagesHaveCorrectRawFrontMatter(string $method, int $index, array $expectedFrontMatter) {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $frontMatter = iterator_to_array($site->$method()[$index]->frontMatter);
@@ -207,7 +176,7 @@ class EngineTest extends TestCase {
      * @dataProvider sitePagesSourcePaths
      */
     public function testSitePagesSourcePathIsAccurate(string $method, int $index, string $expectedSourcePath) {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
         $sourcePath = $site->$method()[$index]->name;
@@ -229,11 +198,11 @@ class EngineTest extends TestCase {
      * @dataProvider sitePagesOutputContents
      */
     public function testSitePagesOutputFileHasCorrectContent(string $outputPath, string $filePath) {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $this->subject->buildSite();
-        $fileExists = file_exists($outputPath);
-        $this->assertTrue($fileExists, 'A file was expected to exist at the output path ' . $outputPath);
+
+        $this->assertFileExists($outputPath);
 
         $actualContents = file_get_contents($outputPath);
         $expectedContents = file_get_contents($filePath);
@@ -258,7 +227,7 @@ class EngineTest extends TestCase {
      * @dataProvider sitePagesFormats
      */
     public function testSitePagesHasCorrectFormat(string $method, int $index, string $format) : void {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
 
         $site = $this->subject->buildSite();
 
@@ -309,7 +278,7 @@ class EngineTest extends TestCase {
             SiteValidationException::class,
             $expectedMessage,
             function () use ($testSite) {
-                $this->testSiteLoader->loadTestSite($testSite);
+                $this->setUpAndLoadTestSite($testSite);
                 $this->subject->buildSite();
             }
         );
@@ -320,13 +289,15 @@ class EngineTest extends TestCase {
             SiteGenerationException::class,
             'The page "vfs://install_dir/content/2018-07-15-no-layout-article.html.php" specified a layout "not_found.html" but the layout is not present.',
             function () {
-                $this->testSiteLoader->loadTestSite(TestSites::pageSpecifiesNotFoundLayoutSite());
+                $this->setUpAndLoadTestSite(TestSites::pageSpecifiesNotFoundLayoutSite());
                 $this->subject->buildSite();
             }
         );
     }
 
     public function testBuildSiteCallsAddedDataProviders() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
         $dataOne = $this->getMockBuilder(DataProvider::class)->getMock();
         $dataTwo = $this->getMockBuilder(DataProvider::class)->getMock();
         $dataThree = $this->getMockBuilder(DataProvider::class)->getMock();
@@ -339,11 +310,12 @@ class EngineTest extends TestCase {
         $this->subject->addDataProvider($dataTwo);
         $this->subject->addDataProvider($dataThree);
 
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
     }
 
     public function testBuildSiteCallsAddedTemplateHelperProviders() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
         $helperOne = $this->getMockBuilder(TemplateHelperProvider::class)->getMock();
         $helperTwo = $this->getMockBuilder(TemplateHelperProvider::class)->getMock();
         $helperThree = $this->getMockBuilder(TemplateHelperProvider::class)->getMock();
@@ -356,12 +328,11 @@ class EngineTest extends TestCase {
         $this->subject->addTemplateHelperProvider($helperTwo);
         $this->subject->addTemplateHelperProvider($helperThree);
 
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
     }
 
     public function testContentHasAccessToKeyValueStore() {
-        $this->testSiteLoader->loadTestSite(TestSites::keyValueSite());
+        $this->setUpAndLoadTestSite(TestSites::keyValueSite());
         $this->subject->buildSite();
 
         $outputPath = 'vfs://install_dir/_site/key-value-article.html';
@@ -372,7 +343,7 @@ class EngineTest extends TestCase {
     }
 
     public function testKeyValueStoreHasDataLoaded() {
-        $this->testSiteLoader->loadTestSite(TestSites::staticDataSite());
+        $this->setUpAndLoadTestSite(TestSites::staticDataSite());
         $this->subject->buildSite();
 
         $outputPath = 'vfs://install_dir/_site/key-value-article.html';
@@ -383,7 +354,7 @@ class EngineTest extends TestCase {
     }
 
     public function testKeyValueStoreHasNestedDataLoaded() {
-        $this->testSiteLoader->loadTestSite(TestSites::nestedStaticDataSite());
+        $this->setUpAndLoadTestSite(TestSites::nestedStaticDataSite());
         $this->subject->buildSite();
 
         $outputPath = 'vfs://install_dir/_site/key-value-article.html';
@@ -394,7 +365,7 @@ class EngineTest extends TestCase {
     }
 
     public function testStaticDataNotJsonThrowsError() {
-        $this->testSiteLoader->loadTestSite(TestSites::nonJsonStaticDataSite());
+        $this->setUpAndLoadTestSite(TestSites::nonJsonStaticDataSite());
 
         $this->expectException(SiteGenerationException::class);
         $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.yml", is not valid JSON.');
@@ -403,7 +374,7 @@ class EngineTest extends TestCase {
     }
 
     public function testStaticDataNotValidJsonThrowsError() {
-        $this->testSiteLoader->loadTestSite(TestSites::invalidJsonStaticDataSite());
+        $this->setUpAndLoadTestSite(TestSites::invalidJsonStaticDataSite());
 
         $this->expectException(SiteGenerationException::class);
         $this->expectExceptionMessage('A static data file, "vfs://install_dir/data/foo.json", is not valid JSON.');
@@ -412,6 +383,8 @@ class EngineTest extends TestCase {
     }
 
     public function testBuildSiteCallsAddedDynamicContentProvider() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
         $helperOne = $this->getMockBuilder(DynamicContentProvider::class)->getMock();
         $helperTwo = $this->getMockBuilder(DynamicContentProvider::class)->getMock();
         $helperThree = $this->getMockBuilder(DynamicContentProvider::class)->getMock();
@@ -430,16 +403,16 @@ class EngineTest extends TestCase {
         $this->subject->addDynamicContentProvider($helperTwo);
         $this->subject->addDynamicContentProvider($helperThree);
 
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
     }
 
     public function testBuildSiteCallsContentGeneratedHandlerAppropriateNumberOfTimes() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
         $stub = new ContentGeneratedHandlerStub();
 
         $this->subject->addContentGeneratedHandler($stub);
 
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
 
         $actual = [];
@@ -461,7 +434,7 @@ class EngineTest extends TestCase {
     }
 
     public function testAllLayoutContentOutputPathNull() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
         $site = $this->subject->buildSite();
 
         $this->assertCount(2, $site->getAllLayouts());
@@ -470,14 +443,14 @@ class EngineTest extends TestCase {
     }
 
     public function testSiteOutputPath() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
         $site = $this->subject->buildSite();
 
-        $this->assertSame('vfs://install_dir/custom-site-dir', $site->getOutputPath());
+        $this->assertSame('vfs://install_dir/custom-site-dir', $site->getConfiguration()->getOutputPath());
     }
 
     public function testSiteContentOverridenByHandler() {
-        $this->testSiteLoader->loadTestSite(TestSites::keyValueSite());
+        $this->setUpAndLoadTestSite(TestSites::keyValueSite());
 
         $this->subject->addContentGeneratedHandler(new OverwritingContentOutputPathHandlerStub());
 
@@ -493,11 +466,11 @@ class EngineTest extends TestCase {
 
 
     public function testBuildSiteCallsContentWrittenHandlerAppropriateNumberOfTimes() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
         $stub = new ContentWrittenHandlerStub();
 
         $this->subject->addContentWrittenHandler($stub);
 
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
         $this->subject->buildSite();
 
         $actual = [];
@@ -519,7 +492,7 @@ class EngineTest extends TestCase {
     }
 
     public function testBuildSiteDefaultDoesNotPublishDraftContent() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
         $this->subject->addContentGeneratedHandler(new OverwritingFrontMatterHandlerStub());
 
         $this->subject->buildSite();
@@ -529,7 +502,7 @@ class EngineTest extends TestCase {
     }
 
     public function testBuildSiteIncludingDraftsDoesPublishDraftContent() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardIncludingDraftsSite());
+        $this->setUpAndLoadTestSite(TestSites::standardIncludingDraftsSite());
         $this->subject->buildSite();
 
         $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html';
@@ -537,7 +510,7 @@ class EngineTest extends TestCase {
     }
 
     public function testBuiltContentIncludesRenderedContents() {
-        $this->testSiteLoader->loadTestSite(TestSites::standardSite());
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
         $site = $this->subject->buildSite();
 
         $content = $site->getAllPages()[0];
@@ -549,7 +522,7 @@ class EngineTest extends TestCase {
     }
 
     public function testMarkdownLayoutFormattedProperly() {
-        $this->testSiteLoader->loadTestSite(TestSites::markdownLayoutSite());
+        $this->setUpAndLoadTestSite(TestSites::markdownLayoutSite());
         $site = $this->subject->buildSite();
 
         $content = $site->getAllPages()[0];
@@ -558,6 +531,24 @@ class EngineTest extends TestCase {
             trim(Fixtures::markdownLayoutSite()->getContents('just-markdown-layout.html')),
             trim($content->getRenderedContents())
         );
+    }
+
+    public function testContentsInOutputDirectoryRemoved() {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $this->vfs->addChild(
+            $this->dir('custom-site-dir', [
+                $this->dir('nested', [
+                    $this->file('foo.txt', 'Some content')
+                ])
+            ])
+        );
+
+        $this->assertFileExists('vfs://install_dir/custom-site-dir/nested/foo.txt');
+
+        $this->subject->buildSite();
+
+        $this->assertFileDoesNotExist('vfs://install_dir/custom-site-dir/nested/foo.txt');
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

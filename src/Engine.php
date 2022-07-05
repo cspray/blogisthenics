@@ -35,8 +35,7 @@ final class Engine {
     private array $dynamicContentProviders = [];
 
     public function __construct(
-        #[Inject('rootDir', from: BlogisthenicsParameterStore::STORE_NAME)]
-        public readonly string $rootDirectory,
+        private readonly SiteConfiguration $siteConfiguration,
         private readonly SiteGenerator $siteGenerator,
         private readonly SiteWriter $siteWriter,
         private readonly KeyValueStore $keyValueStore,
@@ -70,9 +69,7 @@ final class Engine {
      * @return Site
      */
     public function buildSite() : Site {
-        $siteConfig = $this->getSiteConfiguration();
-
-        $this->loadStaticData($siteConfig);
+        $this->loadStaticData();
 
         foreach ($this->dataProviders as $dataProvider) {
             $dataProvider->addData($this->keyValueStore);
@@ -82,7 +79,7 @@ final class Engine {
             $templateHelperProvider->addTemplateHelpers($this->methodDelegator);
         }
 
-        $site = $this->siteGenerator->generateSite($siteConfig);
+        $site = $this->siteGenerator->generateSite();
 
         foreach ($this->dynamicContentProviders as $dynamicContentProvider) {
             $dynamicContentProvider->addContent($site);
@@ -92,73 +89,9 @@ final class Engine {
         return $site;
     }
 
-    private function getSiteConfiguration() : SiteConfiguration {
-        $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
-        if (is_file($filePath)) {
-            $config = json_decode(file_get_contents($filePath), true);
-        } else {
-            $config = SiteConfiguration::getDefaults();
-        }
-
-        $this->guardInvalidSiteConfigurationPreGeneration($config);
-
-        return new SiteConfiguration(
-            layoutDirectory: $config['layout_directory'],
-            contentDirectory: $config['content_directory'],
-            dataDirectory: $config['data_directory'] ?? null,
-            outputDirectory: $config['output_directory'],
-            defaultLayout: $config['default_layout'],
-            includeDraftContent: $config['include_draft_content'] ?? false
-        );
-    }
-
-    private function guardInvalidSiteConfigurationPreGeneration(array $rawConfiguration) : void {
-        $this->validateDirectory($rawConfiguration, 'layout_directory', true);
-        $this->validateDirectory($rawConfiguration, 'content_directory', true);
-        $this->validateDirectory($rawConfiguration, 'output_directory', false);
-        if (array_key_exists('data_directory', $rawConfiguration)) {
-            $this->validateDirectory(
-                $rawConfiguration,
-                'data_directory',
-                true,
-                ' If your site does not require static data do not include this configuration value.'
-            );
-        }
-    }
-
-    private function validateDirectory(array $rawConfiguration, string $configKey, bool $mustExist, string $messageSuffix = null) : void {
-        $configuredDir = $rawConfiguration[$configKey] ?? null;
-        if (empty($configuredDir)) {
-            $msg = sprintf('The "%s" specified in your .blogisthenics/config.json configuration contains a blank value.', $configKey);
-            if (isset($messageSuffix)) {
-                $msg .= $messageSuffix;
-            }
-            throw new SiteValidationException($msg);
-        }
-
-        if ($mustExist) {
-            $layoutDir = $this->rootDirectory . '/' . $configuredDir;
-            if (!is_dir($layoutDir)) {
-                $msg = $this->getMissingDirectoryMessage($configKey, $configuredDir);
-                if (isset($messageSuffix)) {
-                    $msg .= $messageSuffix;
-                }
-                throw new SiteValidationException($msg);
-            }
-        }
-    }
-
-    private function getMissingDirectoryMessage(string $config, string $dir) : string {
-        return sprintf(
-            'The "%s" in your .blogisthenics/config.json configuration, "%s", does not exist.'  ,
-            $config,
-            $dir
-        );
-    }
-
-    private function loadStaticData(SiteConfiguration $siteConfiguration) : void {
-        if (isset($siteConfiguration->dataDirectory)) {
-            $dataPath = sprintf('%s/%s', $this->rootDirectory, $siteConfiguration->dataDirectory);
+    private function loadStaticData() : void {
+        $siteConfiguration = $this->siteConfiguration;
+        if (!empty($dataPath = $siteConfiguration->getDataPath())) {
             $dirIterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($dataPath, \FilesystemIterator::SKIP_DOTS)
             );

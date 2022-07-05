@@ -23,20 +23,11 @@ final class Site {
     private array $staticAssets = [];
 
     public function __construct(
-        private readonly string $rootDirectory,
         private readonly SiteConfiguration $siteConfiguration
     ) {}
 
     public function getConfiguration() : SiteConfiguration {
         return $this->siteConfiguration;
-    }
-
-    public function getOutputPath() : string {
-        return sprintf(
-            '%s/%s',
-            $this->rootDirectory,
-            $this->siteConfiguration->outputDirectory
-        );
     }
 
     public function addContent(Content $content) : void {
