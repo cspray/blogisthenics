@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics;
 
 use Closure;
+use Throwable;
 
 final class DynamicFileTemplate implements Template {
 
@@ -18,9 +19,18 @@ final class DynamicFileTemplate implements Template {
     public function render(Context $context) : string {
         $filePath = $this->path;
         $renderFunc = function() use($filePath) {
-            ob_start();
-            require $filePath;
-            return ob_get_clean();
+            try {
+                ob_start();
+                require $filePath;
+            } catch (Throwable $throwable) {
+                throw $throwable;
+            } finally {
+                if (!isset($throwable)) {
+                    return ob_get_clean();
+                } else {
+                    ob_end_clean();
+                }
+            }
         };
         return Closure::bind($renderFunc, $context)();
     }

@@ -27,7 +27,8 @@ final class SiteGenerator {
 
     public function __construct(
         private readonly SiteConfiguration $siteConfiguration,
-        private readonly FileParser $parser
+        private readonly FileParser $parser,
+        private readonly ComponentRegistry $componentRegistry
     ) {}
 
     public function addHandler(ContentGeneratedHandler $contentGeneratedHandler) : void {
@@ -56,6 +57,19 @@ final class SiteGenerator {
             }
         }
 
+        unset($fileInfo);
+
+        if (is_dir($this->siteConfiguration->getComponentPath())) {
+            foreach ($this->getComponentIterator() as $fileInfo) {
+                $fileNameParts = explode('.', $fileInfo->getBasename());
+                $name = array_shift($fileNameParts);
+                $this->componentRegistry->addComponent(
+                    $name,
+                    $this->createTemplate($fileInfo, $this->parseFile($fileInfo->getPathname()), true)
+                );
+            }
+        }
+
         return $site;
     }
 
@@ -75,6 +89,17 @@ final class SiteGenerator {
 
         foreach ($contentIterator as $content) {
             yield $content;
+        }
+    }
+
+    private function getComponentIterator() : Generator {
+        $componentPath = $this->siteConfiguration->getComponentPath();
+        $componentIterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($componentPath, FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($componentIterator as $component) {
+            yield $component;
         }
     }
 
@@ -174,12 +199,12 @@ final class SiteGenerator {
         return (bool) preg_match($layoutsPath, $fileInfo->getPathname());
     }
 
-    private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile) : Template {
+    private function createTemplate(SplFileInfo $fileInfo, ParserResults $parsedFile, bool $forceParsing = false) : Template {
         $tempName = tempnam(sys_get_temp_dir(), 'blogisthenics_');
         $contents = $parsedFile->contents;
 
         file_put_contents($tempName, $contents);
-        if (in_array($fileInfo->getExtension(), self::PARSEABLE_EXTENSIONS)) {
+        if (in_array($fileInfo->getExtension(), self::PARSEABLE_EXTENSIONS) || $forceParsing) {
             $fileParts = explode('.', $fileInfo->getBasename());
             array_shift($fileParts); // This is the file name itself
             $format = array_pop($fileParts); // This is the PHP extension

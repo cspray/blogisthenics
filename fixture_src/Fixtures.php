@@ -40,4 +40,13 @@ final class Fixtures {
         return $fixture;
     }
 
+    public static function componentSite() : ComponentSiteFixture {
+        static $fixture;
+        if (!isset($fixture)) {
+            $fixture = new ComponentSiteFixture();
+        }
+
+        return $fixture;
+    }
+
 }

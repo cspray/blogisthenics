@@ -7,6 +7,7 @@ use Cspray\Blogisthenics\Bootstrap;
 use Cspray\Blogisthenics\DataProvider;
 use Cspray\Blogisthenics\DynamicContentProvider;
 use Cspray\Blogisthenics\Engine;
+use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
 use Cspray\Blogisthenics\InMemoryKeyValueStore;
@@ -553,6 +554,28 @@ class EngineTest extends TestCase {
         $this->subject->buildSite();
 
         $this->assertFileDoesNotExist('vfs://install_dir/custom-site-dir/nested/foo.txt');
+    }
+
+    public function testComponentSite() {
+        $this->setUpAndLoadTestSite(TestSites::componentTestSite());
+        $site = $this->subject->buildSite();
+
+        $content = $site->getAllPages()[0];
+
+        $this->assertSame(
+            trim(Fixtures::componentSite()->getContents('home.html')),
+            trim($content->getRenderedContents())
+        );
+    }
+
+    public function testMissingComponentSite() {
+        $this->setUpAndLoadTestSite(TestSites::missingComponentTestSite());
+
+        $this->assertExceptionThrown(
+            ComponentNotFoundException::class,
+            'Did not find Component named "my-component".',
+            fn() => $this->subject->buildSite()
+        );
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

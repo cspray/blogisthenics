@@ -18,17 +18,19 @@ final class SiteConfigurationFactory {
     #[ServiceDelegate(SiteConfiguration::class)]
     public function createSiteConfiguration() : SiteConfiguration {
         $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
+        $config = [];
         if (is_file($filePath)) {
             $config = json_decode(file_get_contents($filePath), true);
-        } else {
-            $config = self::getDefaults();
         }
+
+        $config = array_merge([], self::getDefaults(), $config);
 
         $this->guardInvalidSiteConfigurationPreGeneration($config);
 
         return new SiteConfiguration(
             $this->rootDirectory,
             layoutDirectory: $config['layout_directory'],
+            componentDirectory: $config['component_directory'],
             contentDirectory: $config['content_directory'],
             dataDirectory: $config['data_directory'] ?? null,
             outputDirectory: $config['output_directory'],
@@ -84,6 +86,7 @@ final class SiteConfigurationFactory {
     private static function getDefaults() : array {
         return [
             'layout_directory' => 'layouts',
+            'component_directory' => 'components',
             'content_directory' => 'content',
             'output_directory' => '_site',
             'default_layout' => 'main',

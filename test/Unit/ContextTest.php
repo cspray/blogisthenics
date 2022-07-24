@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
+use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Context;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
@@ -17,19 +18,21 @@ class ContextTest extends TestCase {
     private Escaper $escaper;
     private MethodDelegator $methodDelegator;
     private InMemoryKeyValueStore $keyValueStore;
+    private ComponentRegistry $componentRegistry;
 
     public function setUp() : void {
         parent::setUp();
         $this->escaper = new Escaper('utf-8');
         $this->methodDelegator = new MethodDelegator();
         $this->keyValueStore = new InMemoryKeyValueStore();
+        $this->componentRegistry = new ComponentRegistry();
     }
 
     public function testSettingValueThrowsException() {
         $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('Attempted to set a value on an immutable object');
 
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
         $context->foo = 'bar';
     }
 
@@ -37,7 +40,7 @@ class ContextTest extends TestCase {
         $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('Attempted to unset a value on an immutable object');
 
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, ['foo' => 'bar']);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, ['foo' => 'bar']);
         unset($context->foo);
     }
 
@@ -45,7 +48,7 @@ class ContextTest extends TestCase {
         $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('Attempted to set a value on an immutable object');
 
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
         $context[0] = 'bar';
     }
 
@@ -53,12 +56,12 @@ class ContextTest extends TestCase {
         $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('Attempted to unset a value on an immutable object');
 
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, ['foo']);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, ['foo']);
         unset($context[0]);
     }
 
     public function testIsset() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo' => 'bar'
         ]);
 
@@ -67,7 +70,7 @@ class ContextTest extends TestCase {
     }
 
     public function testIssetOffset() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo'
         ]);
 
@@ -76,7 +79,7 @@ class ContextTest extends TestCase {
     }
 
     public function testEncodesValuesByDefault() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo' => '<p>something & else</p>'
         ]);
         $expected = '&lt;p&gt;something &amp; else&lt;/p&gt;';
@@ -84,12 +87,12 @@ class ContextTest extends TestCase {
     }
 
     public function testNullValueNotPresent() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
         $this->assertNull($context->foo, 'Expected to receive a null value');
     }
 
     public function testNestedArraysTurnedIntoContexts() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo' => [
                 'bar' => [
                     'baz' => [
@@ -102,7 +105,7 @@ class ContextTest extends TestCase {
     }
 
     public function testAllowsIndexedAccessWithDefaultEncoding() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo & bar',
         ]);
 
@@ -110,7 +113,7 @@ class ContextTest extends TestCase {
     }
 
     public function testDoesNotEncodeSafeToNotEncodeValues() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
             'foo' => new SafeToNotEncode('bar & baz')
         ]);
         $this->assertSame('bar & baz', $context->foo, 'Expected to not encode SafeToNotEncode values');
@@ -120,39 +123,39 @@ class ContextTest extends TestCase {
         $this->methodDelegator->addMethod('foo', function() {
             return $this->bar;
         });
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, ['bar' => 'baz']);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, ['bar' => 'baz']);
 
         $this->assertSame('baz', $context->foo(), 'Expected the method call to be available based on delegator');
     }
 
     public function testCallingMethodOnMethodDelegatorEncodesValue() {
         $this->methodDelegator->addMethod('fooBar', fn() => 'bar&baz');
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->assertSame('bar&amp;baz', $context->fooBar());
     }
 
     public function testCallingMethodOnMethodDelegatorDoesNotEncodeAppropriateValues() {
         $this->methodDelegator->addMethod('foo', fn() => new SafeToNotEncode('foo & bar'));
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->assertSame('foo & bar', $context->foo());
     }
 
     public function testHasYieldReturnsFalseIfNoYield() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->assertFalse($context->hasYield());
     }
 
     public function testHasYieldReturnsTrueIfYield() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [], fn() => 'yielded content');
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => 'yielded content');
 
         $this->assertTrue($context->hasYield());
     }
 
     public function testYieldThrowsExceptionIfNothingToYield() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->expectException(InvalidYieldException::class);
         $this->expectExceptionMessage('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
@@ -161,7 +164,7 @@ class ContextTest extends TestCase {
     }
 
     public function testYieldWithSomethingReturnsValue() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [], fn() => 'returned value');
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => 'returned value');
 
         $actual = $context->yield();
 
@@ -169,7 +172,7 @@ class ContextTest extends TestCase {
     }
 
     public function testYieldWithHtmlUnsafeValueEncodesProperly() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [], fn() => 'foo&bar');
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => 'foo&bar');
 
         $actual = $context->yield();
 
@@ -177,7 +180,7 @@ class ContextTest extends TestCase {
     }
 
     public function testYieldWithHtmlUnsafeValueThatShouldNotBeEncoded() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, [], fn() => new SafeToNotEncode('foo&bar'));
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => new SafeToNotEncode('foo&bar'));
 
         $actual = $context->yield();
 
@@ -185,13 +188,13 @@ class ContextTest extends TestCase {
     }
 
     public function testKeyValueReturnsNullValueIfNoKey() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->assertNull($context->kv()->get('foo'));
     }
 
     public function testKeyValueReturnsIfKeyPresent() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->keyValueStore->set('fooBar', 'baz');
 
@@ -199,7 +202,7 @@ class ContextTest extends TestCase {
     }
 
     public function testKeyValueReturnEncodedProperly() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->keyValueStore->set('fooBar', 'baz&qux');
 
@@ -207,7 +210,7 @@ class ContextTest extends TestCase {
     }
 
     public function testKeyValueDoesNotEncodeIfCorrectValue() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->keyValueStore->set('htmlSafe', new SafeToNotEncode('<img />'));
 
@@ -215,13 +218,13 @@ class ContextTest extends TestCase {
     }
 
     public function testKeyValueHasValueNotPresent() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->assertFalse($context->kv()->has('fooBar'));
     }
 
     public function testKeyValueHasValuePresent() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->keyValueStore->set('fooBar', 'baz');
 
@@ -229,7 +232,7 @@ class ContextTest extends TestCase {
     }
 
     public function testKeyValueSetThrowsException() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, []);
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
         $this->expectException(InvalidMutationException::class);
         $this->expectExceptionMessage('Attempted to mutate the KeyValueStore from a template Context. Please mutate KeyValueStore with a DataProvider implementation.');
