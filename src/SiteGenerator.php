@@ -247,7 +247,7 @@ final class SiteGenerator {
         $directory = $this->siteConfiguration->getOutputPath();
         $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentPath() . '>', '', $fileInfo->getPathname()));
         return sprintf(
-            '%s%s/%s.html',
+            '%s%s/%s/index.html',
             $directory,
             $contentOutputDir,
             $fileNameWithoutFormat
