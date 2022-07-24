@@ -8,7 +8,7 @@ use Cspray\Blogisthenics\ContentGeneratedHandler;
 class OverwritingContentOutputPathHandlerStub implements ContentGeneratedHandler {
 
     public function handle(Content $content) : Content {
-        $outputDir = dirname($content->outputPath);
+        $outputDir = dirname($content->outputPath, 2);
         return $content->withOutputPath($outputDir . '/content-generated-path.html');
     }
 }

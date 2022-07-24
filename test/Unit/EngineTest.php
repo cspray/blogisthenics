@@ -191,9 +191,9 @@ class EngineTest extends TestCase {
     public function sitePagesOutputContents() : array {
         $fixture = Fixtures::basicHtmlSite();
         return [
-            ['vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html', $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
-            ['vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article.html', $fixture->getContentPath($fixture::SECOND_BLOG_ARTICLE)],
-            ['vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article.html', $fixture->getContentPath($fixture::THIRD_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html', $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html', $fixture->getContentPath($fixture::SECOND_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html', $fixture->getContentPath($fixture::THIRD_BLOG_ARTICLE)],
             ['vfs://install_dir/custom-site-dir/css/styles.css', $fixture->getContentPath($fixture::STYLES_CSS)],
             ['vfs://install_dir/custom-site-dir/js/code.js', $fixture->getContentPath($fixture::CODE_JS)]
         ];
@@ -340,7 +340,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::keyValueSite());
         $this->subject->buildSite();
 
-        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $outputPath = 'vfs://install_dir/_site/key-value-article/index.html';
         $actualContents = file_get_contents($outputPath);
         $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
 
@@ -351,7 +351,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::staticDataSite());
         $this->subject->buildSite();
 
-        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $outputPath = 'vfs://install_dir/_site/key-value-article/index.html';
         $actualContents = file_get_contents($outputPath);
         $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
 
@@ -362,7 +362,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::nestedStaticDataSite());
         $this->subject->buildSite();
 
-        $outputPath = 'vfs://install_dir/_site/key-value-article.html';
+        $outputPath = 'vfs://install_dir/_site/key-value-article/index.html';
         $actualContents = file_get_contents($outputPath);
         $expectedContents = Fixtures::keyValueSite()->getContents(Fixtures::keyValueSite()::KEY_VALUE_ARTICLE);
 
@@ -425,9 +425,9 @@ class EngineTest extends TestCase {
             $actual[] = $content->outputPath;
         }
         $expected = [
-            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html',
             'vfs://install_dir/custom-site-dir/css/styles.css',
             'vfs://install_dir/custom-site-dir/js/code.js'
         ];
@@ -483,9 +483,9 @@ class EngineTest extends TestCase {
             $actual[] = $content->outputPath;
         }
         $expected = [
-            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html',
             'vfs://install_dir/custom-site-dir/css/styles.css',
             'vfs://install_dir/custom-site-dir/js/code.js'
         ];
@@ -502,7 +502,7 @@ class EngineTest extends TestCase {
 
         $this->subject->buildSite();
 
-        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html';
+        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html';
         $this->assertFileDoesNotExist($path);
     }
 
@@ -510,7 +510,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::standardIncludingDraftsSite());
         $this->subject->buildSite();
 
-        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title.html';
+        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html';
         $this->assertFileExists($path);
     }
 
