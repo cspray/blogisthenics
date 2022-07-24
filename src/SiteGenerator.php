@@ -143,7 +143,7 @@ final class SiteGenerator {
             $fileInfo
         );
         $template = $this->createTemplate($fileInfo, $parsedFile);
-        $outputPath = $this->getOutputPath($fileInfo);
+        $outputPath = $this->getOutputPath($fileInfo, $frontMatter);
         return $this->createContent(
             $fileInfo,
             $pageDate,
@@ -239,18 +239,18 @@ final class SiteGenerator {
         );
     }
 
-    private function getOutputPath(SplFileInfo $fileInfo) : ?string {
+    private function getOutputPath(SplFileInfo $fileInfo, FrontMatter $frontMatter) : ?string {
         if ($this->isLayoutPath($fileInfo)) {
             return null;
         }
-        $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
         $directory = $this->siteConfiguration->getOutputPath();
         $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentPath() . '>', '', $fileInfo->getPathname()));
+        $slug = S::create($frontMatter->get('title'))->slugify();
         return sprintf(
             '%s%s/%s/index.html',
             $directory,
             $contentOutputDir,
-            $fileNameWithoutFormat
+            $slug
         );
     }
 }
