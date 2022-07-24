@@ -7,6 +7,7 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
+use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Context;
 use Cspray\Blogisthenics\InMemoryKeyValueStore;
 use Cspray\Blogisthenics\MethodDelegator;
@@ -20,6 +21,7 @@ class MethodDelegatorTest extends TestCase {
             new Escaper(),
             new MethodDelegator(),
             new InMemoryKeyValueStore(),
+            new ComponentRegistry(),
             []);
     }
 
@@ -63,7 +65,7 @@ class MethodDelegatorTest extends TestCase {
             return $this->foo;
         });
 
-        $context = new Context(new Escaper(), $subject, new InMemoryKeyValueStore(), ['foo' => 'baz']);
+        $context = new Context(new Escaper(), $subject, new InMemoryKeyValueStore(), new ComponentRegistry(), ['foo' => 'baz']);
         $actual = $subject->executeMethod($context, 'bar');
 
         $this->assertSame('baz', $actual, 'Expected to have access to the Context as $this');

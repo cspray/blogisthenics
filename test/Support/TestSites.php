@@ -2,6 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Support;
 
+use Cspray\Blogisthenics\Test\Support\TestSite\ComponentTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyContentDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\EmptyLayoutDirectoryConfigurationTestSite;
@@ -9,6 +10,7 @@ use Cspray\Blogisthenics\Test\Support\TestSite\EmptyOutputDirectoryConfiguration
 use Cspray\Blogisthenics\Test\Support\TestSite\InvalidJsonStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\KeyValueTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\MarkdownLayoutTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\MissingComponentTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NestedStaticDataTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NoConfigTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NonJsonStaticDataTestSite;
@@ -173,6 +175,24 @@ final class TestSites {
         static $site;
         if (!isset($site)) {
             $site = new MarkdownLayoutTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function componentTestSite() : ComponentTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new ComponentTestSite();
+        }
+
+        return $site;
+    }
+
+    public static function missingComponentTestSite() : MissingComponentTestSite {
+        static $site;
+        if (!isset($site)) {
+            $site = new MissingComponentTestSite();
         }
 
         return $site;

@@ -11,11 +11,12 @@ final class ContextFactory {
     public function __construct(
         private readonly Escaper $escaper,
         private readonly MethodDelegator $delegator,
-        private readonly KeyValueStore $keyValueStore
+        private readonly KeyValueStore $keyValueStore,
+        private readonly ComponentRegistry $componentRegistry
     ) {}
 
     public function create(array $data, callable $yield = null) : Context {
-        return new Context($this->escaper, $this->delegator, $this->keyValueStore, $data, $yield);
+        return new Context($this->escaper, $this->delegator, $this->keyValueStore, $this->componentRegistry, $data, $yield);
     }
 
 }

@@ -10,6 +10,7 @@ final class SiteConfiguration {
     public function __construct(
         private readonly string $rootDirectory,
         private readonly string $layoutDirectory,
+        private readonly string $componentDirectory,
         private readonly string $contentDirectory,
         private readonly ?string $dataDirectory,
         private readonly string $outputDirectory,
@@ -26,6 +27,14 @@ final class SiteConfiguration {
             '%s/%s',
             $this->getRootDirectory(),
             $this->layoutDirectory
+        );
+    }
+
+    public function getComponentPath() : string {
+        return sprintf(
+            '%s/%s',
+            $this->getRootDirectory(),
+            $this->componentDirectory
         );
     }
 
