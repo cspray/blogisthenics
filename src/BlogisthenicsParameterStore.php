@@ -7,7 +7,7 @@ use Cspray\Typiphy\Type;
 use Cspray\Typiphy\TypeIntersect;
 use Cspray\Typiphy\TypeUnion;
 
-class BlogisthenicsParameterStore implements ParameterStore {
+final class BlogisthenicsParameterStore implements ParameterStore {
 
     public const STORE_NAME = 'blogisthenics';
 

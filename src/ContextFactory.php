@@ -11,7 +11,7 @@ final class ContextFactory {
     public function __construct(
         private readonly Escaper $escaper,
         private readonly MethodDelegator $delegator,
-        private readonly InMemoryKeyValueStore $keyValueStore
+        private readonly KeyValueStore $keyValueStore
     ) {}
 
     public function create(array $data, callable $yield = null) : Context {

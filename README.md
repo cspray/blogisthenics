@@ -21,24 +21,36 @@ Oh, shit. You're still here? In all honesty, you probably shouldn't use this sof
 
 ### Directory Structure
 
-Blogisthenics follows a principle that there are reasonable defaults for your site configuration, but you can override any of the defaults to customize your installation. We suggest that you have a directory structure that resembles the following:
+Blogisthenics follows a principle that there are reasonable defaults for your site configuration, but you can override any of the defaults to customize your installation. Your directory structure should resemble the following:
 
 ```
 /.blogisthenics
-    config.json         # Configure Blogisthenics, if not provided default config will be used
-/content                # The actual content for your site goes here
-    /assets             # CSS, JS, images ... isn't treated specially, convention to put stuff here
-    /blog               # Your blog articles ... could be named whatever you want
-    index.md            # Markdown files are ok. Front-matter parsing and layouts are supported
-    about.html          # HTML files are ok too, you won't get any parsing or layout support though
-    contact.html.php    # Add a PHP extension to enable front-matter parsing and layout support
+    config.json                 # Configure Blogisthenics, if not provided default config will be used
+/content                        # The actual content for your site goes here
+    /assets                     # CSS, JS, images ... isn't treated specially, convention to put stuff here
+    /blog                       # Your blog articles ... could be named whatever you want
+    index.md                    # Markdown files are ok. Front-matter parsing and layouts are supported
+    about.html                  # HTML files are ok too, you won't get any parsing or layout support though
+    contact.html.php            # Add a PHP extension to enable front-matter parsing and layout support
 /data
-    ...                 # Store JSON files here to access in the KeyValueStore
+    ...                         # Store JSON files here to access in the KeyValueStore
 /layouts
-    main.html.php       # Store PHP template files here to use as layouts
-    article.html.php    # Layouts can be nested as deep as you want, but there's probably a logical limit
+    main.html.php               # Store PHP template files here to use as layouts
+    article.html.php            # Layouts can be nested as deep as you want, but probably a logical limit
+    foo.md.php                  # Support Markdown templates
 /src
-    ...                 # PHP code for whatever is required to build your site
+    /ContentGeneratedHandler
+        ...                     # Any ContentGeneratedHandler instances
+    /ContentWrittenHandler
+        ...                     # Any ContentWrittenHandler instances
+    /DataProvider
+        ...                     # Any DataProvider instances
+    /DynamicContentProvider
+        ...                     # Any DynamicContentProvider instances
+    /Formatter
+        ...                     # Any Formatter instances
+    /TemplateHelperProvider
+        ...                     # Any TemplateHelperProvider instances
 ```
 
 ### Content Overview
@@ -112,7 +124,9 @@ The majority of the functionality described in this section refers to the `Cspra
 
 # <?= $this->title ?>
 
-Yep, that's right. The Front Matter is just a JSON object. Slap a new line on the end of that bad boy, then start writing your content. The values available in the page are the values found in your Front Matter.
+Yep, that's right. The Front Matter is just a JSON object. Slap a new line on the end of 
+that bad boy, then start writing your content. The values available in the page are the 
+values found in your Front Matter.
 ```
 
 When built, your site would include an `index.html` file that resembles the following:
@@ -174,7 +188,7 @@ Future updates will add a template API for contextually aware escaping. In other
 
 #### Template Formatting
 
-As already mentioned, we support the ability to create pages out of Markdown documents. Specifically, Blogisthenics uses [GitHub Flavored Markdown]() provided by the [league/commonmark]() package. After all, writing a blog in _just_ HTML would start to get pretty old... blog articles are pretty good candidates for Markdown. Instead of baking Markdown support into Blogisthenics somewhere we expose an interface called `Cspray\Blogisthenics\Formatter` that provides an opportunity for a rendered template to have some additional formatting applied. The `Cspray\Blogisthenics\GitHubFlavoredMarkdownFormatter` is the implementation taking care of Markdown. You can implement your own `Formatter` instance if you find Blogisthenics minimalist approach too spartan for you. We'll be taking advantage of Annotated Container to easily integrate your Formatters into Blogisthenics. This code should live somewhere in the `src` directory of your Blogisthenics site.
+As already mentioned, we support the ability to create pages out of Markdown documents. Specifically, Blogisthenics uses [GitHub Flavored Markdown](https://github.github.com/gfm/) provided by the [league/commonmark](https://commonmark.thephpleague.com/) package. After all, writing a blog in _just_ HTML would start to get pretty old... blog articles are pretty good candidates for Markdown. Instead of baking Markdown support into Blogisthenics somewhere we expose an interface called `Cspray\Blogisthenics\Formatter` that provides an opportunity for a rendered template to have some additional formatting applied. The `Cspray\Blogisthenics\GitHubFlavoredMarkdownFormatter` is the implementation taking care of Markdown. You can implement your own `Formatter` instance if you find Blogisthenics minimalist approach too spartan for you. We'll be taking advantage of Annotated Container to easily integrate your Formatters into Blogisthenics. This code should live somewhere in the `src` directory of your Blogisthenics site.
 
 ```php
 <?php declare(strict_types=1);
@@ -202,18 +216,93 @@ Now any template you create that ends in `my-type` or `my-type.php` will be pass
 
 ### Dynamic Content
 
-Sometimes it isn't possible to create all the necessary content ahead of time in static files. You may need to have access to the content of the site or some other information that requires you to provide the Content at runtime. We'll be using Annotated Container to 
+Sometimes it isn't possible to create all the necessary content ahead of time in static files. You may need to have access to the content of the site or some other information that requires you to provide the Content at runtime. You can take care of this in Blogisthenics by implementing the `Cspray\Blogisthenics\DynamicContentProvider` interface. We'll be using Annotated Container to easily integrate your implementations. This code should live somewhere in the `src` directory of your Blogisthenics site.
 
-### JSON Data
+```php
+<?php declare(stric_types=1);
+
+use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\DynamicContentProvider;
+use Cspray\Blogisthenics\Site;
+
+#[Service]
+final class MyContentProvider implements DynamicContentProvider {
+
+    public function addContent(Site $site) : void {
+        // Construct your Content and call $site->addContent($content)
+    }
+
+}
+```
+
+### Programmatic Data
+
+Sometimes your blog or site might need to include some programmatically loaded data. Inside Blogisthenics this data gets 
+stored in the `Cspray\Blogisthenics\KeyValueStore`. You can depend on this service in your own `#[Service]` and a mutable 
+implementation will be injected. In Template contexts you can get access to an immutable store through the `Context::kv()` 
+method, `$this->kv()` in your templates. You can load data into the `KeyValueStore` in 1 of 2 methods; statically or 
+through programmatic calls.
 
 #### Loading Static Files
 
+In your data directory, by default `/data` in your site's root, all JSON files will be loaded and stored in the 
+`KeyValueStore`. All data is namespaced with the name of the file and keys in the JSON object are accessible through 
+dot-notation. For example, If you have the following JSON file stored in `/data/foo.json` you can make the below method 
+calls in your template.
+
+```
+{
+    "bar": {
+        "baz": {
+            "qux": "whatever"
+        }
+    }
+}
+```
+
+```php
+// Inside a Page or Layout
+<?= $this->kv()->get('foo/bar.baz.qux') ?>
+```
+
 #### Loading Dynamic Data
+
+Maybe you don't know ahead of time what data needs to be loaded. In those situations you should implement a 
+`Cspray\Blogisthenics\DataProvider` instance. We'll be taking advantage of Annotated Container to easily integrate this 
+instance. Somewhere in your `/src` directory you should implement the following:
+
+```php
+<?php declare(strict_types=1);
+
+use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\DataProvider;
+
+#[Service]
+class MyDataProvider implements DataProvider {
+
+    public function addData(KeyValueStore $keyValue) : void {
+        // add whatever data is appropriate
+    }
+}
+```
+
+Just like statically loaded files you can access whatever data you load into the store through dot-notation. Unlike statically 
+loaded files nothing is autonamespaced. If your data needs require a namespace you should make sure you do that in the 
+keys you use to set data.
 
 ## Why?!
 
-I'm a masochist.
+> Holy shit, cspray! Have you never heard of [Jekyll](https://jekyllrb.com/), or [Hugo](https://gohugo.io/), or any of the 134 bajillion generators listed on the [JAMStack](https://jamstack.org/generators/) site?
 
-Also, when I look at the site generators out there I see a lot of libraries designed to build single-page applications, involve learning a new templating library, or using a language I don't wanna use. When I look at PHP-specific site generators I see stuff that brings in a lot of Laravel and Symfony, along with the templating engines they use. I honestly don't wanna learn these frameworks, or the parts that leak out of the site generator abstraction, when I'm working on my personal site.
+Well, clearly I know about them. I included links to their sites! There's 4 primary reasons I did this.
 
-Plus, creating things that have already been created, so I can learn how to do it is my jam.
+1. I'm a masochist.
+2. When I look at site generators out there I see a lot of libraries with, from my perspective, the following drawbacks:
+
+   - Aren't written in PHP
+   - Create sites using SPA architectures
+   - Require me to use Laravel or Symfony
+
+   I want to use PHP to build my site, and without requiring Laravel or Symfony to do so. I didn't find anything targeted towards the framework-less audience, so I built it myself.
+3. Opportunity to dogfood [Annotated Container](https://github.com/cspray/annotated-container).
+4. Creating things to learn how they work or how I might accomplish it is how I learn things. It is kinda my jam.

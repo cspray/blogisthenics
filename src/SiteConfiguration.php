@@ -2,28 +2,67 @@
 
 namespace Cspray\Blogisthenics;
 
+use Cspray\AnnotatedContainer\Attribute\Service;
+
+#[Service]
 final class SiteConfiguration {
 
     public function __construct(
-        public readonly string $layoutDirectory,
-        public readonly string $contentDirectory,
-        public readonly ?string $dataDirectory,
-        public readonly string $outputDirectory,
-        public readonly string $defaultLayout,
-        public readonly bool $includeDraftContent
+        private readonly string $rootDirectory,
+        private readonly string $layoutDirectory,
+        private readonly string $contentDirectory,
+        private readonly ?string $dataDirectory,
+        private readonly string $outputDirectory,
+        private readonly string $defaultLayout,
+        private readonly bool $includeDraftContent
     ) {}
 
-    /**
-     * @return array
-     */
-    public static function getDefaults() : array {
-        return [
-            'layout_directory' => 'layouts',
-            'content_directory' => 'content',
-            'output_directory' => '_site',
-            'default_layout' => 'main',
-            'include_draft_content' => false
-        ];
+    public function getRootDirectory() : string {
+        return $this->rootDirectory;
+    }
+
+    public function getLayoutPath() : string {
+        return sprintf(
+            '%s/%s',
+            $this->getRootDirectory(),
+            $this->layoutDirectory
+        );
+    }
+
+    public function getContentPath() : string {
+        return sprintf(
+            '%s/%s',
+            $this->getRootDirectory(),
+            $this->contentDirectory
+        );
+    }
+
+    public function getDataPath() : ?string {
+        if (!isset($this->dataDirectory)) {
+            return null;
+        }
+
+        return sprintf(
+            '%s/%s',
+            $this->getRootDirectory(),
+            $this->dataDirectory
+        );
+    }
+
+    public function getOutputPath() : string {
+        return sprintf(
+            '%s/%s',
+            $this->getRootDirectory(),
+            $this->outputDirectory
+        );
+    }
+
+    public function getDefaultLayout() : string {
+        return $this->defaultLayout;
+    }
+
+    public function shouldIncludeDraftContent() : bool {
+        return $this->includeDraftContent;
     }
 
 }
