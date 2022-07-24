@@ -15,20 +15,29 @@ final class Bootstrap {
     public static function bootstrap(
         array|string $containerScanDirs,
         array $profiles,
-        string $rootDir
+        string $rootDir,
+        string $cacheDir = null
     ) : AnnotatedContainer {
         if (is_string($containerScanDirs)) {
             $containerScanDirs = [$containerScanDirs];
         }
 
+
         $scanDirs = [__DIR__, ...$containerScanDirs];
-        $compileOptions = ContainerDefinitionCompileOptionsBuilder::scanDirectories(...$scanDirs)->build();
+        $compileOptions = ContainerDefinitionCompileOptionsBuilder::scanDirectories(...$scanDirs)
+            ->build();
+
+        if (isset($cacheDir) && is_dir($cacheDir)) {
+            $compiler = compiler($cacheDir);
+        } else {
+            $compiler = compiler();
+        }
+
+        $containerDefinition = $compiler->compile($compileOptions);
         $factoryOptions = ContainerFactoryOptionsBuilder::forActiveProfiles(...$profiles)->build();
 
         $containerFactory = containerFactory();
         $containerFactory->addParameterStore(new BlogisthenicsParameterStore($rootDir));
-
-        $containerDefinition = compiler()->compile($compileOptions);
         $container = $containerFactory->createContainer($containerDefinition, $factoryOptions);
 
         /** @var Engine $engine */

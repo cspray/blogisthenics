@@ -2,10 +2,8 @@
 
 namespace Cspray\Blogisthenics;
 
-use Cspray\AnnotatedContainer\Attribute\Inject;
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
-use Cspray\Blogisthenics\Exception\SiteValidationException;
 use Stringy\Stringy as S;
 
 /**
@@ -85,6 +83,8 @@ final class Engine {
             $dynamicContentProvider->addContent($site);
         }
 
+        $this->removeDirectory($this->siteConfiguration->getOutputPath());
+
         $this->siteWriter->writeSite($site);
         return $site;
     }
@@ -112,6 +112,19 @@ final class Engine {
                     $this->keyValueStore->set(sprintf('%s/%s', $namespace, $key), $value);
                 }
             }
+        }
+    }
+
+    private function removeDirectory(string $path) : void {
+        if (is_file($path)) {
+            unlink($path);
+        } else if (is_dir($path)) {
+            $iterator = new \FilesystemIterator($path, \FilesystemIterator::CURRENT_AS_PATHNAME);
+            foreach ($iterator as $_path) {
+                $this->removeDirectory($_path);
+            }
+
+            rmdir($path);
         }
     }
 

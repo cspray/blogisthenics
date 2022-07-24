@@ -24,7 +24,8 @@ use Minicli\ServiceInterface;
 $container = Bootstrap::bootstrap(
     $extraScanDirs,
     ['default'],
-    $rootDir
+    $rootDir,
+    $rootDir . '/cache'
 );
 
 $engine = $container->get(Engine::class);

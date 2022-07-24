@@ -2,6 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
+use Cspray\AnnotatedContainer\AnnotatedContainer;
 use Cspray\Blogisthenics\Bootstrap;
 use Cspray\Blogisthenics\DataProvider;
 use Cspray\Blogisthenics\DynamicContentProvider;
@@ -31,6 +32,8 @@ class EngineTest extends TestCase {
 
     use HasVirtualFilesystemHelpers;
 
+    private static AnnotatedContainer $container;
+
     private Engine $subject;
 
     private VirtualDirectory $vfs;
@@ -49,7 +52,8 @@ class EngineTest extends TestCase {
         $container = Bootstrap::bootstrap(
             [],
             ['default', 'test'],
-            $this->vfs->url()
+            $this->vfs->url(),
+            dirname(__DIR__, 2) . '/cache'
         );
 
         $this->methodDelegator = $container->get(MethodDelegator::class);

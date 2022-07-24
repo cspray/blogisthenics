@@ -6,3 +6,4 @@ build/
 vendor/
 test/_dummy/_site/
 .phpunit.cache
+cache/

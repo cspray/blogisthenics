@@ -8,7 +8,7 @@ use Cspray\AnnotatedContainer\Attribute\ServiceDelegate;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
 
 #[Service]
-class SiteConfigurationFactory {
+final class SiteConfigurationFactory {
 
     public function __construct(
         #[Inject('rootDir', from: BlogisthenicsParameterStore::STORE_NAME)]
@@ -17,10 +17,6 @@ class SiteConfigurationFactory {
 
     #[ServiceDelegate(SiteConfiguration::class)]
     public function createSiteConfiguration() : SiteConfiguration {
-        return $this->getSiteConfiguration();
-    }
-
-    private function getSiteConfiguration() : SiteConfiguration {
         $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
         if (is_file($filePath)) {
             $config = json_decode(file_get_contents($filePath), true);
