@@ -191,9 +191,9 @@ class EngineTest extends TestCase {
     public function sitePagesOutputContents() : array {
         $fixture = Fixtures::basicHtmlSite();
         return [
-            ['vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html', $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
-            ['vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html', $fixture->getContentPath($fixture::SECOND_BLOG_ARTICLE)],
-            ['vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html', $fixture->getContentPath($fixture::THIRD_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/the-blog-title/index.html', $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/another-blog-article/index.html', $fixture->getContentPath($fixture::SECOND_BLOG_ARTICLE)],
+            ['vfs://install_dir/custom-site-dir/posts/nested-layout-article/index.html', $fixture->getContentPath($fixture::THIRD_BLOG_ARTICLE)],
             ['vfs://install_dir/custom-site-dir/css/styles.css', $fixture->getContentPath($fixture::STYLES_CSS)],
             ['vfs://install_dir/custom-site-dir/js/code.js', $fixture->getContentPath($fixture::CODE_JS)]
         ];
@@ -425,9 +425,9 @@ class EngineTest extends TestCase {
             $actual[] = $content->outputPath;
         }
         $expected = [
-            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/another-blog-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/nested-layout-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/the-blog-title/index.html',
             'vfs://install_dir/custom-site-dir/css/styles.css',
             'vfs://install_dir/custom-site-dir/js/code.js'
         ];
@@ -483,9 +483,9 @@ class EngineTest extends TestCase {
             $actual[] = $content->outputPath;
         }
         $expected = [
-            'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-06-30-another-blog-article/index.html',
-            'vfs://install_dir/custom-site-dir/posts/2018-07-01-nested-layout-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/another-blog-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/nested-layout-article/index.html',
+            'vfs://install_dir/custom-site-dir/posts/the-blog-title/index.html',
             'vfs://install_dir/custom-site-dir/css/styles.css',
             'vfs://install_dir/custom-site-dir/js/code.js'
         ];
@@ -510,7 +510,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::standardIncludingDraftsSite());
         $this->subject->buildSite();
 
-        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html';
+        $path = 'vfs://install_dir/custom-site-dir/posts/the-blog-title/index.html';
         $this->assertFileExists($path);
     }
 
