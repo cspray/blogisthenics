@@ -5,6 +5,7 @@ namespace Cspray\Blogisthenics\SiteGeneration;
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Content;
+use Cspray\Blogisthenics\ContentCategory;
 use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
 use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\SiteConfiguration;
@@ -237,14 +238,21 @@ final class SiteGenerator {
         $isStaticAsset = $this->isStaticAssetPath($fileInfo);
         $isLayout = $this->isLayoutPath($fileInfo);
 
+        if ($isStaticAsset) {
+            $contentCategory = ContentCategory::Asset;
+        } else if ($isLayout) {
+            $contentCategory = ContentCategory::Layout;
+        } else {
+            $contentCategory = ContentCategory::Page;
+        }
+
         return new Content(
             $fileInfo->getPathname(),
             $pageDate,
             $frontMatter,
             $template,
+            $contentCategory,
             $outputPath,
-            isLayout: $isLayout,
-            isStaticAsset: $isStaticAsset
         );
     }
 

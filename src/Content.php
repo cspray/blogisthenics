@@ -15,9 +15,8 @@ final class Content {
         public readonly DateTimeImmutable $postDate,
         public readonly FrontMatter $frontMatter,
         public readonly Template $template,
+        public readonly ContentCategory $category,
         public readonly ?string $outputPath,
-        public readonly bool $isLayout = false,
-        public readonly bool $isStaticAsset = false
     ) {}
 
     public function withOutputPath(string $outputPath) : Content {
@@ -26,9 +25,8 @@ final class Content {
             $this->postDate,
             $this->frontMatter,
             $this->template,
+            $this->category,
             $outputPath,
-            $this->isLayout,
-            $this->isStaticAsset
         );
     }
 
@@ -38,9 +36,8 @@ final class Content {
             $this->postDate,
             $frontMatter,
             $this->template,
+            $this->category,
             $this->outputPath,
-            $this->isLayout,
-            $this->isStaticAsset
         );
     }
 

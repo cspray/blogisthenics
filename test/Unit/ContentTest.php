@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\Blogisthenics\Content;
+use Cspray\Blogisthenics\ContentCategory;
 use Cspray\Blogisthenics\Exception\InvalidStateException;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\Template;
@@ -16,6 +17,7 @@ class ContentTest extends TestCase {
             new \DateTimeImmutable(),
             new FrontMatter([]),
             $this->getMockBuilder(Template::class)->getMock(),
+            ContentCategory::Asset,
             null
         );
 
@@ -29,6 +31,7 @@ class ContentTest extends TestCase {
             new \DateTimeImmutable(),
             new FrontMatter(['published' => false]),
             $this->getMockBuilder(Template::class)->getMock(),
+            ContentCategory::Layout,
             null
         );
 
@@ -42,6 +45,7 @@ class ContentTest extends TestCase {
             new \DateTimeImmutable(),
             new FrontMatter(['published' => false]),
             $this->getMockBuilder(Template::class)->getMock(),
+            ContentCategory::Page,
             null
         );
 
