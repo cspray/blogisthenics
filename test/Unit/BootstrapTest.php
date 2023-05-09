@@ -2,6 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
+use Cspray\AnnotatedContainer\Profiles\ActiveProfiles;
 use Cspray\Blogisthenics\Bootstrap\Bootstrap;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
@@ -39,6 +40,18 @@ class BootstrapTest extends TestCase {
         $expected = trim(Fixtures::basicHtmlSite()->getContents(Fixtures::basicHtmlSite()::FIRST_BLOG_ARTICLE));
 
         $this->assertSame($expected, $actual);
+    }
+
+    public function testBootstrapWithActiveProfiles() : void {
+        $testSiteLoader = new TestSiteLoader($this->vfs);
+        $testSiteLoader->loadTestSiteDirectories(TestSites::standardSite());
+
+        $container = Bootstrap::bootstrap('vfs://install_dir', ['default', 'foo', 'bar']);
+
+        /** @var ActiveProfiles $activeProfiles */
+        $activeProfiles = $container->get(ActiveProfiles::class);
+
+        self::assertSame(['default', 'foo', 'bar'], $activeProfiles->getProfiles());
     }
 
 }

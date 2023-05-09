@@ -1,42 +1,32 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Cspray\AnnotatedContainer\Cli\CommandExecutor;
+use Cspray\AnnotatedContainer\Cli\InputParser;
+use Cspray\AnnotatedContainer\Cli\TerminalOutput;
+use Cspray\Blogisthenics\Bootstrap\Bootstrap;
+use Cspray\Blogisthenics\Cli\BuildCommand;
+
 if (php_sapi_name() !== 'cli') {
     exit('The blogisthenics CLI tool is not meant to run in non-cli SAPI.');
 }
 
 $rootDir = dirname(__DIR__);
-$extraScanDirs = [];
 if (!file_exists($rootDir . '/vendor/autoload.php')) {
     $rootDir = dirname(__DIR__, 4);
-    if (is_dir($rootDir . '/src')) {
-        $extraScanDirs[] = $rootDir . '/src';
-    }
 }
 require $rootDir . '/vendor/autoload.php';
 
-use Cspray\Blogisthenics\Bootstrap\Bootstrap;
-use Cspray\Blogisthenics\Cli\CliApp;
-use Cspray\Blogisthenics\Engine;
-use Minicli\App;
-use Minicli\ServiceInterface;
+$container = Bootstrap::bootstrap(
+    $rootDir,
+    ['default', 'cli']
+);
 
-$container = Bootstrap::bootstrap($rootDir);
+$executor = new CommandExecutor();
 
-$engine = $container->get(Engine::class);
+$executor->addCommand($container->get(BuildCommand::class));
 
-$blogisthenicsService = new class($engine) implements ServiceInterface {
-
-    public function __construct(private readonly Engine $engine) {}
-
-    public function load(App $app) : void {
-    }
-
-    public function buildSite() : void {
-        $this->engine->buildSite();
-    }
-};
-
-$app = new CliApp();
-$app->addService('blogisthenics', $blogisthenicsService);
-$app->runCommand($argv);
+exit($executor->execute(
+    (new InputParser())->parse($argv),
+    new TerminalOutput()
+));

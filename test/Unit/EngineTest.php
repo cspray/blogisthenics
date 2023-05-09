@@ -124,7 +124,7 @@ class EngineTest extends TestCase {
     /**
      * @return array
      */
-    public function sitePagesDates() : array {
+    public static function sitePagesDates() : array {
         return [
             ['getAllLayouts', 0, new DateTimeImmutable('2018-07-02 22:01:35')],
             ['getAllLayouts', 1, new DateTimeImmutable('2018-07-11 21:44:50')],
@@ -149,7 +149,7 @@ class EngineTest extends TestCase {
         $this->assertEquals($expectedDate, $date, 'Expected the date to be the last modification time');
     }
 
-    public function sitePagesFrontMatters() : array {
+    public static function sitePagesFrontMatters() : array {
         return [
             ['getAllLayouts', 0, [
                 'date' => '2018-07-02',
@@ -193,7 +193,7 @@ class EngineTest extends TestCase {
         $this->assertSame($expectedFrontMatter, $frontMatter);
     }
 
-    public function sitePagesSourcePaths() : array {
+    public static function sitePagesSourcePaths() : array {
         return [
             ['getAllLayouts', 0, 'vfs://install_dir/layouts/article.md.php'],
             ['getAllLayouts', 1, 'vfs://install_dir/layouts/main.html.php'],
@@ -216,7 +216,7 @@ class EngineTest extends TestCase {
         $this->assertSame($expectedSourcePath, $sourcePath, 'Expected to get the correct source path from each page');
     }
 
-    public function sitePagesOutputContents() : array {
+    public static function sitePagesOutputContents() : array {
         $fixture = Fixtures::basicHtmlSite();
         return [
             ['vfs://install_dir/_site/posts/the-blog-title/index.html', $fixture->getContentPath($fixture::FIRST_BLOG_ARTICLE)],
@@ -246,7 +246,7 @@ class EngineTest extends TestCase {
         );
     }
 
-    public function sitePagesFormats() : array {
+    public static function sitePagesFormats() : array {
         return [
             ['getAllPages', 0, 'md'],
             ['getAllPages', 1, 'html'],
@@ -268,7 +268,7 @@ class EngineTest extends TestCase {
         $this->assertSame($format, $content->template->getFormatType());
     }
 
-    public function siteValidationErrors() : array {
+    public static function siteValidationErrors() : array {
         return [
             'emptyLayout' => [
                 'SiteConfiguration::getLayoutDirectory returned a blank value.',
