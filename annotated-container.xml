@@ -15,4 +15,5 @@
   <parameterStores>
     <parameterStore>Cspray\Blogisthenics\BlogisthenicsParameterStore</parameterStore>
   </parameterStores>
+  <cacheDir>.annotated-container-cache</cacheDir>
 </annotatedContainer>

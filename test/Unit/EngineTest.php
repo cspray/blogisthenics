@@ -573,6 +573,15 @@ class EngineTest extends TestCase {
         );
     }
 
+    public function testPermalinkInFrontMatterRespectsOutputPath() : void {
+        $this->setUpAndLoadTestSite(TestSites::permalinkDefiningTestSite());
+        $site = $this->subject->buildSite();
+
+        $content = $site->getAllPages()[0];
+
+        self::assertSame('vfs://install_dir/_site/index.html', $content->outputPath);
+    }
+
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {
         $this->expectException($exception);
         $this->expectExceptionMessage($message);
