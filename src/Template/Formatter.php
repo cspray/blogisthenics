@@ -1,10 +1,9 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Template;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
 
-#[Service]
 interface Formatter {
 
     public function getFormatType() : string;

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Template;
 
 use BadMethodCallException;
 use Closure;

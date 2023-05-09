@@ -2,7 +2,7 @@
 
 namespace Cspray\Blogisthenics;
 
-use Cspray\AnnotatedContainer\ParameterStore;
+use Cspray\AnnotatedContainer\ContainerFactory\ParameterStore;
 use Cspray\Typiphy\Type;
 use Cspray\Typiphy\TypeIntersect;
 use Cspray\Typiphy\TypeUnion;

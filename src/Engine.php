@@ -4,6 +4,14 @@ namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
+use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
+use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\SiteData\DataProvider;
+use Cspray\Blogisthenics\SiteData\KeyValueStore;
+use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
+use Cspray\Blogisthenics\SiteGeneration\SiteGenerator;
+use Cspray\Blogisthenics\Template\MethodDelegator;
+use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 use Stringy\Stringy as S;
 
 /**
@@ -119,9 +127,10 @@ final class Engine {
         if (is_file($path)) {
             unlink($path);
         } else if (is_dir($path)) {
-            $iterator = new \FilesystemIterator($path, \FilesystemIterator::CURRENT_AS_PATHNAME);
+            $iterator = new \FilesystemIterator($path, \FilesystemIterator::SKIP_DOTS);
+            /** @var \SplFileInfo $_path */
             foreach ($iterator as $_path) {
-                $this->removeDirectory($_path);
+                $this->removeDirectory($_path->getPathname());
             }
 
             rmdir($path);

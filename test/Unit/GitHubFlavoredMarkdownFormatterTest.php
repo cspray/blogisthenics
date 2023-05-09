@@ -2,7 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\GitHubFlavoredMarkdownFormatter;
+use Cspray\Blogisthenics\Template\GitHubFlavoredMarkdownFormatter;
 use PHPUnit\Framework\TestCase;
 
 class GitHubFlavoredMarkdownFormatterTest extends TestCase {

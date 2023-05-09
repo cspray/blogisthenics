@@ -8,9 +8,9 @@ namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
 use Cspray\Blogisthenics\ComponentRegistry;
-use Cspray\Blogisthenics\Context;
-use Cspray\Blogisthenics\InMemoryKeyValueStore;
-use Cspray\Blogisthenics\MethodDelegator;
+use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\Template\Context;
+use Cspray\Blogisthenics\Template\MethodDelegator;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
 

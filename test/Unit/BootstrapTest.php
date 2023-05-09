@@ -25,11 +25,7 @@ class BootstrapTest extends TestCase {
         $testSiteLoader = new TestSiteLoader($this->vfs);
         $testSiteLoader->loadTestSiteDirectories(TestSites::standardSite());
 
-        $container = Bootstrap::bootstrap(
-            [],
-            ['default'],
-            'vfs://install_dir'
-        );
+        $container = Bootstrap::bootstrap('vfs://install_dir');
 
         /** @var Engine $engine */
         $engine = $container->get(Engine::class);

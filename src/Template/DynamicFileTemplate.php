@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Template;
 
 use Closure;
 use Throwable;

@@ -1,10 +1,7 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteData;
 
-use Cspray\AnnotatedContainer\Attribute\Service;
-
-#[Service]
 interface DataProvider {
 
     public function addData(KeyValueStore $keyValue) : void;

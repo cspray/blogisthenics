@@ -1,9 +1,18 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\FileParserResults as ParserResults;
+use Cspray\Blogisthenics\ComponentRegistry;
+use Cspray\Blogisthenics\Content;
+use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
+use Cspray\Blogisthenics\Site;
+use Cspray\Blogisthenics\SiteConfiguration;
+use Cspray\Blogisthenics\SiteGeneration\FileParserResults as ParserResults;
+use Cspray\Blogisthenics\Template\DynamicFileTemplate;
+use Cspray\Blogisthenics\Template\FrontMatter;
+use Cspray\Blogisthenics\Template\StaticFileTemplate;
+use Cspray\Blogisthenics\Template\Template;
 use DateTimeImmutable;
 use FilesystemIterator;
 use Generator;

@@ -4,17 +4,17 @@ namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\AnnotatedContainer\AnnotatedContainer;
 use Cspray\Blogisthenics\Bootstrap;
-use Cspray\Blogisthenics\DataProvider;
-use Cspray\Blogisthenics\DynamicContentProvider;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
-use Cspray\Blogisthenics\InMemoryKeyValueStore;
-use Cspray\Blogisthenics\KeyValueStore;
-use Cspray\Blogisthenics\MethodDelegator;
 use Cspray\Blogisthenics\Site;
-use Cspray\Blogisthenics\TemplateHelperProvider;
+use Cspray\Blogisthenics\SiteData\DataProvider;
+use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\SiteData\KeyValueStore;
+use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
+use Cspray\Blogisthenics\Template\MethodDelegator;
+use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 use Cspray\Blogisthenics\Test\Support\HasVirtualFilesystemHelpers;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedHandlerStub;
 use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenHandlerStub;
@@ -50,12 +50,7 @@ class EngineTest extends TestCase {
         $testSiteLoader = new TestSiteLoader($this->vfs);
         $testSiteLoader->loadTestSiteDirectories($testSite);
 
-        $container = Bootstrap::bootstrap(
-            [],
-            ['default', 'test'],
-            $this->vfs->url(),
-            dirname(__DIR__, 2) . '/cache'
-        );
+        $container = Bootstrap::bootstrap($this->vfs->url());
 
         $this->methodDelegator = $container->get(MethodDelegator::class);
         $this->keyValueStore = $container->get(KeyValueStore::class);

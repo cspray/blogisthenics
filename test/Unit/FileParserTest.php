@@ -7,7 +7,7 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\Blogisthenics\Exception\ParsingException;
-use Cspray\Blogisthenics\FileParser;
+use Cspray\Blogisthenics\SiteGeneration\FileParser;
 use PHPUnit\Framework\TestCase;
 
 class FileParserTest extends TestCase {
