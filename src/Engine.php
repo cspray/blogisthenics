@@ -5,8 +5,8 @@ namespace Cspray\Blogisthenics;
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
-use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
-use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\Observer\ContentGenerated;
+use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\SiteData\DataProvider;
 use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
@@ -62,11 +62,11 @@ final class Engine {
         $this->dynamicContentProviders[] = $dynamicContentProvider;
     }
 
-    public function addContentGeneratedHandler(ContentGeneratedHandler $handler) : void {
+    public function addContentGeneratedHandler(ContentGenerated $handler) : void {
         $this->siteGenerator->addHandler($handler);
     }
 
-    public function addContentWrittenHandler(ContentWrittenHandler $handler) : void {
+    public function addContentWrittenHandler(ContentWritten $handler) : void {
         $this->siteWriter->addHandler($handler);
     }
 

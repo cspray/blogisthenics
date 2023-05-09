@@ -28,12 +28,9 @@ use Cspray\Blogisthenics\Test\Support\Stub\BlankContentSiteConfiguration;
 use Cspray\Blogisthenics\Test\Support\Stub\BlankDataSiteConfiguration;
 use Cspray\Blogisthenics\Test\Support\Stub\BlankLayoutSiteConfiguration;
 use Cspray\Blogisthenics\Test\Support\Stub\BlankOutputSiteConfiguration;
-use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedHandlerStub;
-use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenHandlerStub;
+use Cspray\Blogisthenics\Test\Support\Stub\ContentGeneratedStub;
+use Cspray\Blogisthenics\Test\Support\Stub\ContentWrittenStub;
 use Cspray\Blogisthenics\Test\Support\Stub\HasDataSiteConfiguration;
-use Cspray\Blogisthenics\Test\Support\Stub\OverwritingContentOutputPathHandlerStub;
-use Cspray\Blogisthenics\Test\Support\Stub\OverwritingFrontMatterHandlerStub;
-use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundContentDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\TestSite;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;
@@ -450,7 +447,7 @@ class EngineTest extends TestCase {
     public function testBuildSiteCallsContentGeneratedHandlerAppropriateNumberOfTimes() {
         $this->setUpAndLoadTestSite(TestSites::standardSite());
 
-        $stub = new ContentGeneratedHandlerStub();
+        $stub = new ContentGeneratedStub();
 
         $this->subject->addContentGeneratedHandler($stub);
 
@@ -490,25 +487,9 @@ class EngineTest extends TestCase {
         $this->assertSame('vfs://install_dir/_site', $site->getConfiguration()->getOutputDirectory());
     }
 
-    public function testSiteContentOverridenByHandler() {
-        $this->setUpAndLoadTestSite(TestSites::keyValueSite());
-
-        $this->subject->addContentGeneratedHandler(new OverwritingContentOutputPathHandlerStub());
-
-        $this->subject->buildSite();
-
-        $this->assertFileExists('vfs://install_dir/_site/content-generated-path.html');
-
-        $expected = Fixtures::keyValueChangedPathSite()->getContents('content-generated-path.html');
-        $actual = file_get_contents('vfs://install_dir/_site/content-generated-path.html');
-
-        $this->assertSame($expected, $actual);
-    }
-
-
     public function testBuildSiteCallsContentWrittenHandlerAppropriateNumberOfTimes() {
         $this->setUpAndLoadTestSite(TestSites::standardSite());
-        $stub = new ContentWrittenHandlerStub();
+        $stub = new ContentWrittenStub();
 
         $this->subject->addContentWrittenHandler($stub);
 
@@ -530,16 +511,6 @@ class EngineTest extends TestCase {
         sort($actual);
 
         $this->assertSame($expected, $actual);
-    }
-
-    public function testBuildSiteDefaultDoesNotPublishDraftContent() {
-        $this->setUpAndLoadTestSite(TestSites::standardSite());
-        $this->subject->addContentGeneratedHandler(new OverwritingFrontMatterHandlerStub());
-
-        $this->subject->buildSite();
-
-        $path = 'vfs://install_dir/custom-site-dir/posts/2018-06-23-the-blog-article-title/index.html';
-        $this->assertFileDoesNotExist($path);
     }
 
     public function testBuildSiteIncludingDraftsDoesPublishDraftContent() {
@@ -630,6 +601,40 @@ class EngineTest extends TestCase {
         $service = $this->container->get(Site::class);
 
         self::assertSame($site, $service);
+    }
+
+    public function testBuildingSiteHasUrlForPageContent() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $site = $this->subject->buildSite();
+        $pages = $site->getAllPages();
+
+        self::assertCount(3, $pages);
+        self::assertSame('/posts/the-blog-title', (string) $pages[0]->url);
+        self::assertSame('/posts/another-blog-article', (string) $pages[1]->url);
+        self::assertSame('/posts/nested-layout-article', (string) $pages[2]->url);
+    }
+
+    public function testBuildingSiteHasUrlForStaticContent() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $site = $this->subject->buildSite();
+        $assets = $site->getAllStaticAssets();
+
+        self::assertCount(2, $assets);
+        self::assertSame('/css/styles.css', (string) $assets[0]->url);
+        self::assertSame('/js/code.js', (string) $assets[1]->url);
+    }
+
+    public function testBuildSiteHasNoUrlForLayouts() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $site = $this->subject->buildSite();
+        $layouts = $site->getAllLayouts();
+
+        self::assertCount(2, $layouts);
+        self::assertNull($layouts[0]->url);
+        self::assertNull($layouts[1]->url);
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

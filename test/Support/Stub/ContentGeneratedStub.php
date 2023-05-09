@@ -2,17 +2,17 @@
 
 namespace Cspray\Blogisthenics\Test\Support\Stub;
 
-use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\Observer\ContentGenerated;
 use Cspray\Blogisthenics\SiteGeneration\Content;
 
-final class ContentWrittenHandlerStub implements ContentWrittenHandler {
+final class ContentGeneratedStub implements ContentGenerated {
 
     /**
      * @var Content[]
      */
     private array $content = [];
 
-    public function handle(Content $content) : void {
+    public function notify(Content $content) : void {
         $this->content[] = $content;
     }
 

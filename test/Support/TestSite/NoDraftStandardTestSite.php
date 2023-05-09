@@ -4,7 +4,7 @@ namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
 use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
-final class StandardTestSite extends AbstractTestSite {
+final class NoDraftStandardTestSite extends AbstractTestSite {
 
     protected function doPopulateVirtualFileSystem(VirtualDirectory $dir) : void {
         $defaultLayoutContent = <<<'HTML'

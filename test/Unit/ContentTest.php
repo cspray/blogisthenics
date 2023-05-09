@@ -18,6 +18,7 @@ class ContentTest extends TestCase {
             new FrontMatter([]),
             $this->getMockBuilder(Template::class)->getMock(),
             ContentCategory::Asset,
+            null,
             null
         );
 
@@ -32,6 +33,7 @@ class ContentTest extends TestCase {
             new FrontMatter(['published' => false]),
             $this->getMockBuilder(Template::class)->getMock(),
             ContentCategory::Layout,
+            null,
             null
         );
 
@@ -46,6 +48,7 @@ class ContentTest extends TestCase {
             new FrontMatter(['published' => false]),
             $this->getMockBuilder(Template::class)->getMock(),
             ContentCategory::Page,
+            null,
             null
         );
 

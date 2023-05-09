@@ -4,7 +4,7 @@ namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
-use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\Template\ContextFactory;
 use Cspray\Blogisthenics\Template\FrontMatter;
@@ -18,7 +18,7 @@ use Cspray\Blogisthenics\Template\TemplateFormatter;
 final class SiteWriter {
 
     /**
-     * @var ContentWrittenHandler[]
+     * @var ContentWritten[]
      */
     private array $handlers = [];
 
@@ -27,7 +27,7 @@ final class SiteWriter {
         private readonly ContextFactory $contextFactory
     ) {}
 
-    public function addHandler(ContentWrittenHandler $handler) : void {
+    public function addHandler(ContentWritten $handler) : void {
         $this->handlers[] = $handler;
     }
 
@@ -43,7 +43,7 @@ final class SiteWriter {
             file_put_contents($outputFile, $contents);
 
             foreach ($this->handlers as $handler) {
-                $handler->handle($content);
+                $handler->notify($content);
             }
         }
     }

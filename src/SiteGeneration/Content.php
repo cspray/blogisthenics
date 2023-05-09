@@ -7,6 +7,7 @@ use Cspray\Blogisthenics\Exception\InvalidStateException;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\Template;
 use DateTimeImmutable;
+use Psr\Http\Message\UriInterface;
 
 final class Content {
 
@@ -17,29 +18,8 @@ final class Content {
         public readonly Template $template,
         public readonly ContentCategory $category,
         public readonly ?string $outputPath,
+        public readonly ?UriInterface $url
     ) {}
-
-    public function withOutputPath(string $outputPath) : Content {
-        return new Content(
-            $this->name,
-            $this->postDate,
-            $this->frontMatter,
-            $this->template,
-            $this->category,
-            $outputPath,
-        );
-    }
-
-    public function withFrontMatter(FrontMatter $frontMatter) : Content {
-        return new Content(
-            $this->name,
-            $this->postDate,
-            $frontMatter,
-            $this->template,
-            $this->category,
-            $this->outputPath,
-        );
-    }
 
     public function isPublished() : bool {
         return $this->frontMatter->get('published') ?? true;
