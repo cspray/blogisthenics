@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Bootstrap;
 
 use Cspray\AnnotatedContainer\ContainerFactory\ParameterStore;
 use Cspray\Typiphy\Type;

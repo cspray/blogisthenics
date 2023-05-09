@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\Blogisthenics\Exception\InvalidStateException;
 use Cspray\Blogisthenics\Template\FrontMatter;

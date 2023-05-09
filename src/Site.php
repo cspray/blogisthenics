@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\SiteGeneration\Content;
 
 #[Service]
 final class Site {

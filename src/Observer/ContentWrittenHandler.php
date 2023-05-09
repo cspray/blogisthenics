@@ -2,7 +2,7 @@
 
 namespace Cspray\Blogisthenics\Observer;
 
-use Cspray\Blogisthenics\Content;
+use Cspray\Blogisthenics\SiteGeneration\Content;
 
 /**
  * An observer that is triggered every time a piece of content is written to its output path.

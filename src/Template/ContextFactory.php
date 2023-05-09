@@ -3,7 +3,6 @@
 namespace Cspray\Blogisthenics\Template;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Laminas\Escaper\Escaper;
 

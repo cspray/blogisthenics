@@ -2,8 +2,8 @@
 
 namespace Cspray\Blogisthenics\Test\Support\Stub;
 
-use Cspray\Blogisthenics\Content;
 use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\SiteGeneration\Content;
 
 final class ContentWrittenHandlerStub implements ContentWrittenHandler {
 

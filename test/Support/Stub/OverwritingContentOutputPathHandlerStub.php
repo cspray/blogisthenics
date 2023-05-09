@@ -2,8 +2,8 @@
 
 namespace Cspray\Blogisthenics\Test\Support\Stub;
 
-use Cspray\Blogisthenics\Content;
 use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
+use Cspray\Blogisthenics\SiteGeneration\Content;
 
 class OverwritingContentOutputPathHandlerStub implements ContentGeneratedHandler {
 

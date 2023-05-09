@@ -7,8 +7,8 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
-use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\Template\ComponentRegistry;
 use Cspray\Blogisthenics\Template\Context;
 use Cspray\Blogisthenics\Template\MethodDelegator;
 use Laminas\Escaper\Escaper;

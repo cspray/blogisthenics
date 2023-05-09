@@ -5,6 +5,7 @@ namespace Cspray\Blogisthenics;
 use Cspray\AnnotatedContainer\Attribute\Inject;
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\AnnotatedContainer\Attribute\ServiceDelegate;
+use Cspray\Blogisthenics\Bootstrap\BlogisthenicsParameterStore;
 use Cspray\Blogisthenics\Exception\SiteValidationException;
 
 #[Service]

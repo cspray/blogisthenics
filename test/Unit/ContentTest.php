@@ -2,9 +2,9 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\Content;
-use Cspray\Blogisthenics\ContentCategory;
 use Cspray\Blogisthenics\Exception\InvalidStateException;
+use Cspray\Blogisthenics\SiteGeneration\Content;
+use Cspray\Blogisthenics\SiteGeneration\ContentCategory;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\Template;
 use PHPUnit\Framework\TestCase;

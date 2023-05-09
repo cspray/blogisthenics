@@ -3,10 +3,10 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use BadMethodCallException;
-use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
 use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\Template\ComponentRegistry;
 use Cspray\Blogisthenics\Template\Context;
 use Cspray\Blogisthenics\Template\MethodDelegator;
 use Cspray\Blogisthenics\Template\SafeToNotEncode;

@@ -5,7 +5,6 @@ namespace Cspray\Blogisthenics\Template;
 use ArrayAccess;
 use BadMethodCallException;
 use Closure;
-use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;

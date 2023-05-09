@@ -2,7 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\Bootstrap;
+use Cspray\Blogisthenics\Bootstrap\Bootstrap;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;

@@ -10,6 +10,7 @@ use Cspray\Blogisthenics\SiteData\DataProvider;
 use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
 use Cspray\Blogisthenics\SiteGeneration\SiteGenerator;
+use Cspray\Blogisthenics\SiteGeneration\SiteWriter;
 use Cspray\Blogisthenics\Template\MethodDelegator;
 use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 use Stringy\Stringy as S;

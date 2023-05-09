@@ -13,7 +13,7 @@
     <observer>Cspray\Blogisthenics\Autowire\Observer</observer>
   </observers>
   <parameterStores>
-    <parameterStore>Cspray\Blogisthenics\BlogisthenicsParameterStore</parameterStore>
+    <parameterStore>Cspray\Blogisthenics\Bootstrap\BlogisthenicsParameterStore</parameterStore>
   </parameterStores>
   <cacheDir>.annotated-container-cache</cacheDir>
 </annotatedContainer>

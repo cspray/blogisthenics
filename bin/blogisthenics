@@ -15,7 +15,7 @@ if (!file_exists($rootDir . '/vendor/autoload.php')) {
 }
 require $rootDir . '/vendor/autoload.php';
 
-use Cspray\Blogisthenics\Bootstrap;
+use Cspray\Blogisthenics\Bootstrap\Bootstrap;
 use Cspray\Blogisthenics\Cli\CliApp;
 use Cspray\Blogisthenics\Engine;
 use Minicli\App;

@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\Template\ContextFactory;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\SafeToNotEncode;

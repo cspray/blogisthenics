@@ -3,13 +3,11 @@
 namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\ComponentRegistry;
-use Cspray\Blogisthenics\Content;
-use Cspray\Blogisthenics\ContentCategory;
 use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
 use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\SiteConfiguration;
 use Cspray\Blogisthenics\SiteGeneration\FileParserResults as ParserResults;
+use Cspray\Blogisthenics\Template\ComponentRegistry;
 use Cspray\Blogisthenics\Template\DynamicFileTemplate;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\StaticFileTemplate;

@@ -3,7 +3,7 @@
 namespace Cspray\Blogisthenics\Test\Unit;
 
 use Cspray\AnnotatedContainer\AnnotatedContainer;
-use Cspray\Blogisthenics\Bootstrap;
+use Cspray\Blogisthenics\Bootstrap\Bootstrap;
 use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
