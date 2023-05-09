@@ -47,7 +47,7 @@ final class Engine {
         private readonly SiteGenerator $siteGenerator,
         private readonly SiteWriter $siteWriter,
         private readonly KeyValueStore $keyValueStore,
-        private readonly MethodDelegator $methodDelegator
+        private readonly MethodDelegator $methodDelegator,
     ) {}
 
     public function addDataProvider(DataProvider $dataProvider) : void {

@@ -48,7 +48,7 @@ class EngineTest extends TestCase {
 
     use HasVirtualFilesystemHelpers;
 
-    private static AnnotatedContainer $container;
+    private AnnotatedContainer $container;
 
     private Engine $subject;
 
@@ -65,7 +65,7 @@ class EngineTest extends TestCase {
         $testSiteLoader = new TestSiteLoader($this->vfs);
         $testSiteLoader->loadTestSiteDirectories($testSite);
 
-        $container = Bootstrap::bootstrap($this->vfs->url());
+        $this->container = $container = Bootstrap::bootstrap($this->vfs->url());
 
         $this->methodDelegator = $container->get(MethodDelegator::class);
         $this->keyValueStore = $container->get(KeyValueStore::class);
@@ -83,7 +83,7 @@ class EngineTest extends TestCase {
         $componentRegistry = new ComponentRegistry();
         $this->subject = new Engine(
             $siteConfiguration,
-            new SiteGenerator($siteConfiguration, new FileParser(), $componentRegistry),
+            new SiteGenerator(new Site($siteConfiguration), new FileParser(), $componentRegistry),
             new SiteWriter(new TemplateFormatter(), new ContextFactory(new Escaper(), $this->methodDelegator, $this->keyValueStore, $componentRegistry)),
             $this->keyValueStore,
             $this->methodDelegator
@@ -621,6 +621,15 @@ class EngineTest extends TestCase {
         $content = $site->getAllPages()[0];
 
         self::assertSame('vfs://install_dir/_site/index.html', $content->outputPath);
+    }
+
+    public function testBuiltSiteSameReturnedFromContainer() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $site = $this->subject->buildSite();
+        $service = $this->container->get(Site::class);
+
+        self::assertSame($site, $service);
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {
