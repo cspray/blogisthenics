@@ -239,4 +239,17 @@ class ContextTest extends TestCase {
 
         $context->kv()->set('foo', 'bar');
     }
+
+    public function testContextInvokesDelegatedMethodWithArguments() : void {
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
+
+        $this->methodDelegator->addMethod('doIt', function(string $something) : string {
+            return sprintf('%s else', $something);
+        });
+
+        self::assertSame(
+            'something else',
+            $context->doIt('something')
+        );
+    }
 }

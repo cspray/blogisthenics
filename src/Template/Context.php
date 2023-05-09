@@ -105,7 +105,7 @@ final class Context implements ArrayAccess {
     }
 
     public function __call(string $name, array $arguments) {
-        $value = $this->methodDelegator->executeMethod($this, $name, $arguments);
+        $value = $this->methodDelegator->executeMethod($this, $name, ...$arguments);
         return ($this->valueEscaper)($value);
     }
 
