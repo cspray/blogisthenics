@@ -18,6 +18,7 @@ use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundContentDirectoryConfigura
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundDataDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\NotFoundLayoutDirectoryConfigurationTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\PageSpecifiesNotFoundLayoutTestSite;
+use Cspray\Blogisthenics\Test\Support\TestSite\PermalinkDefiningTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardIncludingDraftsTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StandardTestSite;
 use Cspray\Blogisthenics\Test\Support\TestSite\StaticDataTestSite;
@@ -29,46 +30,31 @@ final class TestSites {
 
     public static function standardSite() : StandardTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new StandardTestSite();
-        }
-
+        $site ??= new StandardTestSite();
         return $site;
     }
 
     public static function notFoundLayoutDirSite() : NotFoundLayoutDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NotFoundLayoutDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new NotFoundLayoutDirectoryConfigurationTestSite();
         return $site;
     }
 
     public static function notFoundContentDirSite() : NotFoundContentDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NotFoundContentDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new NotFoundContentDirectoryConfigurationTestSite();
         return $site;
     }
 
     public static function emptyOutputDirSite() : EmptyOutputDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new EmptyOutputDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new EmptyOutputDirectoryConfigurationTestSite();
         return $site;
     }
 
     public static function emptyContentDirSite() : EmptyContentDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new EmptyContentDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new EmptyContentDirectoryConfigurationTestSite();
         return $site;
     }
 
@@ -83,118 +69,86 @@ final class TestSites {
 
     public static function pageSpecifiesNotFoundLayoutSite() : PageSpecifiesNotFoundLayoutTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new PageSpecifiesNotFoundLayoutTestSite();
-        }
-
+        $site ??= new PageSpecifiesNotFoundLayoutTestSite();
         return $site;
     }
 
     public static function keyValueSite() : KeyValueTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new KeyValueTestSite();
-        }
-
+        $site ??= new KeyValueTestSite();
         return $site;
     }
 
     public static function noConfigSite() : NoConfigTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NoConfigTestSite();
-        }
-
+        $site ??= new NoConfigTestSite();
         return $site;
     }
 
     public static function emptyDataDirectorySite() : EmptyDataDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new EmptyDataDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new EmptyDataDirectoryConfigurationTestSite();
         return $site;
     }
 
     public static function notFoundDataDirectorySite() : NotFoundDataDirectoryConfigurationTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NotFoundDataDirectoryConfigurationTestSite();
-        }
-
+        $site ??= new NotFoundDataDirectoryConfigurationTestSite();
         return $site;
     }
 
     public static function staticDataSite() : StaticDataTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new StaticDataTestSite();
-        }
-
+        $site ??= new StaticDataTestSite();
         return $site;
     }
 
     public static function nonJsonStaticDataSite() : NonJsonStaticDataTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NonJsonStaticDataTestSite();
-        }
-
+        $site ??= new NonJsonStaticDataTestSite();
         return $site;
     }
 
     public static function nestedStaticDataSite() : NestedStaticDataTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new NestedStaticDataTestSite();
-        }
-
+        $site ??= new NestedStaticDataTestSite();
         return $site;
     }
 
     public static function invalidJsonStaticDataSite() : InvalidJsonStaticDataTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new InvalidJsonStaticDataTestSite();
-        }
-
+        $site ??= new InvalidJsonStaticDataTestSite();
         return $site;
     }
 
     public static function standardIncludingDraftsSite() : StandardIncludingDraftsTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new StandardIncludingDraftsTestSite();
-        }
-
+        $site ??= new StandardIncludingDraftsTestSite();
         return $site;
     }
 
     public static function markdownLayoutSite() : MarkdownLayoutTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new MarkdownLayoutTestSite();
-        }
-
+        $site ??= new MarkdownLayoutTestSite();
         return $site;
     }
 
     public static function componentTestSite() : ComponentTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new ComponentTestSite();
-        }
+        $site ??= new ComponentTestSite();
 
         return $site;
     }
 
     public static function missingComponentTestSite() : MissingComponentTestSite {
         static $site;
-        if (!isset($site)) {
-            $site = new MissingComponentTestSite();
-        }
+        $site ??= new MissingComponentTestSite();
+        return $site;
+    }
 
+    public static function permalinkDefiningTestSite() : PermalinkDefiningTestSite {
+        static $site;
+        $site ??= new PermalinkDefiningTestSite();
         return $site;
     }
 

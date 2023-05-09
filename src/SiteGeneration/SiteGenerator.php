@@ -252,13 +252,23 @@ final class SiteGenerator {
         if ($this->isLayoutPath($fileInfo)) {
             return null;
         }
+
         $directory = $this->siteConfiguration->getOutputPath();
+        $permalink = $frontMatter->get('permalink');
+        if ($permalink !== null) {
+            return sprintf(
+                '%s/%s',
+                $directory,
+                $permalink
+            );
+        }
+
         $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentPath() . '>', '', $fileInfo->getPathname()));
         $slug = S::create($frontMatter->get('title'))->slugify();
         return sprintf(
             '%s%s/%s/index.html',
             $directory,
-            $contentOutputDir,
+            rtrim($contentOutputDir, '/'),
             $slug
         );
     }
