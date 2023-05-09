@@ -8,17 +8,7 @@ final class EmptyContentDirectoryConfigurationTestSite extends AbstractTestSite 
 
     protected function doPopulateVirtualFilesystem(VirtualDirectory $dir) : void {
         $dir->addChild(
-            $this->dir('.blogisthenics', [
-                $this->file('config.json', json_encode([
-                    'layout_directory' => '_layouts',
-                    'output_directory' => '_site',
-                    'default_layout' => 'default.html',
-                    'content_directory' => ''
-                ]))
-            ])
-        );
-        $dir->addChild(
-            $this->dir('_layouts', [])
+            $this->dir('layouts', [])
         );
     }
 

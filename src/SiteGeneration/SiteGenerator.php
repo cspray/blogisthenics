@@ -67,7 +67,7 @@ final class SiteGenerator {
 
         unset($fileInfo);
 
-        if (is_dir($this->siteConfiguration->getComponentPath())) {
+        if (is_dir($this->siteConfiguration->getComponentDirectory())) {
             foreach ($this->getComponentIterator() as $fileInfo) {
                 $fileNameParts = explode('.', $fileInfo->getBasename());
                 $name = array_shift($fileNameParts);
@@ -82,8 +82,8 @@ final class SiteGenerator {
     }
 
     private function getSourceIterator() : Generator {
-        $contentDirectory = $this->siteConfiguration->getContentPath();
-        $layoutDirectory = $this->siteConfiguration->getLayoutPath();
+        $contentDirectory = $this->siteConfiguration->getContentDirectory();
+        $layoutDirectory = $this->siteConfiguration->getLayoutDirectory();
         $layoutIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($layoutDirectory, FilesystemIterator::SKIP_DOTS)
         );
@@ -101,7 +101,7 @@ final class SiteGenerator {
     }
 
     private function getComponentIterator() : Generator {
-        $componentPath = $this->siteConfiguration->getComponentPath();
+        $componentPath = $this->siteConfiguration->getComponentDirectory();
         $componentIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($componentPath, FilesystemIterator::SKIP_DOTS)
         );
@@ -123,7 +123,7 @@ final class SiteGenerator {
     }
 
     private function createStaticContent(SplFileInfo $fileInfo) : Content {
-        $directory = $this->siteConfiguration->getContentPath();
+        $directory = $this->siteConfiguration->getContentDirectory();
         $contentOutputDir = dirname(preg_replace('<^' . $directory . '>', '', $fileInfo->getPathname()));
         return $this->createContent(
             $fileInfo,
@@ -132,7 +132,7 @@ final class SiteGenerator {
             new StaticFileTemplate($fileInfo->getPathname(), $fileInfo->getExtension()),
             sprintf(
                 '%s%s/%s',
-                $this->siteConfiguration->getOutputPath(),
+                $this->siteConfiguration->getOutputDirectory(),
                 $contentOutputDir,
                 $fileInfo->getBasename()
             )
@@ -203,7 +203,7 @@ final class SiteGenerator {
     }
 
     private function isLayoutPath(SplFileInfo $fileInfo) : bool {
-        $layoutsPath = '(^' . $this->siteConfiguration->getLayoutPath() . ')';
+        $layoutsPath = '(^' . $this->siteConfiguration->getLayoutDirectory() . ')';
         return (bool) preg_match($layoutsPath, $fileInfo->getPathname());
     }
 
@@ -259,7 +259,7 @@ final class SiteGenerator {
             return null;
         }
 
-        $directory = $this->siteConfiguration->getOutputPath();
+        $directory = $this->siteConfiguration->getOutputDirectory();
         $permalink = $frontMatter->get('permalink');
         if ($permalink !== null) {
             return sprintf(
@@ -269,7 +269,7 @@ final class SiteGenerator {
             );
         }
 
-        $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentPath() . '>', '', $fileInfo->getPathname()));
+        $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentDirectory() . '>', '', $fileInfo->getPathname()));
         $slug = S::create($frontMatter->get('title'))->slugify();
         return sprintf(
             '%s%s/%s/index.html',
