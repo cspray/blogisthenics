@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 final class FileParserResults {
 

@@ -1,8 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Template;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\ComponentRegistry;
+use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Laminas\Escaper\Escaper;
 
 #[Service]

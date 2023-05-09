@@ -2,8 +2,8 @@
 
 namespace Cspray\Blogisthenics\Test\Support\TestSite;
 
-use Cspray\Blogisthenics\DataProvider;
-use Cspray\Blogisthenics\KeyValueStore;
+use Cspray\Blogisthenics\SiteData\DataProvider;
+use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 
 final class KeyValueTestSite extends AbstractTestSite {

@@ -158,9 +158,7 @@ To utilize template helpers you'll have to implement some PHP code. In addition 
 
 namespace Acme\BlogisthenicsDemo;
 
-use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\TemplateHelperProvider;
-use Cspray\Blogisthenics\MethodDelegator;
+use Cspray\AnnotatedContainer\Attribute\Service;use Cspray\Blogisthenics\Template\MethodDelegator;use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 
 #[Service]
 final class MyTemplateHelperProvider implements TemplateHelperProvider {
@@ -195,8 +193,7 @@ As already mentioned, we support the ability to create pages out of Markdown doc
 
 namespace Acme\BlogisthenicsDemo;
 
-use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\Formatter;
+use Cspray\AnnotatedContainer\Attribute\Service;use Cspray\Blogisthenics\Template\Formatter;
 
 #[Service]
 final class MyCustomFormatter implements Formatter {
@@ -221,9 +218,7 @@ Sometimes it isn't possible to create all the necessary content ahead of time in
 ```php
 <?php declare(stric_types=1);
 
-use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\DynamicContentProvider;
-use Cspray\Blogisthenics\Site;
+use Cspray\AnnotatedContainer\Attribute\Service;use Cspray\Blogisthenics\Site;use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
 
 #[Service]
 final class MyContentProvider implements DynamicContentProvider {
@@ -274,8 +269,7 @@ instance. Somewhere in your `/src` directory you should implement the following:
 ```php
 <?php declare(strict_types=1);
 
-use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\DataProvider;
+use Cspray\AnnotatedContainer\Attribute\Service;use Cspray\Blogisthenics\SiteData\DataProvider;
 
 #[Service]
 class MyDataProvider implements DataProvider {

@@ -15,7 +15,7 @@ final class SiteConfigurationFactory {
         private readonly string $rootDirectory
     ) {}
 
-    #[ServiceDelegate(SiteConfiguration::class)]
+    #[ServiceDelegate]
     public function createSiteConfiguration() : SiteConfiguration {
         $filePath = $this->rootDirectory . '/.blogisthenics/config.json';
         $config = [];

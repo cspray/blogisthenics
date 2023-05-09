@@ -1,8 +1,9 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\Site;
 
 #[Service]
 interface DynamicContentProvider {

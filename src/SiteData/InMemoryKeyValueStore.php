@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteData;
 
 use Adbar\Dot;
 use Cspray\AnnotatedContainer\Attribute\Service;

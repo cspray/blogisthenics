@@ -1,13 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Template;
 
 use ArrayAccess;
 use BadMethodCallException;
 use Closure;
+use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
+use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {

@@ -6,7 +6,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\FrontMatter;
+use Cspray\Blogisthenics\Template\FrontMatter;
 use PHPUnit\Framework\TestCase;
 
 class FrontMatterTest extends TestCase {

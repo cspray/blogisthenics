@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<annotatedContainer xmlns="https://annotated-container.cspray.io/schema/annotated-container.xsd">
+  <scanDirectories>
+    <source>
+      <dir>src</dir>
+      <dir>cli_src</dir>
+      <dir>fixture_src</dir>
+    </source>
+    <vendor/>
+  </scanDirectories>
+  <definitionProviders/>
+  <observers>
+    <observer>Cspray\Blogisthenics\Autowire\Observer</observer>
+  </observers>
+  <parameterStores>
+    <parameterStore>Cspray\Blogisthenics\BlogisthenicsParameterStore</parameterStore>
+  </parameterStores>
+</annotatedContainer>

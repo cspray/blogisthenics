@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\Template\Template;
 
 #[Service]
 class ComponentRegistry {

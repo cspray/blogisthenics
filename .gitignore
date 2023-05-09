@@ -7,3 +7,4 @@ vendor/
 test/_dummy/_site/
 .phpunit.cache
 cache/
+.annotated-container-cache/

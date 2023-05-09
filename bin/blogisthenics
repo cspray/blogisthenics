@@ -21,12 +21,7 @@ use Cspray\Blogisthenics\Engine;
 use Minicli\App;
 use Minicli\ServiceInterface;
 
-$container = Bootstrap::bootstrap(
-    $extraScanDirs,
-    ['default'],
-    $rootDir,
-    $rootDir . '/cache'
-);
+$container = Bootstrap::bootstrap($rootDir);
 
 $engine = $container->get(Engine::class);
 

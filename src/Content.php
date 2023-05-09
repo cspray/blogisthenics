@@ -4,6 +4,8 @@
 namespace Cspray\Blogisthenics;
 
 use Cspray\Blogisthenics\Exception\InvalidStateException;
+use Cspray\Blogisthenics\Template\FrontMatter;
+use Cspray\Blogisthenics\Template\Template;
 use DateTimeImmutable;
 
 final class Content {

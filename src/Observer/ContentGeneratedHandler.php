@@ -1,13 +1,12 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Observer;
 
-use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\Content;
 
 /**
  * An observer that is triggered every time a piece of Content is generated, before it is added to the site.
  */
-#[Service]
 interface ContentGeneratedHandler {
 
     /**

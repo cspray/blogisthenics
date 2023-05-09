@@ -2,8 +2,8 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\Formatter;
-use Cspray\Blogisthenics\TemplateFormatter;
+use Cspray\Blogisthenics\Template\Formatter;
+use Cspray\Blogisthenics\Template\TemplateFormatter;
 use PHPUnit\Framework\TestCase;
 
 class TemplateFormatterTest extends TestCase {

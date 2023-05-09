@@ -2,7 +2,7 @@
 
 namespace Cspray\Blogisthenics\Test\Unit;
 
-use Cspray\Blogisthenics\InMemoryKeyValueStore;
+use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
 use PHPUnit\Framework\TestCase;
 
 class InMemoryKeyValueStoreTest extends TestCase {

@@ -1,13 +1,12 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Observer;
 
-use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\Content;
 
 /**
  * An observer that is triggered every time a piece of content is written to its output path.
  */
-#[Service]
 interface ContentWrittenHandler {
 
     /**

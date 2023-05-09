@@ -3,7 +3,7 @@
 namespace Cspray\Blogisthenics\Test\Support\Stub;
 
 use Cspray\Blogisthenics\Content;
-use Cspray\Blogisthenics\ContentGeneratedHandler;
+use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
 
 final class ContentGeneratedHandlerStub implements ContentGeneratedHandler {
 
