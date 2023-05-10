@@ -34,6 +34,9 @@ use Cspray\Blogisthenics\Test\Support\Stub\HasDataSiteConfiguration;
 use Cspray\Blogisthenics\Test\Support\TestSite\TestSite;
 use Cspray\Blogisthenics\Test\Support\TestSiteLoader;
 use Cspray\Blogisthenics\Test\Support\TestSites;
+use Cspray\BlogisthenicsFixture\AutowiredContentGeneratedObserver;
+use Cspray\BlogisthenicsFixture\AutowiredContentWrittenObserver;
+use Cspray\BlogisthenicsFixture\AutowiredDataProvider;
 use Cspray\BlogisthenicsFixture\Fixtures;
 use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
@@ -449,7 +452,7 @@ class EngineTest extends TestCase {
 
         $stub = new ContentGeneratedStub();
 
-        $this->subject->addContentGeneratedHandler($stub);
+        $this->subject->addContentGeneratedObserver($stub);
 
         $this->subject->buildSite();
 
@@ -458,6 +461,8 @@ class EngineTest extends TestCase {
             $actual[] = $content->outputPath;
         }
         $expected = [
+            null,
+            null,
             'vfs://install_dir/_site/posts/another-blog-article/index.html',
             'vfs://install_dir/_site/posts/nested-layout-article/index.html',
             'vfs://install_dir/_site/posts/the-blog-title/index.html',
@@ -491,7 +496,7 @@ class EngineTest extends TestCase {
         $this->setUpAndLoadTestSite(TestSites::standardSite());
         $stub = new ContentWrittenStub();
 
-        $this->subject->addContentWrittenHandler($stub);
+        $this->subject->addContentWrittenObserver($stub);
 
         $this->subject->buildSite();
 
@@ -635,6 +640,46 @@ class EngineTest extends TestCase {
         self::assertCount(2, $layouts);
         self::assertNull($layouts[0]->url);
         self::assertNull($layouts[1]->url);
+    }
+
+    public function testAutowiredContentGeneratedObserversAddedToEngine() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        /** @var AutowiredContentGeneratedObserver $autowiredObserver */
+        $autowiredObserver = $this->container->get(AutowiredContentGeneratedObserver::class);
+
+        self::assertSame(0, $autowiredObserver->notifyCount);
+
+        $this->subject->buildSite();
+
+        self::assertSame(7, $autowiredObserver->notifyCount);
+    }
+
+    public function testAutowiredContentWrittenObserversAddedToEngine() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $autowiredObserver = $this->container->get(AutowiredContentWrittenObserver::class);
+
+        self::assertSame(0, $autowiredObserver->notifyCount);
+
+        $this->subject->buildSite();
+
+        self::assertSame(5, $autowiredObserver->notifyCount);
+    }
+
+    public function testAutowireDataProviderLoaded() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        /** @var KeyValueStore $keyValueStore */
+        $keyValueStore = $this->container->get(KeyValueStore::class);
+
+        $key = AutowiredDataProvider::class . '::addData';
+
+        self::assertFalse($keyValueStore->has($key));
+
+        $this->subject->buildSite();
+
+        self::assertSame('autowired', $keyValueStore->get($key));
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

@@ -54,10 +54,8 @@ final class SiteGenerator {
                 $content = $this->createStaticContent($fileInfo);
             }
 
-            if (isset($content->outputPath)) {
-                foreach ($this->observers as $observer) {
-                    $observer->notify($content);
-                }
+            foreach ($this->observers as $observer) {
+                $observer->notify($content);
             }
 
             if ($content->isPublished() || $this->site->getConfiguration()->shouldIncludeDraftContent()) {

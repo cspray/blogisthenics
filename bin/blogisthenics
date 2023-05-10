@@ -11,7 +11,7 @@ if (php_sapi_name() !== 'cli') {
     exit('The blogisthenics CLI tool is not meant to run in non-cli SAPI.');
 }
 
-$rootDir = dirname(__DIR__);
+$rootDir = $blogRoot = dirname(__DIR__);
 if (!file_exists($rootDir . '/vendor/autoload.php')) {
     $rootDir = dirname(__DIR__, 4);
 }

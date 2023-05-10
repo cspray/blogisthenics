@@ -28,14 +28,27 @@ final class Context implements ArrayAccess {
     ) {
         $this->data = $this->convertNestedArraysToContexts($data);
         $this->yield = $yield;
+
         $escaper = $this->escaper;
-        $this->valueEscaper = static function($value) use($escaper) {
+        $methodDelegator = $this->methodDelegator;
+        $kv = $this->kv;
+        $componentRegistry = $this->componentRegistry;
+
+        $this->valueEscaper = static function($value) use($escaper, $methodDelegator, $kv, $componentRegistry) {
             if ($value instanceof Context) {
                 return $value;
             } elseif ($value instanceof SafeToNotEncode) {
                 return (string) $value;
             } elseif (is_null($value)) {
                 return null;
+            } elseif (is_array($value)) {
+                return new Context(
+                    $escaper,
+                    $methodDelegator,
+                    $kv,
+                    $componentRegistry,
+                    $value,
+                );
             } else {
                 return $escaper->escapeHtml($value);
             }

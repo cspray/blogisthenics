@@ -3,7 +3,6 @@
   <scanDirectories>
     <source>
       <dir>src</dir>
-      <dir>cli_src</dir>
       <dir>fixture_src</dir>
     </source>
     <vendor/>

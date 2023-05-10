@@ -252,4 +252,28 @@ class ContextTest extends TestCase {
             $context->doIt('something')
         );
     }
+
+    public function testInvokesMethodDelegatorReturnsArrayIsProperlyConvertedIntoContext() : void {
+        $this->methodDelegator->addMethod('getCollection', function() {
+            return [
+                'collection' => [
+                    'one', 'two', 'three',
+                ],
+                'nested' => [
+                    'array' => [
+                        'foo' => [
+                            '<bar>', 'baz', 'qux'
+                        ]
+                    ]
+                ]
+            ];
+        });
+        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
+
+        $collection = $context->getCollection();
+
+        self::assertInstanceOf(Context::class, $collection['collection']);
+        self::assertSame($collection['nested']['array']['foo'][0], '&lt;bar&gt;');
+    }
+
 }

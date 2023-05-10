@@ -62,11 +62,11 @@ final class Engine {
         $this->dynamicContentProviders[] = $dynamicContentProvider;
     }
 
-    public function addContentGeneratedHandler(ContentGenerated $handler) : void {
+    public function addContentGeneratedObserver(ContentGenerated $handler) : void {
         $this->siteGenerator->addHandler($handler);
     }
 
-    public function addContentWrittenHandler(ContentWritten $handler) : void {
+    public function addContentWrittenObserver(ContentWritten $handler) : void {
         $this->siteWriter->addHandler($handler);
     }
 
