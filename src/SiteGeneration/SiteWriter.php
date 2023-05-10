@@ -8,7 +8,6 @@ use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\Template\ContextFactory;
 use Cspray\Blogisthenics\Template\FrontMatter;
-use Cspray\Blogisthenics\Template\SafeToNotEncode;
 use Cspray\Blogisthenics\Template\TemplateFormatter;
 
 /**
@@ -55,7 +54,7 @@ final class SiteWriter {
         $contents = null;
         foreach ($pageTemplatesToRender as $contentPage) {
             $templateData = $this->mergeAndConvertToArray($page->frontMatter, $contentPage->frontMatter);
-            $yield = is_null($contents) ? null : fn() => new SafeToNotEncode($contents);
+            $yield = is_null($contents) ? null : fn() => $contents;
             $context = $this->contextFactory->create($templateData, $yield);
             $markup = $contentPage->template->render($context);
 
@@ -63,7 +62,7 @@ final class SiteWriter {
         }
 
         $templateData = $this->mergeAndConvertToArray($page->frontMatter, $finalLayout->frontMatter);
-        $context = $this->contextFactory->create($templateData, fn() => new SafeToNotEncode($contents));
+        $context = $this->contextFactory->create($templateData, fn() => $contents);
         $markup = $finalLayout->template->render($context);
         return $this->templateFormatter->format($finalLayout->template->getFormatType(), $markup);
     }

@@ -9,7 +9,6 @@ use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
 use Cspray\Blogisthenics\Template\ComponentRegistry;
 use Cspray\Blogisthenics\Template\Context;
 use Cspray\Blogisthenics\Template\MethodDelegator;
-use Cspray\Blogisthenics\Template\SafeToNotEncode;
 use Laminas\Escaper\Escaper;
 use PHPUnit\Framework\TestCase;
 
@@ -78,14 +77,6 @@ class ContextTest extends TestCase {
         $this->assertFalse(isset($context[1]), 'Expected a property with no value to not be isset');
     }
 
-    public function testEncodesValuesByDefault() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
-            'foo' => '<p>something & else</p>'
-        ]);
-        $expected = '&lt;p&gt;something &amp; else&lt;/p&gt;';
-        $this->assertSame($expected, $context->foo, 'Expected data attribute to be automatically encoded');
-    }
-
     public function testNullValueNotPresent() {
         $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
         $this->assertNull($context->foo, 'Expected to receive a null value');
@@ -101,22 +92,7 @@ class ContextTest extends TestCase {
                 ]
             ]
         ]);
-        $this->assertSame('foo &amp; bar', $context->foo->bar->baz->qux, 'Expected nested arrays to turn into template context');
-    }
-
-    public function testAllowsIndexedAccessWithDefaultEncoding() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
-            'foo & bar',
-        ]);
-
-        $this->assertSame('foo &amp; bar', $context[0], 'Expected to get the 0 index element');
-    }
-
-    public function testDoesNotEncodeSafeToNotEncodeValues() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
-            'foo' => new SafeToNotEncode('bar & baz')
-        ]);
-        $this->assertSame('bar & baz', $context->foo, 'Expected to not encode SafeToNotEncode values');
+        $this->assertSame('foo & bar', $context->foo->bar->baz->qux, 'Expected nested arrays to turn into template context');
     }
 
     public function testCallingMethodOnContextDelegatesToMethodDelegator() {
@@ -126,20 +102,6 @@ class ContextTest extends TestCase {
         $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, ['bar' => 'baz']);
 
         $this->assertSame('baz', $context->foo(), 'Expected the method call to be available based on delegator');
-    }
-
-    public function testCallingMethodOnMethodDelegatorEncodesValue() {
-        $this->methodDelegator->addMethod('fooBar', fn() => 'bar&baz');
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
-
-        $this->assertSame('bar&amp;baz', $context->fooBar());
-    }
-
-    public function testCallingMethodOnMethodDelegatorDoesNotEncodeAppropriateValues() {
-        $this->methodDelegator->addMethod('foo', fn() => new SafeToNotEncode('foo & bar'));
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
-
-        $this->assertSame('foo & bar', $context->foo());
     }
 
     public function testHasYieldReturnsFalseIfNoYield() {
@@ -171,22 +133,6 @@ class ContextTest extends TestCase {
         $this->assertSame('returned value', $actual);
     }
 
-    public function testYieldWithHtmlUnsafeValueEncodesProperly() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => 'foo&bar');
-
-        $actual = $context->yield();
-
-        $this->assertSame('foo&amp;bar', $actual);
-    }
-
-    public function testYieldWithHtmlUnsafeValueThatShouldNotBeEncoded() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [], fn() => new SafeToNotEncode('foo&bar'));
-
-        $actual = $context->yield();
-
-        $this->assertSame('foo&bar', $actual);
-    }
-
     public function testKeyValueReturnsNullValueIfNoKey() {
         $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
 
@@ -199,22 +145,6 @@ class ContextTest extends TestCase {
         $this->keyValueStore->set('fooBar', 'baz');
 
         $this->assertSame('baz', $context->kv()->get('fooBar'));
-    }
-
-    public function testKeyValueReturnEncodedProperly() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
-
-        $this->keyValueStore->set('fooBar', 'baz&qux');
-
-        $this->assertSame('baz&amp;qux', $context->kv()->get('fooBar'));
-    }
-
-    public function testKeyValueDoesNotEncodeIfCorrectValue() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
-
-        $this->keyValueStore->set('htmlSafe', new SafeToNotEncode('<img />'));
-
-        $this->assertSame('<img />', $context->kv()->get('htmlSafe'));
     }
 
     public function testKeyValueHasValueNotPresent() {
@@ -251,29 +181,6 @@ class ContextTest extends TestCase {
             'something else',
             $context->doIt('something')
         );
-    }
-
-    public function testInvokesMethodDelegatorReturnsArrayIsProperlyConvertedIntoContext() : void {
-        $this->methodDelegator->addMethod('getCollection', function() {
-            return [
-                'collection' => [
-                    'one', 'two', 'three',
-                ],
-                'nested' => [
-                    'array' => [
-                        'foo' => [
-                            '<bar>', 'baz', 'qux'
-                        ]
-                    ]
-                ]
-            ];
-        });
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, []);
-
-        $collection = $context->getCollection();
-
-        self::assertInstanceOf(Context::class, $collection['collection']);
-        self::assertSame($collection['nested']['array']['foo'][0], '&lt;bar&gt;');
     }
 
 }

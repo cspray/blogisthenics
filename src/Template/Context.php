@@ -4,7 +4,6 @@ namespace Cspray\Blogisthenics\Template;
 
 use ArrayAccess;
 use BadMethodCallException;
-use Closure;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
@@ -15,51 +14,43 @@ final class Context implements ArrayAccess {
 
     private array $data;
     private $yield;
-    private Closure $valueEscaper;
-    private KeyValueStore $escapedKeyValueStore;
+
+    private readonly KeyValueStore $kv;
 
     public function __construct(
         private readonly Escaper $escaper,
         private readonly MethodDelegator $methodDelegator,
-        private readonly KeyValueStore $kv,
+        KeyValueStore $kv,
         private readonly ComponentRegistry $componentRegistry,
         array $data,
         callable $yield = null
     ) {
-        $this->data = $this->convertNestedArraysToContexts($data);
+        $this->data = $this->convertNestedArraysToContexts($data, $kv);
         $this->yield = $yield;
+        $this->kv = new class($kv) implements KeyValueStore {
 
-        $escaper = $this->escaper;
-        $methodDelegator = $this->methodDelegator;
-        $kv = $this->kv;
-        $componentRegistry = $this->componentRegistry;
+            public function __construct(
+                private readonly KeyValueStore $kv
+            ) {}
 
-        $this->valueEscaper = static function($value) use($escaper, $methodDelegator, $kv, $componentRegistry) {
-            if ($value instanceof Context) {
-                return $value;
-            } elseif ($value instanceof SafeToNotEncode) {
-                return (string) $value;
-            } elseif (is_null($value)) {
-                return null;
-            } elseif (is_array($value)) {
-                return new Context(
-                    $escaper,
-                    $methodDelegator,
-                    $kv,
-                    $componentRegistry,
-                    $value,
-                );
-            } else {
-                return $escaper->escapeHtml($value);
+            public function set(string $key, mixed $value) : void {
+                throw new InvalidMutationException('Attempted to mutate the KeyValueStore from a template Context. Please mutate KeyValueStore with a DataProvider implementation.');
+            }
+
+            public function get(string $key) : mixed {
+                return $this->kv->get($key);
+            }
+
+            public function has(string $key) : bool {
+                return $this->kv->has($key);
             }
         };
-        $this->escapedKeyValueStore = $this->getEscapedKeyValueStore();
     }
 
-    private function convertNestedArraysToContexts(array $data) : array {
+    private function convertNestedArraysToContexts(array $data, KeyValueStore $kv) : array {
         $cleanData = [];
         foreach ($data as $key => $value) {
-            $cleanData[$key] = is_array($value) ? new Context($this->escaper, $this->methodDelegator, $this->kv, $this->componentRegistry, $value) : $value;
+            $cleanData[$key] = is_array($value) ? new Context($this->escaper, $this->methodDelegator, $kv, $this->componentRegistry, $value) : $value;
         }
         return $cleanData;
     }
@@ -73,15 +64,14 @@ final class Context implements ArrayAccess {
             throw new InvalidYieldException('Attempted to yield nothing. Please ensure yield() is only called from a layout template.');
         }
 
-        $value = ($this->yield)();
-        return ($this->valueEscaper)($value);
+        return (string) ($this->yield)();
     }
 
     public function kv() : KeyValueStore {
-        return $this->escapedKeyValueStore;
+        return $this->kv;
     }
 
-    public function component(string $name, array $data = []) : SafeToNotEncode {
+    public function component(string $name, array $data = []) : string {
         $component = $this->componentRegistry->getComponent($name);
         if ($component === null) {
             throw new ComponentNotFoundException(sprintf(
@@ -89,24 +79,33 @@ final class Context implements ArrayAccess {
                 $name
             ));
         }
-        return new SafeToNotEncode($component->render(
+        return $component->render(
             new Context(
                 $this->escaper,
                 $this->methodDelegator,
-                $this->escapedKeyValueStore,
+                $this->kv,
                 $this->componentRegistry,
                 $data
             )
-        ));
+        );
+    }
+
+    public function e($value, EscapeType $escapeType = EscapeType::Html) : string {
+        return match($escapeType) {
+            EscapeType::Html => $this->escaper->escapeHtml($value),
+            EscapeType::HtmlAttribute => $this->escaper->escapeHtmlAttr($value),
+            EscapeType::Css => $this->escaper->escapeCss($value),
+            EscapeType::JavaScript => $this->escaper->escapeJs($value),
+            EscapeType::Url => $this->escaper->escapeUrl($value)
+        };
     }
 
     public function __set(string $name, mixed $value) : void {
         throw new BadMethodCallException('Attempted to set a value on an immutable object');
     }
 
-    public function __get(string $name) : Context|string|null {
-        $value = $this->data[$name] ?? null;
-        return ($this->valueEscaper)($value);
+    public function __get(string $name) : mixed {
+        return $this->data[$name] ?? null;
     }
 
     public function __isset(string $name) : bool {
@@ -118,8 +117,7 @@ final class Context implements ArrayAccess {
     }
 
     public function __call(string $name, array $arguments) {
-        $value = $this->methodDelegator->executeMethod($this, $name, ...$arguments);
-        return ($this->valueEscaper)($value);
+        return $this->methodDelegator->executeMethod($this, $name, ...$arguments);
     }
 
     public function offsetExists(mixed $offset) : bool {
@@ -138,26 +136,4 @@ final class Context implements ArrayAccess {
         throw new BadMethodCallException('Attempted to unset a value on an immutable object');
     }
 
-    private function getEscapedKeyValueStore() : KeyValueStore {
-        return new class($this->kv, $this->valueEscaper) implements KeyValueStore {
-
-            public function __construct(
-                private readonly KeyValueStore $keyValueStore,
-                private $valueEscaper
-            ) {}
-
-            public function set(string $key, mixed $value) : void {
-                throw new InvalidMutationException('Attempted to mutate the KeyValueStore from a template Context. Please mutate KeyValueStore with a DataProvider implementation.');
-            }
-
-            public function get(string $key) : mixed {
-                $value = $this->keyValueStore->get($key);
-                return ($this->valueEscaper)($value);
-            }
-
-            public function has(string $key) : bool {
-                return $this->keyValueStore->has($key);
-            }
-        };
-    }
 }
