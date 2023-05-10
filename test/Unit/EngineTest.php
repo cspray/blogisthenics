@@ -14,6 +14,7 @@ use Cspray\Blogisthenics\SiteConfiguration;
 use Cspray\Blogisthenics\SiteData\DataProvider;
 use Cspray\Blogisthenics\SiteData\InMemoryKeyValueStore;
 use Cspray\Blogisthenics\SiteData\KeyValueStore;
+use Cspray\Blogisthenics\SiteGeneration\ContentRenderer;
 use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
 use Cspray\Blogisthenics\SiteGeneration\FileParser;
 use Cspray\Blogisthenics\SiteGeneration\SiteGenerator;
@@ -84,7 +85,16 @@ class EngineTest extends TestCase {
         $this->subject = new Engine(
             $siteConfiguration,
             new SiteGenerator(new Site($siteConfiguration), new FileParser(), $componentRegistry),
-            new SiteWriter(new TemplateFormatter(), new ContextFactory(new Escaper(), $this->methodDelegator, $this->keyValueStore, $componentRegistry)),
+            new SiteWriter(new ContentRenderer(
+                new TemplateFormatter(),
+                new ContextFactory(
+                    new Escaper(),
+                    $this->methodDelegator,
+                    $this->keyValueStore,
+                    $componentRegistry
+                ),
+                new Site(new DefaultSiteConfiguration('vfs://install_dir'))
+            )),
             $this->keyValueStore,
             $this->methodDelegator
         );

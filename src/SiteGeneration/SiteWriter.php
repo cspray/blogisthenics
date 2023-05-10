@@ -3,12 +3,8 @@
 namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\Exception\SiteGenerationException;
 use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\Site;
-use Cspray\Blogisthenics\Template\ContextFactory;
-use Cspray\Blogisthenics\Template\FrontMatter;
-use Cspray\Blogisthenics\Template\TemplateFormatter;
 
 /**
  * @internal This class should only be utilized by Engine implementations; use outside of this context is unsupported.
@@ -22,8 +18,7 @@ final class SiteWriter {
     private array $handlers = [];
 
     public function __construct(
-        private readonly TemplateFormatter $templateFormatter,
-        private readonly ContextFactory $contextFactory
+        private readonly ContentRenderer $contentRenderer
     ) {}
 
     public function addHandler(ContentWritten $handler) : void {
@@ -38,8 +33,10 @@ final class SiteWriter {
                 mkdir($dirPath, 0777, true);
             }
 
-            $contents = $this->buildTemplateContents($site, $content);
-            file_put_contents($outputFile, $contents);
+            file_put_contents(
+                $outputFile,
+                $this->contentRenderer->renderForWeb($content)
+            );
 
             foreach ($this->handlers as $handler) {
                 $handler->notify($content);
@@ -47,51 +44,5 @@ final class SiteWriter {
         }
     }
 
-    private function buildTemplateContents(Site $site, Content $page) : string {
-        $pageTemplatesToRender = $this->getPagesToRender($site, $page);
-
-        $finalLayout = array_pop($pageTemplatesToRender);
-        $contents = null;
-        foreach ($pageTemplatesToRender as $contentPage) {
-            $templateData = $this->mergeAndConvertToArray($page->frontMatter, $contentPage->frontMatter);
-            $yield = is_null($contents) ? null : fn() => $contents;
-            $context = $this->contextFactory->create($templateData, $yield);
-            $markup = $contentPage->template->render($context);
-
-            $contents = $this->templateFormatter->format($contentPage->template->getFormatType(), $markup) . PHP_EOL;
-        }
-
-        $templateData = $this->mergeAndConvertToArray($page->frontMatter, $finalLayout->frontMatter);
-        $context = $this->contextFactory->create($templateData, fn() => $contents);
-        $markup = $finalLayout->template->render($context);
-        return $this->templateFormatter->format($finalLayout->template->getFormatType(), $markup);
-    }
-
-    private function mergeAndConvertToArray(FrontMatter $first, FrontMatter $second) : array {
-        return iterator_to_array($second->withData(iterator_to_array($first)));
-    }
-
-    /**
-     * @param Site $site
-     * @param Content $page
-     * @return Content[]
-     */
-    private function getPagesToRender(Site $site, Content $page) : array {
-        $pages = [];
-        $pages[] = $page;
-        $layoutName = $page->frontMatter->get('layout');
-
-        while ($layoutName !== null) {
-            $layout = $site->findLayout((string) $layoutName);
-            if (is_null($layout)) {
-                $msg = 'The page "' . $page->name . '" specified a layout "' . $layoutName . '" but the layout is not present.';
-                throw new SiteGenerationException($msg);
-            }
-            $pages[] = $layout;
-            $layoutName = $layout->frontMatter->get('layout');
-        }
-
-        return $pages;
-    }
 
 }
