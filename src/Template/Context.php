@@ -5,7 +5,6 @@ namespace Cspray\Blogisthenics\Template;
 use ArrayAccess;
 use BadMethodCallException;
 use Closure;
-use Cspray\Blogisthenics\ComponentRegistry;
 use Cspray\Blogisthenics\Exception\ComponentNotFoundException;
 use Cspray\Blogisthenics\Exception\InvalidMutationException;
 use Cspray\Blogisthenics\Exception\InvalidYieldException;
@@ -29,14 +28,27 @@ final class Context implements ArrayAccess {
     ) {
         $this->data = $this->convertNestedArraysToContexts($data);
         $this->yield = $yield;
+
         $escaper = $this->escaper;
-        $this->valueEscaper = static function($value) use($escaper) {
+        $methodDelegator = $this->methodDelegator;
+        $kv = $this->kv;
+        $componentRegistry = $this->componentRegistry;
+
+        $this->valueEscaper = static function($value) use($escaper, $methodDelegator, $kv, $componentRegistry) {
             if ($value instanceof Context) {
                 return $value;
             } elseif ($value instanceof SafeToNotEncode) {
                 return (string) $value;
             } elseif (is_null($value)) {
                 return null;
+            } elseif (is_array($value)) {
+                return new Context(
+                    $escaper,
+                    $methodDelegator,
+                    $kv,
+                    $componentRegistry,
+                    $value,
+                );
             } else {
                 return $escaper->escapeHtml($value);
             }
@@ -106,7 +118,7 @@ final class Context implements ArrayAccess {
     }
 
     public function __call(string $name, array $arguments) {
-        $value = $this->methodDelegator->executeMethod($this, $name, $arguments);
+        $value = $this->methodDelegator->executeMethod($this, $name, ...$arguments);
         return ($this->valueEscaper)($value);
     }
 

@@ -4,12 +4,14 @@ namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\Blogisthenics\Exception\SiteGenerationException;
-use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
-use Cspray\Blogisthenics\Observer\ContentWrittenHandler;
+use Cspray\Blogisthenics\Exception\SiteValidationException;
+use Cspray\Blogisthenics\Observer\ContentGenerated;
+use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\SiteData\DataProvider;
 use Cspray\Blogisthenics\SiteData\KeyValueStore;
 use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
 use Cspray\Blogisthenics\SiteGeneration\SiteGenerator;
+use Cspray\Blogisthenics\SiteGeneration\SiteWriter;
 use Cspray\Blogisthenics\Template\MethodDelegator;
 use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 use Stringy\Stringy as S;
@@ -45,7 +47,7 @@ final class Engine {
         private readonly SiteGenerator $siteGenerator,
         private readonly SiteWriter $siteWriter,
         private readonly KeyValueStore $keyValueStore,
-        private readonly MethodDelegator $methodDelegator
+        private readonly MethodDelegator $methodDelegator,
     ) {}
 
     public function addDataProvider(DataProvider $dataProvider) : void {
@@ -60,11 +62,11 @@ final class Engine {
         $this->dynamicContentProviders[] = $dynamicContentProvider;
     }
 
-    public function addContentGeneratedHandler(ContentGeneratedHandler $handler) : void {
+    public function addContentGeneratedObserver(ContentGenerated $handler) : void {
         $this->siteGenerator->addHandler($handler);
     }
 
-    public function addContentWrittenHandler(ContentWrittenHandler $handler) : void {
+    public function addContentWrittenObserver(ContentWritten $handler) : void {
         $this->siteWriter->addHandler($handler);
     }
 
@@ -75,6 +77,7 @@ final class Engine {
      * @return Site
      */
     public function buildSite() : Site {
+        $this->guardInvalidSiteConfigurationPreGeneration($this->siteConfiguration);
         $this->loadStaticData();
 
         foreach ($this->dataProviders as $dataProvider) {
@@ -91,7 +94,7 @@ final class Engine {
             $dynamicContentProvider->addContent($site);
         }
 
-        $this->removeDirectory($this->siteConfiguration->getOutputPath());
+        $this->removeDirectory($this->siteConfiguration->getOutputDirectory());
 
         $this->siteWriter->writeSite($site);
         return $site;
@@ -99,7 +102,7 @@ final class Engine {
 
     private function loadStaticData() : void {
         $siteConfiguration = $this->siteConfiguration;
-        if (!empty($dataPath = $siteConfiguration->getDataPath())) {
+        if (!empty($dataPath = $siteConfiguration->getDataDirectory())) {
             $dirIterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($dataPath, \FilesystemIterator::SKIP_DOTS)
             );
@@ -135,6 +138,48 @@ final class Engine {
 
             rmdir($path);
         }
+    }
+
+    private function guardInvalidSiteConfigurationPreGeneration(SiteConfiguration $siteConfiguration) : void {
+        $this->validateDirectory('getLayoutDirectory', $siteConfiguration->getLayoutDirectory(),  true);
+        $this->validateDirectory('getContentDirectory', $siteConfiguration->getContentDirectory(), true);
+        $this->validateDirectory('getOutputDirectory', $siteConfiguration->getOutputDirectory(), false);
+        $dataDirectory = $siteConfiguration->getDataDirectory();
+        if ($dataDirectory !== null) {
+            $this->validateDirectory(
+                'getDataDirectory',
+                $dataDirectory,
+                true,
+                ' If your site does not require static data do not include this configuration value.'
+            );
+        }
+    }
+
+    private function validateDirectory(string $configName, string $directory, bool $mustExist, string $messageSuffix = null) : void {
+        if (trim($directory) === '') {
+            throw new SiteValidationException(sprintf(
+                'SiteConfiguration::%s returned a blank value.',
+                $configName
+            ));
+        }
+
+        if ($mustExist) {
+            if (!is_dir($directory)) {
+                $msg = $this->getMissingDirectoryMessage($configName, $directory);
+                if (isset($messageSuffix)) {
+                    $msg .= $messageSuffix;
+                }
+                throw new SiteValidationException($msg);
+            }
+        }
+    }
+
+    private function getMissingDirectoryMessage(string $configName, string $dir) : string {
+        return sprintf(
+            'SiteConfiguration::%s specifies a directory, "%s", that does not exist.',
+            $configName,
+            $dir
+        );
     }
 
 }

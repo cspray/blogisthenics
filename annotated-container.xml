@@ -3,7 +3,6 @@
   <scanDirectories>
     <source>
       <dir>src</dir>
-      <dir>cli_src</dir>
       <dir>fixture_src</dir>
     </source>
     <vendor/>
@@ -13,7 +12,7 @@
     <observer>Cspray\Blogisthenics\Autowire\Observer</observer>
   </observers>
   <parameterStores>
-    <parameterStore>Cspray\Blogisthenics\BlogisthenicsParameterStore</parameterStore>
+    <parameterStore>Cspray\Blogisthenics\Bootstrap\BlogisthenicsParameterStore</parameterStore>
   </parameterStores>
   <cacheDir>.annotated-container-cache</cacheDir>
 </annotatedContainer>

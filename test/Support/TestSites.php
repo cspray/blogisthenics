@@ -46,12 +46,6 @@ final class TestSites {
         return $site;
     }
 
-    public static function emptyOutputDirSite() : EmptyOutputDirectoryConfigurationTestSite {
-        static $site;
-        $site ??= new EmptyOutputDirectoryConfigurationTestSite();
-        return $site;
-    }
-
     public static function emptyContentDirSite() : EmptyContentDirectoryConfigurationTestSite {
         static $site;
         $site ??= new EmptyContentDirectoryConfigurationTestSite();
@@ -64,6 +58,12 @@ final class TestSites {
             $site = new EmptyLayoutDirectoryConfigurationTestSite();
         }
 
+        return $site;
+    }
+
+    public static function emptyOutputDirSite() : EmptyOutputDirectoryConfigurationTestSite {
+        static $site;
+        $site ??= new EmptyOutputDirectoryConfigurationTestSite();
         return $site;
     }
 

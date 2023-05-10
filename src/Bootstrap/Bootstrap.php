@@ -1,6 +1,6 @@
 <?php
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\Bootstrap;
 
 use Cspray\AnnotatedContainer\AnnotatedContainer;
 use Cspray\AnnotatedContainer\Bootstrap\Bootstrap as AnnotatedContainerBootstrap;
@@ -11,11 +11,14 @@ final class Bootstrap {
 
     private function __construct() {}
 
-    public static function bootstrap(string $rootDir) : AnnotatedContainer {
+    public static function bootstrap(
+        string $rootDir,
+        array $profiles = ['default']
+    ) : AnnotatedContainer {
         $parameterStoreFactory = new class($rootDir) implements ParameterStoreFactory {
 
             public function __construct(
-                private readonly string $rootDir
+                private readonly string $rootDir,
             ) {}
 
             public function createParameterStore(string $identifier) : ParameterStore {
@@ -32,6 +35,6 @@ final class Bootstrap {
         );
 
 
-        return $bootstrap->bootstrapContainer();
+        return $bootstrap->bootstrapContainer($profiles);
     }
 }

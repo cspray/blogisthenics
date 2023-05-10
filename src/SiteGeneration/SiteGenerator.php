@@ -3,12 +3,11 @@
 namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\ComponentRegistry;
-use Cspray\Blogisthenics\Content;
-use Cspray\Blogisthenics\Observer\ContentGeneratedHandler;
+use Cspray\Blogisthenics\Observer\ContentGenerated;
 use Cspray\Blogisthenics\Site;
 use Cspray\Blogisthenics\SiteConfiguration;
 use Cspray\Blogisthenics\SiteGeneration\FileParserResults as ParserResults;
+use Cspray\Blogisthenics\Template\ComponentRegistry;
 use Cspray\Blogisthenics\Template\DynamicFileTemplate;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\StaticFileTemplate;
@@ -16,6 +15,8 @@ use Cspray\Blogisthenics\Template\Template;
 use DateTimeImmutable;
 use FilesystemIterator;
 use Generator;
+use League\Uri\Http;
+use Psr\Http\Message\UriInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -30,23 +31,21 @@ final class SiteGenerator {
     private const PARSEABLE_EXTENSIONS = ['php', 'md'];
 
     /**
-     * @var ContentGeneratedHandler[]
+     * @var ContentGenerated[]
      */
-    private array $handlers = [];
+    private array $observers = [];
 
     public function __construct(
-        private readonly SiteConfiguration $siteConfiguration,
+        private readonly Site $site,
         private readonly FileParser $parser,
         private readonly ComponentRegistry $componentRegistry
     ) {}
 
-    public function addHandler(ContentGeneratedHandler $contentGeneratedHandler) : void {
-        $this->handlers[] = $contentGeneratedHandler;
+    public function addHandler(ContentGenerated $contentGeneratedHandler) : void {
+        $this->observers[] = $contentGeneratedHandler;
     }
 
     public function generateSite() : Site {
-        $site = new Site($this->siteConfiguration);
-
         /** @var SplFileInfo $fileInfo */
         foreach ($this->getSourceIterator() as $fileInfo) {
             if ($this->isParseablePath($fileInfo)) {
@@ -55,20 +54,18 @@ final class SiteGenerator {
                 $content = $this->createStaticContent($fileInfo);
             }
 
-            if (isset($content->outputPath)) {
-                foreach ($this->handlers as $handler) {
-                    $content = $handler->handle($content);
-                }
+            foreach ($this->observers as $observer) {
+                $observer->notify($content);
             }
 
-            if ($content->isPublished() || $this->siteConfiguration->shouldIncludeDraftContent()) {
-                $site->addContent($content);
+            if ($content->isPublished() || $this->site->getConfiguration()->shouldIncludeDraftContent()) {
+                $this->site->addContent($content);
             }
         }
 
         unset($fileInfo);
 
-        if (is_dir($this->siteConfiguration->getComponentPath())) {
+        if (is_dir($this->site->getConfiguration()->getComponentDirectory())) {
             foreach ($this->getComponentIterator() as $fileInfo) {
                 $fileNameParts = explode('.', $fileInfo->getBasename());
                 $name = array_shift($fileNameParts);
@@ -79,12 +76,12 @@ final class SiteGenerator {
             }
         }
 
-        return $site;
+        return $this->site;
     }
 
     private function getSourceIterator() : Generator {
-        $contentDirectory = $this->siteConfiguration->getContentPath();
-        $layoutDirectory = $this->siteConfiguration->getLayoutPath();
+        $contentDirectory = $this->site->getConfiguration()->getContentDirectory();
+        $layoutDirectory = $this->site->getConfiguration()->getLayoutDirectory();
         $layoutIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($layoutDirectory, FilesystemIterator::SKIP_DOTS)
         );
@@ -102,7 +99,7 @@ final class SiteGenerator {
     }
 
     private function getComponentIterator() : Generator {
-        $componentPath = $this->siteConfiguration->getComponentPath();
+        $componentPath = $this->site->getConfiguration()->getComponentDirectory();
         $componentIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($componentPath, FilesystemIterator::SKIP_DOTS)
         );
@@ -124,19 +121,20 @@ final class SiteGenerator {
     }
 
     private function createStaticContent(SplFileInfo $fileInfo) : Content {
-        $directory = $this->siteConfiguration->getContentPath();
+        $directory = $this->site->getConfiguration()->getContentDirectory();
         $contentOutputDir = dirname(preg_replace('<^' . $directory . '>', '', $fileInfo->getPathname()));
+        $path = sprintf('%s/%s', $contentOutputDir, $fileInfo->getBasename());
         return $this->createContent(
             $fileInfo,
             (new DateTimeImmutable())->setTimestamp($fileInfo->getMTime()),
             new FrontMatter([]),
             new StaticFileTemplate($fileInfo->getPathname(), $fileInfo->getExtension()),
             sprintf(
-                '%s%s/%s',
-                $this->siteConfiguration->getOutputPath(),
-                $contentOutputDir,
-                $fileInfo->getBasename()
-            )
+                '%s%s',
+                $this->site->getConfiguration()->getOutputDirectory(),
+                $path
+            ),
+            Http::createFromString($path)
         );
     }
 
@@ -152,13 +150,14 @@ final class SiteGenerator {
             $fileInfo
         );
         $template = $this->createTemplate($fileInfo, $parsedFile);
-        $outputPath = $this->getOutputPath($fileInfo, $frontMatter);
+        [$outputPath, $uri] = $this->getOutputPair($fileInfo, $frontMatter);
         return $this->createContent(
             $fileInfo,
             $pageDate,
             $frontMatter,
             $template,
-            $outputPath
+            $outputPath,
+            $uri
         );
     }
 
@@ -189,7 +188,7 @@ final class SiteGenerator {
 
         if (!$this->isLayoutPath($fileInfo)) {
             if (is_null($frontMatter->get('layout'))) {
-                $dataToAdd['layout'] = $this->siteConfiguration->getDefaultLayout();
+                $dataToAdd['layout'] = $this->site->getConfiguration()->getDefaultLayout();
             }
 
             $fileNameWithoutFormat = explode('.', $fileInfo->getBasename())[0];
@@ -204,7 +203,7 @@ final class SiteGenerator {
     }
 
     private function isLayoutPath(SplFileInfo $fileInfo) : bool {
-        $layoutsPath = '(^' . $this->siteConfiguration->getLayoutPath() . ')';
+        $layoutsPath = '(^' . $this->site->getConfiguration()->getLayoutDirectory() . ')';
         return (bool) preg_match($layoutsPath, $fileInfo->getPathname());
     }
 
@@ -232,44 +231,64 @@ final class SiteGenerator {
         DateTimeImmutable $pageDate,
         FrontMatter $frontMatter,
         Template $template,
-        ?string $outputPath
+        ?string $outputPath,
+        ?UriInterface $url
     ) : Content {
         $isStaticAsset = $this->isStaticAssetPath($fileInfo);
         $isLayout = $this->isLayoutPath($fileInfo);
+
+        if ($isStaticAsset) {
+            $contentCategory = ContentCategory::Asset;
+        } else if ($isLayout) {
+            $contentCategory = ContentCategory::Layout;
+        } else {
+            $contentCategory = ContentCategory::Page;
+        }
 
         return new Content(
             $fileInfo->getPathname(),
             $pageDate,
             $frontMatter,
             $template,
+            $contentCategory,
             $outputPath,
-            isLayout: $isLayout,
-            isStaticAsset: $isStaticAsset
+            $url,
         );
     }
 
-    private function getOutputPath(SplFileInfo $fileInfo, FrontMatter $frontMatter) : ?string {
+    /**
+     * @param SplFileInfo $fileInfo
+     * @param FrontMatter $frontMatter
+     * @return array{0: ?string, 1: ?UriInterface}
+     */
+    private function getOutputPair(SplFileInfo $fileInfo, FrontMatter $frontMatter) : array {
         if ($this->isLayoutPath($fileInfo)) {
-            return null;
+            return [null, null];
         }
 
-        $directory = $this->siteConfiguration->getOutputPath();
+        $directory = $this->site->getConfiguration()->getOutputDirectory();
         $permalink = $frontMatter->get('permalink');
         if ($permalink !== null) {
-            return sprintf(
-                '%s/%s',
-                $directory,
-                $permalink
-            );
+            return [
+                sprintf(
+                    '%s/%s',
+                    $directory,
+                    $permalink
+                ),
+                Http::createFromString(sprintf('/%s', $permalink))
+            ];
         }
 
-        $contentOutputDir = dirname(preg_replace('<^' . $this->siteConfiguration->getContentPath() . '>', '', $fileInfo->getPathname()));
+        $contentOutputDir = dirname(preg_replace('<^' . $this->site->getConfiguration()->getContentDirectory() . '>', '', $fileInfo->getPathname()));
         $slug = S::create($frontMatter->get('title'))->slugify();
-        return sprintf(
-            '%s%s/%s/index.html',
-            $directory,
-            rtrim($contentOutputDir, '/'),
-            $slug
-        );
+        $path = sprintf('%s/%s', rtrim($contentOutputDir, '/'), $slug);
+        return [
+            sprintf(
+                '%s%s/index.html',
+                $directory,
+                $path
+            ),
+            Http::createFromString($path)
+        ];
     }
 }

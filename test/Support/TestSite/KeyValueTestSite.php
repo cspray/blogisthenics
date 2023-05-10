@@ -21,18 +21,8 @@ final class KeyValueTestSite extends AbstractTestSite {
 PHP;
 
         $dir->addChild(
-            $this->dir('.blogisthenics', [
-                $this->file('config.json', json_encode([
-                    'layout_directory' => '_layouts',
-                    'output_directory' => '_site',
-                    'default_layout' => 'default.html',
-                    'content_directory' => 'content'
-                ]))
-            ])
-        );
-        $dir->addChild(
-            $this->dir('_layouts', [
-                $this->file('default.html.php', '<?= $this->yield() ?>')
+            $this->dir('layouts', [
+                $this->file('main.html.php', '<?= $this->yield() ?>')
             ])
         );
         $dir->addChild(

@@ -37,26 +37,15 @@ But _should not_ parse Markdown.
 HTML;
 
         $dir->addChild(
-            $this->dir('.blogisthenics', [
-                $this->file('config.json', json_encode([
-                    'layout_directory' => 'custom-layouts-dir',
-                    'output_directory' => 'custom-site-dir',
-                    'default_layout' => 'primary-layout.html',
-                    'content_directory' => 'site-source'
-                ]))
-            ])
-        );
-
-        $dir->addChild(
-            $this->dir('custom-layouts-dir', [
+            $this->dir('layouts', [
                 $this->content(
                     'article.md.php',
-                    ['layout' => 'primary-layout.html'],
+                    ['layout' => 'main.html'],
                     '# <?= $this->title ?>' . PHP_EOL . PHP_EOL . '<?= $this->yield() ?>',
                     new \DateTime('2018-07-02 22:01:35')
                 ),
                 $this->content(
-                    'primary-layout.html.php',
+                    'main.html.php',
                     [],
                     $defaultLayoutContent,
                     new \DateTime('2018-07-11 21:44:50')
@@ -65,7 +54,7 @@ HTML;
         );
 
         $dir->addChild(
-            $this->dir('site-source', [
+            $this->dir('content', [
                 $this->dir('css', [
                     $this->file('styles.css', 'body { font-size: 1em; }', new \DateTime('2018-07-15 13:00:00'))
                 ]),

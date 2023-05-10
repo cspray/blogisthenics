@@ -3,6 +3,7 @@
 namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Service;
+use Cspray\Blogisthenics\SiteGeneration\Content;
 
 #[Service]
 final class Site {
@@ -31,9 +32,9 @@ final class Site {
     }
 
     public function addContent(Content $content) : void {
-        if ($content->isLayout) {
+        if ($content->category->isLayout()) {
             $this->layouts[] = $content;
-        } else if ($content->isStaticAsset) {
+        } else if ($content->category->isAsset()) {
             $this->staticAssets[] = $content;
         } else {
             $this->pages[] = $content;

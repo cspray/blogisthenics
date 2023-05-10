@@ -1,12 +1,13 @@
 <?php declare(strict_types=1);
 
 
-namespace Cspray\Blogisthenics;
+namespace Cspray\Blogisthenics\SiteGeneration;
 
 use Cspray\Blogisthenics\Exception\InvalidStateException;
 use Cspray\Blogisthenics\Template\FrontMatter;
 use Cspray\Blogisthenics\Template\Template;
 use DateTimeImmutable;
+use Psr\Http\Message\UriInterface;
 
 final class Content {
 
@@ -15,34 +16,10 @@ final class Content {
         public readonly DateTimeImmutable $postDate,
         public readonly FrontMatter $frontMatter,
         public readonly Template $template,
+        public readonly ContentCategory $category,
         public readonly ?string $outputPath,
-        public readonly bool $isLayout = false,
-        public readonly bool $isStaticAsset = false
+        public readonly ?UriInterface $url
     ) {}
-
-    public function withOutputPath(string $outputPath) : Content {
-        return new Content(
-            $this->name,
-            $this->postDate,
-            $this->frontMatter,
-            $this->template,
-            $outputPath,
-            $this->isLayout,
-            $this->isStaticAsset
-        );
-    }
-
-    public function withFrontMatter(FrontMatter $frontMatter) : Content {
-        return new Content(
-            $this->name,
-            $this->postDate,
-            $frontMatter,
-            $this->template,
-            $this->outputPath,
-            $this->isLayout,
-            $this->isStaticAsset
-        );
-    }
 
     public function isPublished() : bool {
         return $this->frontMatter->get('published') ?? true;
