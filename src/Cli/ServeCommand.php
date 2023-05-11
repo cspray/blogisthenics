@@ -3,7 +3,6 @@
 namespace Cspray\Blogisthenics\Cli;
 
 use Amp\Process\Process;
-use Cspray\AnnotatedContainer\Attribute\Inject;
 use Cspray\AnnotatedContainer\Attribute\Service;
 use Cspray\AnnotatedContainer\Cli\Command;
 use Cspray\AnnotatedContainer\Cli\Input;
@@ -15,7 +14,7 @@ use function Amp\ByteStream\getStderr;
 use function Amp\ByteStream\getStdout;
 use function Amp\ByteStream\pipe;
 
-#[Service(profiles: ['cli'])]
+#[Service]
 class ServeCommand implements Command {
 
     public function __construct(
@@ -34,10 +33,12 @@ HELP;
     }
 
     public function handle(Input $input, TerminalOutput $output) : int {
-        $command = ['php', '-S', '1337'];
+        $port = $input->getOption('port') ?? '1337';
+
+        $command = ['php', '-S', 'localhost:' . $port];
         $process = Process::start(
             command: $command,
-            workingDirectory: $this->siteConfiguration->getRootDirectory()
+            workingDirectory: $this->siteConfiguration->getOutputDirectory()
         );
 
         async(fn() => pipe($process->getStdout(), getStdout()));

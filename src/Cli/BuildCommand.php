@@ -8,7 +8,7 @@ use Cspray\AnnotatedContainer\Cli\Input;
 use Cspray\AnnotatedContainer\Cli\TerminalOutput;
 use Cspray\Blogisthenics\Engine;
 
-#[Service(profiles: ['cli'])]
+#[Service]
 final class BuildCommand implements Command {
 
     public function __construct(
