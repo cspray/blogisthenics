@@ -4,8 +4,10 @@
 use Cspray\AnnotatedContainer\Cli\CommandExecutor;
 use Cspray\AnnotatedContainer\Cli\InputParser;
 use Cspray\AnnotatedContainer\Cli\TerminalOutput;
+use Cspray\AnnotatedContainer\Profiles\CsvActiveProfilesParser;
 use Cspray\Blogisthenics\Bootstrap\Bootstrap;
 use Cspray\Blogisthenics\Cli\BuildCommand;
+use Cspray\Blogisthenics\Cli\ServeCommand;
 
 if (php_sapi_name() !== 'cli') {
     exit('The blogisthenics CLI tool is not meant to run in non-cli SAPI.');
@@ -17,16 +19,24 @@ if (!file_exists($rootDir . '/vendor/autoload.php')) {
 }
 require $rootDir . '/vendor/autoload.php';
 
+$terminalOutput = new TerminalOutput();
+
+$profiles = getenv('BLOGISTHENICS_PROFILES');
+if ($profiles === false) {
+    $terminalOutput->stderr->write(
+        '<bold><fg:yellow>No profiles were provided! Setting active profiles to "default"!</fg:yellow></bold>'
+    );
+    $profiles = 'default';
+}
+
 $container = Bootstrap::bootstrap(
     $rootDir,
-    ['default', 'cli']
+    (new CsvActiveProfilesParser())->parse($profiles)
 );
 
 $executor = new CommandExecutor();
 
 $executor->addCommand($container->get(BuildCommand::class));
+$executor->addCommand($container->get(ServeCommand::class));
 
-exit($executor->execute(
-    (new InputParser())->parse($argv),
-    new TerminalOutput()
-));
+exit($executor->execute((new InputParser())->parse($argv), $terminalOutput));
