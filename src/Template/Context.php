@@ -12,7 +12,6 @@ use Laminas\Escaper\Escaper;
 
 final class Context implements ArrayAccess {
 
-    private array $data;
     private $yield;
 
     private readonly KeyValueStore $kv;
@@ -22,10 +21,9 @@ final class Context implements ArrayAccess {
         private readonly MethodDelegator $methodDelegator,
         KeyValueStore $kv,
         private readonly ComponentRegistry $componentRegistry,
-        array $data,
+        private readonly array $data,
         callable $yield = null
     ) {
-        $this->data = $this->convertNestedArraysToContexts($data, $kv);
         $this->yield = $yield;
         $this->kv = new class($kv) implements KeyValueStore {
 
@@ -45,14 +43,6 @@ final class Context implements ArrayAccess {
                 return $this->kv->has($key);
             }
         };
-    }
-
-    private function convertNestedArraysToContexts(array $data, KeyValueStore $kv) : array {
-        $cleanData = [];
-        foreach ($data as $key => $value) {
-            $cleanData[$key] = is_array($value) ? new Context($this->escaper, $this->methodDelegator, $kv, $this->componentRegistry, $value) : $value;
-        }
-        return $cleanData;
     }
 
     public function hasYield() : bool {

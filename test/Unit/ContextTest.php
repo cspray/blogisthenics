@@ -82,19 +82,6 @@ class ContextTest extends TestCase {
         $this->assertNull($context->foo, 'Expected to receive a null value');
     }
 
-    public function testNestedArraysTurnedIntoContexts() {
-        $context = new Context($this->escaper, $this->methodDelegator, $this->keyValueStore, $this->componentRegistry, [
-            'foo' => [
-                'bar' => [
-                    'baz' => [
-                        'qux' => 'foo & bar'
-                    ]
-                ]
-            ]
-        ]);
-        $this->assertSame('foo & bar', $context->foo->bar->baz->qux, 'Expected nested arrays to turn into template context');
-    }
-
     public function testCallingMethodOnContextDelegatesToMethodDelegator() {
         $this->methodDelegator->addMethod('foo', function() {
             return $this->bar;
