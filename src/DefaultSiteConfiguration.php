@@ -4,13 +4,13 @@ namespace Cspray\Blogisthenics;
 
 use Cspray\AnnotatedContainer\Attribute\Inject;
 use Cspray\AnnotatedContainer\Attribute\Service;
-use Cspray\Blogisthenics\Bootstrap\BlogisthenicsParameterStore;
+use Cspray\Blogisthenics\Bootstrap\BlogisthenicsMetaDataParameterStore;
 
 #[Service]
 final class DefaultSiteConfiguration implements SiteConfiguration {
 
     public function __construct(
-        #[Inject('rootDir', from: BlogisthenicsParameterStore::STORE_NAME)]
+        #[Inject('rootDir', from: 'blogisthenics')]
         private readonly string $rootDirectory
     ) {}
 

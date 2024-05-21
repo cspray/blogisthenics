@@ -9,9 +9,10 @@ use Cspray\Blogisthenics\Engine;
 use Cspray\Blogisthenics\Observer\ContentGenerated;
 use Cspray\Blogisthenics\Observer\ContentWritten;
 use Cspray\Blogisthenics\SiteData\DataProvider;
-use Cspray\Blogisthenics\SiteGeneration\ContentCategory;
+use Cspray\Blogisthenics\SiteGeneration\DynamicContentProvider;
 use Cspray\Blogisthenics\Template\Formatter;
 use Cspray\Blogisthenics\Template\TemplateFormatter;
+use Cspray\Blogisthenics\Template\TemplateHelperProvider;
 
 final class Observer extends ServiceWiringObserver {
 
@@ -33,6 +34,14 @@ final class Observer extends ServiceWiringObserver {
 
         foreach ($gatherer->getServicesForType(DataProvider::class) as $dataProvider) {
             $engine->addDataProvider($dataProvider->getService());
+        }
+
+        foreach ($gatherer->getServicesForType(TemplateHelperProvider::class) as $templateHelperProvider) {
+            $engine->addTemplateHelperProvider($templateHelperProvider->getService());
+        }
+
+        foreach ($gatherer->getServicesForType(DynamicContentProvider::class) as $dynamicContentProvider) {
+            $engine->addDynamicContentProvider($dynamicContentProvider->getService());
         }
     }
 }

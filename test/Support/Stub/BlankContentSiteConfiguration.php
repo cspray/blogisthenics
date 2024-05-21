@@ -3,7 +3,7 @@
 namespace Cspray\Blogisthenics\Test\Support\Stub;
 
 use Cspray\AnnotatedContainer\Attribute\Inject;
-use Cspray\Blogisthenics\Bootstrap\BlogisthenicsParameterStore;
+use Cspray\Blogisthenics\Bootstrap\BlogisthenicsMetaDataParameterStore;
 use Cspray\Blogisthenics\SiteConfiguration;
 
 class BlankContentSiteConfiguration implements SiteConfiguration {
