@@ -38,12 +38,15 @@ use Cspray\Blogisthenics\Test\Support\TestSites;
 use Cspray\BlogisthenicsFixture\AutowiredContentGeneratedObserver;
 use Cspray\BlogisthenicsFixture\AutowiredContentWrittenObserver;
 use Cspray\BlogisthenicsFixture\AutowiredDataProvider;
+use Cspray\BlogisthenicsFixture\AutowiredDynamicContentProvider;
+use Cspray\BlogisthenicsFixture\AutowiredTemplateHelperProvider;
 use Cspray\BlogisthenicsFixture\Fixtures;
 use DateTimeImmutable;
 use Laminas\Escaper\Escaper;
 use org\bovigo\vfs\vfsStream as VirtualFilesystem;
 use org\bovigo\vfs\vfsStreamDirectory as VirtualDirectory;
 use PHPUnit\Framework\TestCase;
+use function Stringy\create;
 
 class EngineTest extends TestCase {
 
@@ -690,6 +693,30 @@ class EngineTest extends TestCase {
         $this->subject->buildSite();
 
         self::assertSame('autowired', $keyValueStore->get($key));
+    }
+
+    public function testAutowireTemplateHelperProviderLoaded() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $helperProvider = $this->container->get(AutowiredTemplateHelperProvider::class);
+
+        self::assertSame(0, $helperProvider->addHelpersCount);
+
+        $this->subject->buildSite();
+
+        self::assertSame(1, $helperProvider->addHelpersCount);
+    }
+
+    public function testAutowireDynamicContentProviderLoaded() : void {
+        $this->setUpAndLoadTestSite(TestSites::standardSite());
+
+        $contentProvider = $this->container->get(AutowiredDynamicContentProvider::class);
+
+        self::assertSame(0, $contentProvider->addContentCount);
+
+        $this->subject->buildSite();
+
+        self::assertSame(1, $contentProvider->addContentCount);
     }
 
     private function assertExceptionThrown(string $exception, string $message, callable $callable) {

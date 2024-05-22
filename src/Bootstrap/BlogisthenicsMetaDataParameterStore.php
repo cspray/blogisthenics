@@ -7,9 +7,19 @@ use Cspray\Typiphy\Type;
 use Cspray\Typiphy\TypeIntersect;
 use Cspray\Typiphy\TypeUnion;
 
-final class BlogisthenicsParameterStore implements ParameterStore {
-
-    public const STORE_NAME = 'blogisthenics';
+/**
+ * Provides access to a limited set of injectable parameters exposing metadata about blogisthenics.
+ *
+ * The following array shape defines the keys and types exposed by this ParameterStore. To make used of it use the
+ * following Attribute:
+ *
+ * #[Inject('...', from: 'blogisthenics')]
+ *
+ * @psalm-type MetaDataPayload = array{
+ *     rootDir: string
+ * }
+ */
+final class BlogisthenicsMetaDataParameterStore implements ParameterStore {
 
     private array $data = [];
 
@@ -18,7 +28,7 @@ final class BlogisthenicsParameterStore implements ParameterStore {
     }
 
     public function getName() : string {
-        return self::STORE_NAME;
+        return 'blogisthenics';
     }
 
     public function fetch(TypeUnion|Type|TypeIntersect $type, string $key) : mixed {

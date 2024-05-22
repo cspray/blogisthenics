@@ -17,6 +17,7 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: 8
+          php_extensions: pcntl
       - name: PHP tests
         uses: php-actions/phpunit@v3
         with:

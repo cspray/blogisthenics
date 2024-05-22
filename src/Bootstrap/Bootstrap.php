@@ -15,26 +15,23 @@ final class Bootstrap {
         string $rootDir,
         array $profiles = ['default']
     ) : AnnotatedContainer {
+        // Ensures that our meta data parameters are made available to inject via the container
         $parameterStoreFactory = new class($rootDir) implements ParameterStoreFactory {
-
             public function __construct(
                 private readonly string $rootDir,
             ) {}
 
             public function createParameterStore(string $identifier) : ParameterStore {
-                if ($identifier === BlogisthenicsParameterStore::class) {
-                    return new BlogisthenicsParameterStore($this->rootDir);
+                if ($identifier === BlogisthenicsMetaDataParameterStore::class) {
+                    return new BlogisthenicsMetaDataParameterStore($this->rootDir);
                 }
 
                 return new $identifier();
             }
         };
 
-        $bootstrap = new AnnotatedContainerBootstrap(
+        return (new AnnotatedContainerBootstrap(
             parameterStoreFactory: $parameterStoreFactory
-        );
-
-
-        return $bootstrap->bootstrapContainer($profiles);
+        ))->bootstrapContainer($profiles);
     }
 }
