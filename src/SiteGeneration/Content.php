@@ -11,10 +11,6 @@ use Psr\Http\Message\UriInterface;
 
 final class Content {
 
-    private ?string $renderedContent = null;
-
-    private ?string $pageContent = null;
-
     public function __construct(
         public readonly string $name,
         public readonly DateTimeImmutable $postDate,
@@ -22,7 +18,7 @@ final class Content {
         public readonly Template $template,
         public readonly ContentCategory $category,
         public readonly ?string $outputPath,
-        public readonly ?UriInterface $url
+        public readonly ?string $urlPath
     ) {}
 
     public function isPublished() : bool {
