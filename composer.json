@@ -34,7 +34,7 @@
   ],
   "extra": {
     "$annotatedContainer": {
-      "initializers": ["Cspray\\Blogisthenics\\Autowire\\InitializerProvider"]
+      "initializers": ["Cspray\\Blogisthenics\\Autowire\\Initializer"]
     }
   }
 }
