@@ -3,33 +3,24 @@
 namespace Cspray\Blogisthenics\Autowire;
 
 use Cspray\AnnotatedContainer\Bootstrap\ThirdPartyInitializer;
-use Cspray\AnnotatedContainer\Bootstrap\ThirdPartyInitializerProvider;
 
-class Initializer implements ThirdPartyInitializerProvider {
+class Initializer extends ThirdPartyInitializer {
 
-    public function getThirdPartyInitializers() : array {
-        return [$this->createInitializer()];
+    public function getPackageName() : string {
+        return 'cspray/blogisthenics';
     }
 
-    private function createInitializer(): ThirdPartyInitializer {
-        return new class extends ThirdPartyInitializer {
-            public function getPackageName() : string {
-                return 'cspray/blogisthenics';
-            }
+    public function getRelativeScanDirectories() : array {
+        return ['src'];
+    }
 
-            public function getRelativeScanDirectories() : array {
-                return ['src'];
-            }
+    public function getObserverClasses() : array {
+        return [
+            Observer::class
+        ];
+    }
 
-            public function getObserverClasses() : array {
-                return [
-                    Observer::class
-                ];
-            }
-
-            public function getDefinitionProviderClass() : ?string {
-                return null;
-            }
-        };
+    public function getDefinitionProviderClass() : ?string {
+        return null;
     }
 }
