@@ -134,7 +134,7 @@ final class SiteGenerator {
                 $this->site->getConfiguration()->getOutputDirectory(),
                 $path
             ),
-            Http::createFromString($path)
+            $path
         );
     }
 
@@ -232,7 +232,7 @@ final class SiteGenerator {
         FrontMatter $frontMatter,
         Template $template,
         ?string $outputPath,
-        ?UriInterface $url
+        ?string $urlPath
     ) : Content {
         $isStaticAsset = $this->isStaticAssetPath($fileInfo);
         $isLayout = $this->isLayoutPath($fileInfo);
@@ -252,7 +252,7 @@ final class SiteGenerator {
             $template,
             $contentCategory,
             $outputPath,
-            $url,
+            $urlPath,
         );
     }
 
@@ -275,7 +275,7 @@ final class SiteGenerator {
                     $directory,
                     $permalink
                 ),
-                Http::createFromString(sprintf('/%s', $permalink))
+                sprintf('/%s', $permalink)
             ];
         }
 
@@ -288,7 +288,7 @@ final class SiteGenerator {
                 $directory,
                 $path
             ),
-            Http::createFromString($path)
+            $path
         ];
     }
 }

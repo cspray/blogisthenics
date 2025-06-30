@@ -628,9 +628,9 @@ class EngineTest extends TestCase {
         $pages = $site->getAllPages();
 
         self::assertCount(3, $pages);
-        self::assertSame('/posts/the-blog-title', (string) $pages[0]->url);
-        self::assertSame('/posts/another-blog-article', (string) $pages[1]->url);
-        self::assertSame('/posts/nested-layout-article', (string) $pages[2]->url);
+        self::assertSame('/posts/the-blog-title', (string) $pages[0]->urlPath);
+        self::assertSame('/posts/another-blog-article', (string) $pages[1]->urlPath);
+        self::assertSame('/posts/nested-layout-article', (string) $pages[2]->urlPath);
     }
 
     public function testBuildingSiteHasUrlForStaticContent() : void {
@@ -640,8 +640,8 @@ class EngineTest extends TestCase {
         $assets = $site->getAllStaticAssets();
 
         self::assertCount(2, $assets);
-        self::assertSame('/css/styles.css', (string) $assets[0]->url);
-        self::assertSame('/js/code.js', (string) $assets[1]->url);
+        self::assertSame('/css/styles.css', (string) $assets[0]->urlPath);
+        self::assertSame('/js/code.js', (string) $assets[1]->urlPath);
     }
 
     public function testBuildSiteHasNoUrlForLayouts() : void {
@@ -651,8 +651,8 @@ class EngineTest extends TestCase {
         $layouts = $site->getAllLayouts();
 
         self::assertCount(2, $layouts);
-        self::assertNull($layouts[0]->url);
-        self::assertNull($layouts[1]->url);
+        self::assertNull($layouts[0]->urlPath);
+        self::assertNull($layouts[1]->urlPath);
     }
 
     public function testAutowiredContentGeneratedObserversAddedToEngine() : void {
